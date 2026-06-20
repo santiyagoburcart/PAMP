@@ -290,7 +290,6 @@ def admin_action(request, username):
             panel_admin.save(update_fields=['active_user_count', 'disabled_users'])
             return HttpResponse(
                 '<div class="action-result error" style="margin-bottom:12px;">👥🔒 All users disabled</div>',
-                headers={'HX-Refresh': 'true'},
             )
         return HttpResponse('<div class="action-result error">✗ Failed to disable users</div>')
 
