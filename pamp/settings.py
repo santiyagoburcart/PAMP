@@ -1,7 +1,6 @@
 from pathlib import Path
 import os
 from decouple import config
-# hook-test-sentinel
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
