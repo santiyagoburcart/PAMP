@@ -298,7 +298,6 @@ def admin_action(request, username):
         if success:
             return HttpResponse(
                 '<div class="action-result success" style="margin-bottom:12px;">👥✓ All users enabled</div>',
-                headers={'HX-Refresh': 'true'},
             )
         return HttpResponse('<div class="action-result error">✗ Failed to enable users</div>')
 
