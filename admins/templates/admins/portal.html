@@ -32,14 +32,6 @@
   <div class="portal-hero-sub">{{ a.status|title }} Admin · {{ a.users_count }} users</div>
 </div>
 
-{% if a.hidden_traffic_bytes > 0 %}
-<div class="formula-box">
-  <div class="formula-title">⚠ Hidden / Deleted Traffic Detected</div>
-  <div class="formula-expr">{{ total_user_limit_fmt }} − {{ total_user_used_fmt }} − {{ admin_remaining_fmt }}</div>
-  <div class="formula-result">= {{ hidden_traffic_fmt }} hidden</div>
-</div>
-{% endif %}
-
 <div class="detail-grid">
   <div class="detail-section">
     <h3>Admin Traffic</h3>
