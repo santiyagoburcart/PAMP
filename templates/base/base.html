@@ -434,6 +434,7 @@ document.getElementById('confirm-modal').addEventListener('click', function(e) {
 });
 
 function confirmSetLimit(username, action, valueGb, targetId, csrfToken) {
+
   const gbNum = parseFloat(valueGb);
   const gbLabel = gbNum >= 1000 ? (gbNum / 1000).toFixed(1) + ' TB' : gbNum + ' GB';
   const isSet = action === 'set';
