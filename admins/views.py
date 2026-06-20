@@ -55,18 +55,25 @@ def dashboard(request):
     total_remaining = totals['total_remaining'] or 0
     total_hidden = total_limit - total_used - total_remaining
 
-    # Build over-limit list (usage >= 100% of their PAMP limit)
+    # Build over-limit list — only admins currently at/above 80% of PAMP limit
     over_limit_list = []
     for lc in AdminLimit.objects.select_related('panel_admin').filter(limit_bytes__gt=0):
         a = lc.panel_admin
         used = a.admin_used_bytes
-        pct = round((used / lc.limit_bytes) * 100, 1) if lc.limit_bytes > 0 else 0
+        if lc.limit_bytes <= 0:
+            continue
+        pct = round((used / lc.limit_bytes) * 100, 1)
         if pct >= 80:
+            if pct >= 100:
+                state = 'blocked' if a.pamp_blocked else 'over'
+            else:
+                state = 'at_risk'
             over_limit_list.append({
                 'username': a.username,
                 'pamp_limit_fmt': _fmt_bytes(lc.limit_bytes),
                 'admin_used_fmt': _fmt_bytes(used),
                 'pamp_pct': pct,
+                'state': state,
                 'pamp_blocked': a.pamp_blocked,
                 'pamp_blocked_at': a.pamp_blocked_at,
             })
@@ -75,11 +82,12 @@ def dashboard(request):
     context = {
         'admins': admins,
         'admin_count': admins.count(),
+        'total_count': PanelAdmin.objects.count(),
+        'active_count': PanelAdmin.objects.filter(status='active').count(),
+        'disabled_count': PanelAdmin.objects.filter(status='disabled').count(),
         'total_limit_fmt': _fmt_bytes(total_limit),
         'total_used_fmt': _fmt_bytes(total_used),
         'total_remaining_fmt': _fmt_bytes(total_remaining),
-        'total_hidden_fmt': _fmt_bytes(total_hidden),
-        'total_hidden_bytes': total_hidden,
         'total_users': totals['total_users'] or 0,
         'total_active': totals['total_active'] or 0,
         'last_sync': SyncLog.objects.first(),
