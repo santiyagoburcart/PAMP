@@ -279,7 +279,6 @@ def admin_action(request, username):
             panel_admin.save(update_fields=['status', 'is_active'])
             return HttpResponse(
                 '<div class="action-result success" style="margin-bottom:12px;">✓ Admin enabled</div>',
-                headers={'HX-Refresh': 'true'},
             )
         return HttpResponse('<div class="action-result error">✗ Failed to enable admin</div>')
 
