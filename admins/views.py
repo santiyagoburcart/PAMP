@@ -315,3 +315,34 @@ def sync_status(request):
             'duration': last.duration_seconds,
         })
     return JsonResponse({'status': 'never'})
+
+
+@login_required
+def backup_database(request):
+    """Download a MySQL dump of the database. Superuser only."""
+    if not request.user.is_superuser:
+        return HttpResponse(status=403)
+
+    db = dj_settings.DATABASES['default']
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+
+    try:
+        cmd = [
+            'mysqldump',
+            f'--host={db["HOST"]}',
+            f'--port={db["PORT"]}',
+            f'--user={db["USER"]}',
+            f'--password={db["PASSWORD"]}',
+            db['NAME'],
+        ]
+        result = subprocess.run(cmd, capture_output=True, timeout=60)
+        if result.returncode != 0:
+            return HttpResponse(f'Backup failed: {result.stderr.decode()[:200]}', status=500)
+
+        response = HttpResponse(result.stdout, content_type='application/sql')
+        response['Content-Disposition'] = f'attachment; filename="pamp_backup_{timestamp}.sql"'
+        return response
+    except FileNotFoundError:
+        return HttpResponse('mysqldump not available in web container', status=500)
+    except Exception as e:
+        return HttpResponse(f'Backup error: {e}', status=500)
