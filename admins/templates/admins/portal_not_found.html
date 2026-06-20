@@ -1,0 +1,13 @@
+{% extends "base/base.html" %}
+{% block title %}Not Found — PAMP{% endblock %}
+{% block topbar_title %}My Panel{% endblock %}
+
+{% block content %}
+<div class="empty">
+  <div style="font-size:48px;margin-bottom:16px;">⚠</div>
+  <div>Your account is not linked to any panel admin yet.</div>
+  <div style="margin-top:8px;color:var(--muted);font-size:12px;">
+    Please wait for the next sync or contact the administrator.
+  </div>
+</div>
+{% endblock %}

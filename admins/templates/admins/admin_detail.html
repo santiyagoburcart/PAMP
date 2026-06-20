@@ -1,0 +1,205 @@
+{% extends "base/base.html" %}
+{% load pamp_filters %}
+{% block title %}{{ obj.username }} — PAMP{% endblock %}
+{% block topbar_title %}{{ obj.username }}{% endblock %}
+
+{% block content %}
+{% with a=obj %}
+<div style="margin-bottom:20px;">
+  <a href="{% url 'dashboard' %}" style="color:var(--muted);font-size:12px;text-decoration:none;">← Back to Dashboard</a>
+</div>
+
+<div class="portal-hero">
+  <div class="portal-hero-name">{{ a.username }}</div>
+  <div class="portal-hero-sub">
+    {{ a.status|title }} Admin · {{ a.users_count }} users
+    {% if a.is_sudo %} · <span style="color:#a5b4fc;">Sudo</span>{% endif %}
+    {% if a.pamp_blocked %} · <span style="color:var(--danger);">🔒 PAMP Blocked</span>{% endif %}
+  </div>
+</div>
+
+{% if a.hidden_traffic_bytes > 0 %}
+<div class="formula-box">
+  <div class="formula-title">⚠ Hidden / Deleted Traffic Detected</div>
+  <div class="formula-expr">{{ total_user_limit_fmt }} − {{ total_user_used_fmt }} − {{ admin_remaining_fmt }}</div>
+  <div class="formula-result">= {{ hidden_traffic_fmt }} hidden</div>
+</div>
+{% endif %}
+
+<div class="detail-grid">
+  <div class="detail-section">
+    <h3>Traffic</h3>
+    <div class="detail-row"><span class="key">Admin Limit</span><span class="val">{{ admin_limit_fmt }}</span></div>
+    <div class="detail-row"><span class="key">Total User Limit</span><span class="val">{{ total_user_limit_fmt }}</span></div>
+    <div class="detail-row"><span class="key">Total Used</span><span class="val">{{ admin_used_fmt }}</span></div>
+    <div class="detail-row"><span class="key">Remaining</span><span class="val" style="color:var(--success);">{{ admin_remaining_fmt }}</span></div>
+    <div class="detail-row">
+      <span class="key">Hidden</span>
+      <span class="val hidden-traffic {% if a.hidden_traffic_bytes > 0 %}has-hidden{% else %}zero{% endif %}">{{ hidden_traffic_fmt }}</span>
+    </div>
+    <div class="detail-row">
+      <span class="key">Usage</span>
+      <div class="progress-wrap" style="width:160px;">
+        <div class="progress-track">
+          <div class="progress-fill" style="width:{{ usage_percent }}%;background:{% if usage_percent >= 90 %}var(--danger){% elif usage_percent >= 70 %}var(--warning){% else %}linear-gradient(90deg,var(--accent),var(--accent2)){% endif %};"></div>
+        </div>
+        <span class="progress-pct">{{ usage_percent }}%</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-section">
+    <h3>Users</h3>
+    <div class="detail-row"><span class="key">Total</span><span class="val">{{ a.users_count }}</span></div>
+    <div class="detail-row"><span class="key">Active</span><span class="val" style="color:var(--success);">{{ a.active_users }}</span></div>
+    <div class="detail-row"><span class="key">On Hold</span><span class="val" style="color:var(--accent);">{{ a.on_hold_users }}</span></div>
+    <div class="detail-row"><span class="key">Limited</span><span class="val" style="color:var(--warning);">{{ a.limited_users }}</span></div>
+    <div class="detail-row"><span class="key">Disabled</span><span class="val" style="color:var(--danger);">{{ a.disabled_users }}</span></div>
+    <div class="detail-row"><span class="key">Expired</span><span class="val" style="color:var(--muted);">{{ a.expired_users }}</span></div>
+  </div>
+</div>
+
+<!-- Set Limit (superuser only) -->
+{% if user.is_superuser %}
+<div class="detail-section" style="margin-bottom:28px;">
+  <h3>Set PAMP Limit</h3>
+  <div id="limit-result-{{ a.username }}"></div>
+
+  <p style="color:var(--muted);font-size:12px;margin-bottom:8px;">Set total limit:</p>
+  <div class="limit-group">
+    {% for gb in "10 50 100 500 1000 2000"|split:" " %}
+    <button class="limit-btn set"
+      onclick="confirmSetLimit('{{ a.username }}', 'set', {{ gb }}, 'limit-result-{{ a.username }}', '{{ csrf_token }}')">
+      Set {{ gb }} GB
+    </button>
+    {% endfor %}
+  </div>
+
+  <p style="color:var(--muted);font-size:12px;margin:12px 0 8px;">Add to current limit:</p>
+  <div class="limit-group">
+    {% for gb in "5 10 30 50 100 200"|split:" " %}
+    <button class="limit-btn add"
+      onclick="confirmSetLimit('{{ a.username }}', 'add', {{ gb }}, 'limit-result-{{ a.username }}', '{{ csrf_token }}')">
+      +{{ gb }} GB
+    </button>
+    {% endfor %}
+  </div>
+
+  <div class="custom-limit-wrap">
+    <input type="number" id="custom-gb-{{ a.username }}" class="input" placeholder="Custom GB" min="1" style="width:130px;">
+    <button class="btn btn-glass btn-sm" onclick="doCustomLimit('set')">Set Custom</button>
+    <button class="btn btn-glass btn-sm" onclick="doCustomLimit('add')">Add Custom</button>
+  </div>
+</div>
+
+<script>
+function doCustomLimit(action) {
+  const gb = parseFloat(document.getElementById('custom-gb-{{ a.username }}').value);
+  if (!gb || gb <= 0) return;
+  confirmSetLimit('{{ a.username }}', action, gb, 'limit-result-{{ a.username }}', '{{ csrf_token }}');
+}
+</script>
+{% endif %}
+
+{% if user.is_superuser %}
+<div class="detail-section" style="margin-bottom:28px;">
+  <h3>⚙ Admin Actions</h3>
+  <div id="action-result-{{ a.username }}" style="margin-bottom:12px;min-height:20px;"></div>
+
+  <!-- Status row -->
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:12px 16px;
+    background:rgba(255,255,255,0.04);border-radius:10px;border:1px solid rgba(255,255,255,0.08);">
+    <span style="font-size:12px;color:rgba(241,245,249,0.5);">Panel Status:</span>
+    {% if a.status == 'active' %}
+      <span class="badge badge-active">● Active</span>
+    {% else %}
+      <span class="badge badge-disabled">● Disabled</span>
+    {% endif %}
+    {% if a.pamp_blocked %}
+      <span class="badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);">⚠ PAMP Blocked</span>
+    {% endif %}
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+
+    <!-- Admin enable/disable based on status -->
+    {% if a.status == 'active' %}
+    <button class="btn-action btn-action-danger"
+      onclick="confirmAdminAction('{{ a.username }}','disable_admin','🔒','Disable Admin','Disable <strong>{{ a.username }}</strong> on the Sigma panel — they cannot connect.','Disable Admin','linear-gradient(135deg,#dc2626,#ef4444)')">
+      🔒 Disable Admin
+    </button>
+    {% else %}
+    <button class="btn-action btn-action-success"
+      onclick="confirmAdminAction('{{ a.username }}','enable_admin','✅','Enable Admin','Re-enable <strong>{{ a.username }}</strong> on the Sigma panel.','Enable Admin','linear-gradient(135deg,#059669,#10b981)')">
+      ✅ Enable Admin
+    </button>
+    {% endif %}
+
+    <!-- Users enable/disable based on active_users count -->
+    {% if a.active_users > 0 %}
+    <button class="btn-action btn-action-danger"
+      onclick="confirmAdminAction('{{ a.username }}','disable_users','👥🔒','Disable All Users','Cut all <strong>{{ a.active_users }} active users</strong> of <strong>{{ a.username }}</strong> immediately.','Disable All Users','linear-gradient(135deg,#9f1239,#e11d48)')">
+      👥 Disable All Users
+    </button>
+    {% else %}
+    <button class="btn-action btn-action-success"
+      onclick="confirmAdminAction('{{ a.username }}','enable_users','👥✅','Enable All Users','Re-enable all users of <strong>{{ a.username }}</strong>.','Enable All Users','linear-gradient(135deg,#065f46,#10b981)')">
+      👥 Enable All Users
+    </button>
+    {% endif %}
+
+  </div>
+</div>
+
+<style>
+.btn-action {
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .2s;
+  text-align: center;
+  border: 1px solid;
+}
+.btn-action:active { transform: scale(.96); }
+.btn-action-danger {
+  background: rgba(239,68,68,0.12);
+  border-color: rgba(239,68,68,0.3);
+  color: #fca5a5;
+}
+.btn-action-danger:hover {
+  background: rgba(239,68,68,0.22);
+  border-color: rgba(239,68,68,0.5);
+  transform: translateY(-1px);
+}
+.btn-action-success {
+  background: rgba(16,185,129,0.12);
+  border-color: rgba(16,185,129,0.3);
+  color: #6ee7b7;
+}
+.btn-action-success:hover {
+  background: rgba(16,185,129,0.22);
+  border-color: rgba(16,185,129,0.5);
+  transform: translateY(-1px);
+}
+</style>
+
+<script>
+function confirmAdminAction(username, action, icon, title, body, confirmLabel, confirmColor) {
+  showConfirmModal(icon, title, body, confirmLabel, confirmColor, function() {
+    htmx.ajax('POST', '/panel/' + username + '/action/', {
+      target: '#action-result-' + username,
+      swap: 'innerHTML',
+      values: { action: action, csrfmiddlewaretoken: '{{ csrf_token }}' }
+    });
+  });
+}
+</script>
+{% endif %}
+
+{% if a.last_synced_at %}
+<div style="color:var(--muted);font-size:11px;">Last synced: {{ a.last_synced_at|date:"Y-m-d H:i:s" }}</div>
+{% endif %}
+{% endwith %}
+{% endblock %}

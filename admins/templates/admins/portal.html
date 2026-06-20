@@ -1,0 +1,90 @@
+{% extends "base/base.html" %}
+{% block title %}My Panel — PAMP{% endblock %}
+{% block topbar_title %}My Panel{% endblock %}
+
+{% block content %}
+{% with a=obj %}
+
+{% if show_warning %}
+<div style="
+  background:linear-gradient(135deg,rgba(245,158,11,0.15),rgba(245,158,11,0.08));
+  border:1px solid rgba(245,158,11,0.4);
+  border-radius:14px;
+  padding:16px 24px;
+  margin-bottom:20px;
+  display:flex;align-items:center;gap:16px;
+">
+  <span style="font-size:28px;">⚠️</span>
+  <div>
+    <div style="font-weight:600;color:#f59e0b;margin-bottom:2px;">
+      هشدار: {{ warning_pct }}% از لیمیت مصرف شده
+    </div>
+    <div style="font-size:13px;color:rgba(241,245,249,0.6);">
+      در صورت رسیدن به ۱۰۰٪، تمام کاربران شما به‌طور خودکار غیرفعال می‌شوند.
+      برای افزایش لیمیت با پشتیبانی تماس بگیرید.
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="portal-hero">
+  <div class="portal-hero-name">{{ a.username }}</div>
+  <div class="portal-hero-sub">{{ a.status|title }} Admin · {{ a.users_count }} users</div>
+</div>
+
+{% if a.hidden_traffic_bytes > 0 %}
+<div class="formula-box">
+  <div class="formula-title">⚠ Hidden / Deleted Traffic Detected</div>
+  <div class="formula-expr">{{ total_user_limit_fmt }} − {{ total_user_used_fmt }} − {{ admin_remaining_fmt }}</div>
+  <div class="formula-result">= {{ hidden_traffic_fmt }} hidden</div>
+</div>
+{% endif %}
+
+<div class="detail-grid">
+  <div class="detail-section">
+    <h3>Admin Traffic</h3>
+    <div class="detail-row">
+      <span class="key">Limit</span>
+      <span class="val">{{ admin_limit_fmt }}</span>
+    </div>
+    <div class="detail-row">
+      <span class="key">Used (by users)</span>
+      <span class="val">{{ admin_used_fmt }}</span>
+    </div>
+    <div class="detail-row">
+      <span class="key">Remaining</span>
+      <span class="val" style="color:var(--success);">{{ admin_remaining_fmt }}</span>
+    </div>
+    <div class="detail-row">
+      <span class="key">Usage</span>
+      <div class="progress-wrap" style="width:160px;">
+        <div class="progress-track">
+          <div class="progress-fill" style="width:{{ usage_percent }}%;background:{% if usage_percent >= 90 %}var(--danger){% elif usage_percent >= 70 %}var(--warning){% else %}linear-gradient(90deg,var(--accent),var(--accent2)){% endif %};"></div>
+        </div>
+        <span class="progress-pct">{{ usage_percent }}%</span>
+      </div>
+    </div>
+    <div class="detail-row">
+      <span class="key">Hidden Traffic</span>
+      <span class="val hidden-traffic {% if a.hidden_traffic_bytes > 0 %}has-hidden{% else %}zero{% endif %}">
+        {{ hidden_traffic_fmt }}
+      </span>
+    </div>
+  </div>
+
+  <div class="detail-section">
+    <h3>Users Overview</h3>
+    <div class="detail-row"><span class="key">Total</span><span class="val">{{ a.users_count }}</span></div>
+    <div class="detail-row"><span class="key">Active</span><span class="val" style="color:var(--success);">{{ a.active_users }}</span></div>
+    <div class="detail-row"><span class="key">On Hold</span><span class="val" style="color:var(--accent);">{{ a.on_hold_users }}</span></div>
+    <div class="detail-row"><span class="key">Limited</span><span class="val" style="color:var(--warning);">{{ a.limited_users }}</span></div>
+    <div class="detail-row"><span class="key">Disabled</span><span class="val" style="color:var(--danger);">{{ a.disabled_users }}</span></div>
+    <div class="detail-row"><span class="key">Expired</span><span class="val" style="color:var(--muted);">{{ a.expired_users }}</span></div>
+  </div>
+</div>
+
+{% if a.last_synced_at %}
+<div style="color:var(--muted);font-size:11px;">Last synced: {{ a.last_synced_at|date:"Y-m-d H:i:s" }}</div>
+{% endif %}
+{% endwith %}
+{% endblock %}
