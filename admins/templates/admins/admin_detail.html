@@ -26,10 +26,6 @@
     <div class="detail-row"><span class="key">Total Used</span><span class="val">{{ admin_used_fmt }}</span></div>
     <div class="detail-row"><span class="key">Remaining</span><span class="val" style="color:var(--success);">{{ admin_remaining_fmt }}</span></div>
     <div class="detail-row">
-      <span class="key">Hidden</span>
-      <span class="val hidden-traffic {% if a.hidden_traffic_bytes > 0 %}has-hidden{% else %}zero{% endif %}">{{ hidden_traffic_fmt }}</span>
-    </div>
-    <div class="detail-row">
       <span class="key">Usage</span>
       <div class="progress-wrap" style="width:160px;">
         <div class="progress-track">
