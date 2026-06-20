@@ -16,6 +16,8 @@ services:
       redis:
         condition: service_started
     restart: unless-stopped
+    networks:
+      - pamp_network
 
   db:
     image: mysql:8.0
@@ -34,12 +36,16 @@ services:
       timeout: 5s
       retries: 10
     restart: unless-stopped
+    networks:
+      - pamp_network
 
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
     restart: unless-stopped
+    networks:
+      - pamp_network
 
   celery:
     build: .
@@ -54,6 +60,8 @@ services:
       redis:
         condition: service_started
     restart: unless-stopped
+    networks:
+      - pamp_network
 
   celery-beat:
     build: .
@@ -68,6 +76,8 @@ services:
       redis:
         condition: service_started
     restart: unless-stopped
+    networks:
+      - pamp_network
 
   nginx:
     image: nginx:alpine
@@ -80,6 +90,8 @@ services:
       - ./staticfiles:/app/staticfiles
     depends_on:
       - web
+    networks:
+      - pamp_network
 
   phpmyadmin:
     image: phpmyadmin:latest
@@ -92,6 +104,12 @@ services:
       PMA_ABSOLUTE_URI: http://pamp.caspinxp.com/phpmyadmin/
     depends_on:
       - db
+    networks:
+      - pamp_network
+
+networks:
+  pamp_network:
+    driver: bridge
 
 volumes:
   mysql_data:

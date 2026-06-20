@@ -122,11 +122,3 @@ LOGGING = {
 LOGIN_REDIRECT_URL = '/portal-redirect/'
 LOGIN_URL = '/login/'
 LOGOUT_REDIRECT_URL = '/login/'
-
-# Restrict admin site to superusers only
-from django.contrib import admin
-class SecureAdminSite(admin.AdminSite):
-    def has_permission(self, request):
-        return request.user.is_active and request.user.is_superuser
-
-admin.site.__class__ = SecureAdminSite
