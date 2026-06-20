@@ -4,6 +4,28 @@
 {% block topbar_title %}Dashboard{% endblock %}
 
 {% block content %}
+<!-- Admin Count Summary Cards -->
+<div class="stats-row">
+  <div class="stat-card">
+    <div class="label">Total Admins</div>
+    <div class="value accent">{{ total_count }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Active Admins</div>
+    <div class="value success">{{ active_count }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Disabled Admins</div>
+    <div class="value danger">{{ disabled_count }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Last Sync</div>
+    <div class="value" style="font-size:14px;margin-top:8px;color:var(--muted);">
+      {% if last_sync %}{{ last_sync.created_at|date:"M d, H:i" }}{% else %}Never{% endif %}
+    </div>
+  </div>
+</div>
+
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
   <div style="color:var(--muted);font-size:12px;">
     {% if last_sync %}
@@ -18,7 +40,7 @@
   </div>
 </div>
 
-<!-- Summary Stats -->
+<!-- Traffic Stats -->
 <div class="stats-row">
   <div class="stat-card">
     <div class="label">Panel Admins</div>
@@ -35,17 +57,6 @@
     <div class="value success">{{ total_used_fmt }}</div>
     <div class="sub">Consumed by all users</div>
   </div>
-  <div class="stat-card">
-    <div class="label">Hidden Traffic</div>
-    <div class="value {% if total_hidden_bytes > 0 %}warning{% else %}success{% endif %}">{{ total_hidden_fmt }}</div>
-    <div class="sub">Limit − Used − Remaining</div>
-  </div>
-</div>
-
-<!-- Formula -->
-<div style="background:linear-gradient(135deg,rgba(99,102,241,0.1),rgba(99,102,241,0.05));border:1px solid rgba(99,102,241,0.25);border-radius:var(--radius);padding:14px 20px;margin-bottom:28px;font-size:12px;color:var(--muted);">
-  <strong style="color:#a5b4fc;">Formula:</strong>
-  <code style="color:#fbbf24;margin-left:8px;">hidden_traffic = total_user_limit − total_user_used − admin_remaining</code>
 </div>
 
 <!-- Admins Table -->
