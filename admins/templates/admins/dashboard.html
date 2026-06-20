@@ -172,12 +172,12 @@
             </div>
           </td>
           <td>
-            {% if item.pamp_blocked %}
-            <span class="badge badge-disabled">Blocked</span>
-            {% elif item.pamp_pct >= 100 %}
-            <span class="badge" style="background:rgba(239,68,68,0.15);color:var(--danger);border:1px solid rgba(239,68,68,0.3);">Over Limit</span>
+            {% if item.state == 'blocked' %}
+              <span class="badge badge-disabled">🔒 Blocked</span>
+            {% elif item.state == 'over' %}
+              <span class="badge" style="background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.3);">Over Limit</span>
             {% else %}
-            <span class="badge" style="background:rgba(245,158,11,0.15);color:var(--warning);border:1px solid rgba(245,158,11,0.3);">At Risk</span>
+              <span class="badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);">⚠ At Risk</span>
             {% endif %}
           </td>
           <td class="last-sync">{{ item.pamp_blocked_at|date:"M d, H:i"|default:"—" }}</td>
