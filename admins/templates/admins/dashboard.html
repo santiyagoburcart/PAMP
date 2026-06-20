@@ -223,6 +223,19 @@
 </div>
 {% endif %}
 
+<!-- Database Backup (superuser only) -->
+{% if user.is_superuser %}
+<div class="detail-section" style="margin-top:28px;">
+  <h3>💾 Database Backup</h3>
+  <p style="color:var(--muted);font-size:12px;margin-bottom:12px;">
+    Download a full SQL dump of the database (admins, limits, settings).
+  </p>
+  <a href="{% url 'backup_database' %}" class="btn btn-primary">
+    ⬇ Download Database Backup
+  </a>
+</div>
+{% endif %}
+
 <!-- Sync Logs -->
 {% if recent_logs %}
 <div class="card" style="margin-top:24px;">
