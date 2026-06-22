@@ -113,15 +113,17 @@ def portal(request):
     except PanelAdmin.DoesNotExist:
         return render(request, 'admins/portal_not_found.html')
 
-    if panel_admin.pamp_blocked:
+    if panel_admin.pamp_blocked or panel_admin.status == 'disabled':
         support_telegram = '@support'
         try:
             support_telegram = panel_admin.limit_config.support_telegram or '@support'
         except AdminLimit.DoesNotExist:
             pass
+        reason = 'limit' if panel_admin.pamp_blocked else 'disabled'
         return render(request, 'admins/portal_blocked.html', {
             'admin': panel_admin,
             'support_telegram': support_telegram,
+            'reason': reason,
         })
 
     show_warning = False
