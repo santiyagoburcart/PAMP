@@ -12,9 +12,10 @@
 <div class="portal-hero">
   <div class="portal-hero-name">{{ a.username }}</div>
   <div class="portal-hero-sub">
-    {{ a.status|title }} Admin · {{ a.users_count }} users
+    Panel: {% if a.status == 'active' %}<span style="color:#10b981;">Active</span>{% else %}<span style="color:#ef4444;">Disabled</span>{% endif %}
+    · {{ a.users_count }} users
     {% if a.is_sudo %} · <span style="color:#a5b4fc;">Sudo</span>{% endif %}
-    {% if a.pamp_blocked %} · <span style="color:var(--danger);">🔒 PAMP Blocked</span>{% endif %}
+    {% if a.pamp_blocked %} · <span style="color:#ef4444;">🔒 PAMP Blocked (over limit)</span>{% endif %}
   </div>
 </div>
 
