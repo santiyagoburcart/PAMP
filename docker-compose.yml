@@ -7,6 +7,11 @@ services:
     volumes:
       - .:/app
       - static_volume:/app/staticfiles
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+    environment:
+      - HOST_PROC=/host/proc
+      - HOST_SYS=/host/sys
     ports:
       - "8000:8000"
     env_file:
