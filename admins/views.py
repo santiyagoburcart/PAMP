@@ -20,10 +20,24 @@ logger = logging.getLogger('admins')
 
 # ── helpers ────────────────────────────────────────────────────────────────
 
+def _fmt_bytes_signed(b: int) -> str:
+    """Format a byte count with an explicit +/- sign. Zero returns '0 GB'."""
+    if b == 0:
+        return "0 GB"
+    sign = "+" if b > 0 else "-"
+    val = abs(b)
+    for unit in ("B", "KB", "MB", "GB", "TB", "PB"):
+        if val < 1024:
+            return f"{sign}{val:.2f} {unit}"
+        val /= 1024
+    return f"{sign}{val:.2f} PB"
+
+
 def _enrich(panel_admin):
     """Return context dict with all formatted values for portal/detail views."""
     a = panel_admin
     hidden = a.total_user_limit - a.total_user_used - a.admin_remaining
+    sold = a.sold_limit_bytes
     return {
         'obj': a,
         'panel_admin': a,
@@ -34,6 +48,8 @@ def _enrich(panel_admin):
         'admin_used_fmt': a.admin_used_fmt,
         'admin_remaining_fmt': a.admin_remaining_fmt,
         'usage_percent': a.usage_percent,
+        'sold_limit_fmt': _fmt_bytes_signed(sold),
+        'sold_limit_value': sold,
     }
 
 
