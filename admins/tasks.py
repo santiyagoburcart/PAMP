@@ -88,14 +88,18 @@ def sync_panel_admins(self):
     return f"Synced {synced} admins."
 
 
-def _check_and_enforce_limits():
+def check_and_enforce_limits():
     """Check all admins with a PAMP limit set and block/unblock as needed."""
     from .models import PanelAdmin, AdminLimit
     from .panel_api import PanelAPIClient
 
     configs = AdminLimit.objects.select_related('panel_admin').filter(limit_bytes__gt=0)
-    if not configs.exists():
+    count = configs.count()
+    if not count:
+        logger.info("Enforcement: no admins with PAMP limits, skipping")
         return
+
+    logger.info("Enforcement: checking %d admin(s) with PAMP limits", count)
 
     client = PanelAPIClient()
     client.authenticate()
@@ -106,8 +110,11 @@ def _check_and_enforce_limits():
         limit = lc.limit_bytes
         usage_pct = (used / limit) * 100 if limit > 0 else 0
 
+        logger.info("Enforcement: %s at %.1f%% (used=%d, limit=%d, blocked=%s)",
+                    admin.username, usage_pct, used, limit, admin.pamp_blocked)
+
         if usage_pct >= 100 and not admin.pamp_blocked:
-            logger.warning("BLOCK: %s at %.1f%% (used=%d, limit=%d)", admin.username, usage_pct, used, limit)
+            logger.warning("Enforcement: BLOCKING %s at %.1f%%", admin.username, usage_pct)
             try:
                 client.disable_admin(admin.username)
             except Exception as e:
@@ -120,7 +127,7 @@ def _check_and_enforce_limits():
                 lc.save(update_fields=['warning_sent_80'])
 
         elif usage_pct < 100 and admin.pamp_blocked:
-            logger.info("UNBLOCK: %s at %.1f%%", admin.username, usage_pct)
+            logger.info("Enforcement: UNBLOCKING %s at %.1f%%", admin.username, usage_pct)
             try:
                 client.enable_admin(admin.username)
             except Exception as e:
@@ -136,3 +143,5 @@ def _check_and_enforce_limits():
         elif usage_pct < 80 and lc.warning_sent_80:
             lc.warning_sent_80 = False
             lc.save(update_fields=['warning_sent_80'])
+
+    logger.info("Enforcement: done")
