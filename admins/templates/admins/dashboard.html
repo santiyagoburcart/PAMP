@@ -241,11 +241,9 @@ setInterval(updateServerStats, 2000);
             {% if a.is_sudo %}<span class="badge badge-sudo" style="margin-left:6px;font-size:10px;">Sudo</span>{% endif %}
           </td>
           <td>
-            {% if a.is_active %}
-              <span class="badge badge-active">Active</span>
-            {% else %}
-              <span class="badge badge-disabled">Disabled</span>
-            {% endif %}
+            <span class="badge" style="background:{{ a.status_color }}22;color:{{ a.status_color }};border:1px solid {{ a.status_color }}55;">
+              ● {{ a.status_label }}
+            </span>
           </td>
           <td>
             <span style="color:#c4b5fd;">{{ a.user_count }}</span>
