@@ -193,16 +193,38 @@ function doCustomLimit(action) {
   border-color: rgba(16,185,129,0.5);
   transform: translateY(-1px);
 }
+.btn-danger-glass {
+  padding: 8px 18px;
+  border-radius: var(--radius-sm);
+  background: rgba(239,68,68,0.12);
+  border: 1px solid rgba(239,68,68,0.3);
+  color: #fca5a5;
+  font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: all .2s;
+}
+.btn-danger-glass:hover {
+  background: rgba(239,68,68,0.22);
+  border-color: rgba(239,68,68,0.5);
+  transform: translateY(-1px);
+}
 </style>
 
 <script>
 function confirmAdminAction(username, action, icon, title, body, confirmLabel, confirmColor) {
   showConfirmModal(icon, title, body, confirmLabel, confirmColor, function() {
-    htmx.ajax('POST', '/panel/' + username + '/action/', {
-      target: '#action-result-' + username,
-      swap: 'innerHTML',
-      values: { action: action, csrfmiddlewaretoken: '{{ csrf_token }}' }
-    });
+    if (action === 'remove_limit_special') {
+      htmx.ajax('POST', '/panel/' + username + '/remove-limit/', {
+        target: '#limit-result-' + username,
+        swap: 'innerHTML',
+        values: { csrfmiddlewaretoken: '{{ csrf_token }}' }
+      });
+    } else {
+      htmx.ajax('POST', '/panel/' + username + '/action/', {
+        target: '#action-result-' + username,
+        swap: 'innerHTML',
+        values: { action: action, csrfmiddlewaretoken: '{{ csrf_token }}' }
+      });
+    }
   });
 }
 </script>
