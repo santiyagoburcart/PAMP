@@ -144,7 +144,15 @@ def admin_detail(request, username):
     panel_admin = get_object_or_404(PanelAdmin, username=username)
     if not (request.user.is_superuser or request.user.is_staff or request.user.username == username):
         return redirect('portal')
-    return render(request, 'admins/admin_detail.html', _enrich(panel_admin))
+    context = _enrich(panel_admin)
+    try:
+        lc = AdminLimit.objects.get(panel_admin=panel_admin, limit_bytes__gt=0)
+        context['has_pamp_limit'] = True
+        context['current_pamp_limit_fmt'] = _fmt_bytes(lc.limit_bytes)
+    except AdminLimit.DoesNotExist:
+        context['has_pamp_limit'] = False
+        context['current_pamp_limit_fmt'] = None
+    return render(request, 'admins/admin_detail.html', context)
 
 
 @login_required
