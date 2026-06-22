@@ -56,6 +56,12 @@
         <span class="progress-pct">{{ usage_percent }}%</span>
       </div>
     </div>
+    <div class="detail-row">
+      <span class="key">Sold Limit</span>
+      <span class="val" style="color:{% if sold_limit_value > 0 %}#10b981{% elif sold_limit_value < 0 %}#ef4444{% else %}#f1f5f9{% endif %};font-weight:600;">
+        {{ sold_limit_fmt }}
+      </span>
+    </div>
   </div>
 
   <div class="detail-section">
