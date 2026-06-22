@@ -79,6 +79,27 @@
     <button class="btn btn-glass btn-sm" onclick="doCustomLimit('set')">Set Custom</button>
     <button class="btn btn-glass btn-sm" onclick="doCustomLimit('add')">Add Custom</button>
   </div>
+
+  {% if has_pamp_limit %}
+  <div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.08);">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      <div>
+        <span style="font-size:12px;color:var(--muted);">Current PAMP Limit:</span>
+        <span style="font-size:14px;font-weight:600;color:#f1f5f9;margin-left:8px;">{{ current_pamp_limit_fmt }}</span>
+      </div>
+      <button class="btn-danger-glass"
+        onclick="confirmAdminAction(
+          '{{ a.username }}', 'remove_limit_special',
+          '🗑️', 'Remove PAMP Limit',
+          'Remove the PAMP limit for <strong>{{ a.username }}</strong>? This will unblock them and remove all usage restrictions.',
+          'Remove Limit',
+          'linear-gradient(135deg,#dc2626,#ef4444)'
+        )">
+        🗑️ Remove Limit
+      </button>
+    </div>
+  </div>
+  {% endif %}
 </div>
 
 <script>
