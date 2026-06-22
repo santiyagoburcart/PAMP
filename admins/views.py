@@ -365,6 +365,45 @@ if _host_proc:
     psutil.PROCFS_PATH = _host_proc
 
 
+def _read_host_meminfo():
+    """Parse /host/proc/meminfo and return (used_bytes, total_bytes, percent)."""
+    path = '/host/proc/meminfo'
+    if not _os.path.exists(path):
+        return None
+    meminfo = {}
+    with open(path) as f:
+        for line in f:
+            parts = line.split(':')
+            if len(parts) == 2:
+                key = parts[0].strip()
+                val = parts[1].strip().split()[0]
+                meminfo[key] = int(val) * 1024  # kB → bytes
+    total = meminfo.get('MemTotal', 0)
+    available = meminfo.get('MemAvailable', 0)
+    used = total - available
+    percent = round((used / total) * 100, 1) if total else 0
+    return used, total, percent
+
+
+def _read_host_netdev():
+    """Parse /host/proc/net/dev and return (recv_bytes, sent_bytes) summed across non-loopback interfaces."""
+    path = '/host/proc/net/dev'
+    if not _os.path.exists(path):
+        return None
+    recv = sent = 0
+    with open(path) as f:
+        for line in f.readlines()[2:]:
+            parts = line.split()
+            if len(parts) < 10:
+                continue
+            iface = parts[0].rstrip(':')
+            if iface == 'lo':
+                continue
+            recv += int(parts[1])
+            sent += int(parts[9])
+    return recv, sent
+
+
 @login_required
 def server_stats(request):
     """Return real-time server resource stats as JSON. Superuser only."""
@@ -375,11 +414,22 @@ def server_stats(request):
         cpu_percent = psutil.cpu_percent(interval=0.5)
         cpu_count = psutil.cpu_count()
 
-        mem = psutil.virtual_memory()
+        mem_host = _read_host_meminfo()
+        if mem_host:
+            mem_used, mem_total, mem_percent = mem_host
+        else:
+            m = psutil.virtual_memory()
+            mem_used, mem_total, mem_percent = m.used, m.total, m.percent
 
-        disk = psutil.disk_usage('/')
+        disk_path = '/host/root' if _os.path.exists('/host/root') else '/'
+        disk = psutil.disk_usage(disk_path)
 
-        net = psutil.net_io_counters()
+        net_host = _read_host_netdev()
+        if net_host:
+            net_recv, net_sent = net_host
+        else:
+            n = psutil.net_io_counters()
+            net_recv, net_sent = n.bytes_recv, n.bytes_sent
 
         return JsonResponse({
             'cpu': {
@@ -387,9 +437,9 @@ def server_stats(request):
                 'cores': cpu_count,
             },
             'memory': {
-                'percent': mem.percent,
-                'used_gb': round(mem.used / 1024 ** 3, 2),
-                'total_gb': round(mem.total / 1024 ** 3, 2),
+                'percent': mem_percent,
+                'used_gb': round(mem_used / 1024 ** 3, 2),
+                'total_gb': round(mem_total / 1024 ** 3, 2),
             },
             'disk': {
                 'percent': disk.percent,
@@ -397,10 +447,10 @@ def server_stats(request):
                 'total_gb': round(disk.total / 1024 ** 3, 2),
             },
             'network': {
-                'sent_gb': round(net.bytes_sent / 1024 ** 3, 2),
-                'recv_gb': round(net.bytes_recv / 1024 ** 3, 2),
-                'sent_bytes': net.bytes_sent,
-                'recv_bytes': net.bytes_recv,
+                'sent_gb': round(net_sent / 1024 ** 3, 2),
+                'recv_gb': round(net_recv / 1024 ** 3, 2),
+                'sent_bytes': net_sent,
+                'recv_bytes': net_recv,
             },
         })
     except Exception as e:
