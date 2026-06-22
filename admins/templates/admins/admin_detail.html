@@ -118,33 +118,45 @@ function doCustomLimit(action) {
   <!-- Status row -->
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:12px 16px;
     background:rgba(255,255,255,0.04);border-radius:10px;border:1px solid rgba(255,255,255,0.08);">
-    <span style="font-size:12px;color:rgba(241,245,249,0.5);">Panel Status:</span>
-    {% if a.status == 'active' %}
-      <span class="badge badge-active">● Active</span>
-    {% else %}
-      <span class="badge badge-disabled">● Disabled</span>
-    {% endif %}
-    {% if a.pamp_blocked %}
-      <span class="badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);">⚠ PAMP Blocked</span>
-    {% endif %}
+    <span style="font-size:12px;color:rgba(241,245,249,0.5);">Status:</span>
+    <span class="badge" style="background:{{ a.status_color }}22;color:{{ a.status_color }};border:1px solid {{ a.status_color }}55;">
+      ● {{ a.status_label }}
+    </span>
   </div>
 
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
 
-    <!-- Admin enable/disable based on status -->
-    {% if a.status == 'active' %}
-    <button class="btn-action btn-action-danger"
-      onclick="confirmAdminAction('{{ a.username }}','disable_admin','🔒','Disable Admin','Disable <strong>{{ a.username }}</strong> on the Sigma panel — they cannot connect.','Disable Admin','linear-gradient(135deg,#dc2626,#ef4444)')">
-      🔒 Disable Admin
-    </button>
-    {% else %}
+    {% if a.status_code == 'panel_disabled' %}
+    <!-- Panel-disabled: offer enable admin + enable users -->
     <button class="btn-action btn-action-success"
       onclick="confirmAdminAction('{{ a.username }}','enable_admin','✅','Enable Admin','Re-enable <strong>{{ a.username }}</strong> on the Sigma panel.','Enable Admin','linear-gradient(135deg,#059669,#10b981)')">
       ✅ Enable Admin
     </button>
-    {% endif %}
+    <button class="btn-action btn-action-success"
+      onclick="confirmAdminAction('{{ a.username }}','enable_users','👥✅','Enable All Users','Re-enable all users of <strong>{{ a.username }}</strong>.','Enable Users','linear-gradient(135deg,#065f46,#10b981)')">
+      👥 Enable All Users
+    </button>
 
-    <!-- Users enable/disable based on active_users count -->
+    {% elif a.status_code == 'pamp_limited' %}
+    <!-- PAMP-blocked: warning banner + force-enable users + disable admin -->
+    <div style="grid-column:1/-1;padding:14px 18px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:10px;color:#fcd34d;font-size:13px;">
+      ⚠ This admin reached their PAMP usage limit. Raise or remove their limit above to unblock, or manually force-enable users below.
+    </div>
+    <button class="btn-action btn-action-success"
+      onclick="confirmAdminAction('{{ a.username }}','enable_users','👥✅','Force Enable Users','Re-enable all users of <strong>{{ a.username }}</strong> despite the PAMP limit.','Enable Users','linear-gradient(135deg,#065f46,#10b981)')">
+      👥 Force Enable Users
+    </button>
+    <button class="btn-action btn-action-danger"
+      onclick="confirmAdminAction('{{ a.username }}','disable_admin','🔒','Disable Admin','Disable <strong>{{ a.username }}</strong> on the Sigma panel.','Disable Admin','linear-gradient(135deg,#dc2626,#ef4444)')">
+      🔒 Disable Admin
+    </button>
+
+    {% else %}
+    <!-- Active: disable admin + toggle users -->
+    <button class="btn-action btn-action-danger"
+      onclick="confirmAdminAction('{{ a.username }}','disable_admin','🔒','Disable Admin','Disable <strong>{{ a.username }}</strong> on the Sigma panel — they cannot connect.','Disable Admin','linear-gradient(135deg,#dc2626,#ef4444)')">
+      🔒 Disable Admin
+    </button>
     {% if a.active_users > 0 %}
     <button class="btn-action btn-action-danger"
       onclick="confirmAdminAction('{{ a.username }}','disable_users','👥🔒','Disable All Users','Cut all <strong>{{ a.active_users }} active users</strong> of <strong>{{ a.username }}</strong> immediately.','Disable All Users','linear-gradient(135deg,#9f1239,#e11d48)')">
@@ -155,6 +167,7 @@ function doCustomLimit(action) {
       onclick="confirmAdminAction('{{ a.username }}','enable_users','👥✅','Enable All Users','Re-enable all users of <strong>{{ a.username }}</strong>.','Enable All Users','linear-gradient(135deg,#065f46,#10b981)')">
       👥 Enable All Users
     </button>
+    {% endif %}
     {% endif %}
 
   </div>
