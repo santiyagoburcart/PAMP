@@ -357,3 +357,34 @@ def backup_database(request):
         return HttpResponse('Backup timed out', status=500)
     except Exception as e:
         return HttpResponse(f'Backup error: {e}', status=500)
+
+
+@login_required
+def server_stats(request):
+    """Return live server resource metrics as JSON. Staff/superuser only."""
+    if not (request.user.is_superuser or request.user.is_staff):
+        return JsonResponse({'error': 'forbidden'}, status=403)
+
+    cpu = psutil.cpu_percent(interval=0.1)
+    mem = psutil.virtual_memory()
+    disk = psutil.disk_usage('/')
+    net = psutil.net_io_counters()
+
+    return JsonResponse({
+        'cpu': cpu,
+        'ram': {
+            'percent': mem.percent,
+            'used': mem.used,
+            'total': mem.total,
+        },
+        'disk': {
+            'percent': disk.percent,
+            'used': disk.used,
+            'total': disk.total,
+        },
+        'net': {
+            'bytes_sent': net.bytes_sent,
+            'bytes_recv': net.bytes_recv,
+            'ts': time.time(),
+        },
+    })
