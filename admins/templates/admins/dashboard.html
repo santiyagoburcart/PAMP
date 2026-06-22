@@ -60,149 +60,151 @@
 </div>
 
 <!-- Server Resources -->
-{% if user.is_superuser or user.is_staff %}
-<div class="card" style="margin-bottom:28px;">
-  <div class="card-header">
-    <span>Server Resources</span>
-    <span id="srv-badge" style="font-size:11px;color:var(--success);transition:opacity .4s;">● Live</span>
+{% if user.is_superuser %}
+<div style="margin-bottom:32px;">
+  <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:10px;">
+    <span style="color:var(--accent);">📊</span> Server Resources
+    <span style="width:8px;height:8px;background:#10b981;border-radius:50%;animation:pulse 2s infinite;box-shadow:0 0 8px #10b981;"></span>
+    <span style="font-size:11px;color:var(--muted);font-weight:400;">Live</span>
   </div>
-  <div style="display:grid;grid-template-columns:repeat(4,1fr);">
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;">
 
     <!-- CPU -->
-    <div style="padding:22px 24px;border-right:1px solid var(--glass-border);">
-      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px;">CPU</div>
-      <div id="srv-cpu-val" style="font-size:26px;font-weight:700;color:var(--text);">—</div>
-      <div style="margin-top:10px;">
-        <div class="progress-track" style="height:6px;">
-          <div id="srv-cpu-bar" class="progress-fill" style="width:0%;background:var(--success);transition:width .6s ease,background .4s;"></div>
-        </div>
+    <div class="stat-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <span style="font-size:12px;color:var(--muted);">⚡ CPU</span>
+        <span id="cpu-cores" style="font-size:11px;color:var(--muted);"></span>
       </div>
-      <div id="srv-cpu-cores" style="font-size:11px;color:var(--muted);margin-top:6px;"></div>
+      <div style="font-size:28px;font-weight:700;" id="cpu-percent">—</div>
+      <div class="progress-track" style="margin-top:10px;">
+        <div class="progress-fill" id="cpu-bar" style="width:0%;background:linear-gradient(90deg,#6366f1,#8b5cf6);transition:width .5s ease,background .3s;"></div>
+      </div>
     </div>
 
     <!-- RAM -->
-    <div style="padding:22px 24px;border-right:1px solid var(--glass-border);">
-      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px;">RAM</div>
-      <div id="srv-ram-val" style="font-size:26px;font-weight:700;color:var(--text);">—</div>
-      <div style="margin-top:10px;">
-        <div class="progress-track" style="height:6px;">
-          <div id="srv-ram-bar" class="progress-fill" style="width:0%;background:var(--success);transition:width .6s ease,background .4s;"></div>
-        </div>
+    <div class="stat-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <span style="font-size:12px;color:var(--muted);">🧠 Memory</span>
+        <span id="ram-detail" style="font-size:11px;color:var(--muted);"></span>
       </div>
-      <div id="srv-ram-detail" style="font-size:11px;color:var(--muted);margin-top:6px;"></div>
+      <div style="font-size:28px;font-weight:700;" id="ram-percent">—</div>
+      <div class="progress-track" style="margin-top:10px;">
+        <div class="progress-fill" id="ram-bar" style="width:0%;background:linear-gradient(90deg,#06b6d4,#3b82f6);transition:width .5s ease,background .3s;"></div>
+      </div>
     </div>
 
     <!-- Disk -->
-    <div style="padding:22px 24px;border-right:1px solid var(--glass-border);">
-      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px;">Disk</div>
-      <div id="srv-disk-val" style="font-size:26px;font-weight:700;color:var(--text);">—</div>
-      <div style="margin-top:10px;">
-        <div class="progress-track" style="height:6px;">
-          <div id="srv-disk-bar" class="progress-fill" style="width:0%;background:var(--success);transition:width .6s ease,background .4s;"></div>
-        </div>
+    <div class="stat-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <span style="font-size:12px;color:var(--muted);">💾 Disk</span>
+        <span id="disk-detail" style="font-size:11px;color:var(--muted);"></span>
       </div>
-      <div id="srv-disk-detail" style="font-size:11px;color:var(--muted);margin-top:6px;"></div>
+      <div style="font-size:28px;font-weight:700;" id="disk-percent">—</div>
+      <div class="progress-track" style="margin-top:10px;">
+        <div class="progress-fill" id="disk-bar" style="width:0%;background:linear-gradient(90deg,#f59e0b,#f97316);transition:width .5s ease,background .3s;"></div>
+      </div>
     </div>
 
     <!-- Network -->
-    <div style="padding:22px 24px;">
-      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px;">Bandwidth</div>
-      <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px;">
-        <div style="display:flex;align-items:baseline;gap:8px;">
-          <span style="font-size:11px;color:var(--accent3);font-weight:600;min-width:14px;">↓</span>
-          <span id="srv-net-recv" style="font-size:18px;font-weight:700;color:var(--text);">—</span>
+    <div class="stat-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <span style="font-size:12px;color:var(--muted);">🌐 Bandwidth</span>
+        <span style="font-size:11px;color:var(--muted);">live</span>
+      </div>
+      <div style="display:flex;gap:16px;margin-top:6px;">
+        <div>
+          <div style="font-size:11px;color:var(--muted);">↓ Down</div>
+          <div style="font-size:18px;font-weight:600;color:#10b981;" id="net-down">—</div>
         </div>
-        <div style="display:flex;align-items:baseline;gap:8px;">
-          <span style="font-size:11px;color:#a78bfa;font-weight:600;min-width:14px;">↑</span>
-          <span id="srv-net-sent" style="font-size:18px;font-weight:700;color:var(--text);">—</span>
+        <div>
+          <div style="font-size:11px;color:var(--muted);">↑ Up</div>
+          <div style="font-size:18px;font-weight:600;color:#6366f1;" id="net-up">—</div>
         </div>
       </div>
-      <div id="srv-net-total" style="font-size:11px;color:var(--muted);margin-top:14px;"></div>
+      <div style="font-size:10px;color:var(--muted);margin-top:8px;" id="net-total"></div>
     </div>
 
   </div>
 </div>
 
+<style>
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+</style>
+
 <script>
-(function () {
-  var prevNet = null;
+let lastNet = null;
+let lastNetTime = null;
 
-  function barColor(pct) {
-    if (pct >= 90) return 'var(--danger)';
-    if (pct >= 70) return 'var(--warning)';
-    return 'var(--success)';
+function colorForPercent(pct) {
+  if (pct >= 90) return 'linear-gradient(90deg,#dc2626,#ef4444)';
+  if (pct >= 70) return 'linear-gradient(90deg,#d97706,#f59e0b)';
+  return null;
+}
+
+function fmtSpeed(bytesPerSec) {
+  if (bytesPerSec < 0) bytesPerSec = 0;
+  if (bytesPerSec >= 1073741824) return (bytesPerSec / 1073741824).toFixed(2) + ' GB/s';
+  if (bytesPerSec >= 1048576)    return (bytesPerSec / 1048576).toFixed(1) + ' MB/s';
+  if (bytesPerSec >= 1024)       return (bytesPerSec / 1024).toFixed(1) + ' KB/s';
+  return bytesPerSec.toFixed(0) + ' B/s';
+}
+
+async function updateServerStats() {
+  try {
+    const res = await fetch('/api/server-stats/');
+    if (!res.ok) return;
+    const d = await res.json();
+    if (d.error) return;
+
+    // CPU
+    document.getElementById('cpu-percent').textContent = d.cpu.percent + '%';
+    document.getElementById('cpu-cores').textContent = d.cpu.cores + ' cores';
+    const cpuBar = document.getElementById('cpu-bar');
+    cpuBar.style.width = d.cpu.percent + '%';
+    const cpuColor = colorForPercent(d.cpu.percent);
+    if (cpuColor) cpuBar.style.background = cpuColor;
+
+    // RAM
+    document.getElementById('ram-percent').textContent = d.memory.percent + '%';
+    document.getElementById('ram-detail').textContent = d.memory.used_gb + ' / ' + d.memory.total_gb + ' GB';
+    const ramBar = document.getElementById('ram-bar');
+    ramBar.style.width = d.memory.percent + '%';
+    const ramColor = colorForPercent(d.memory.percent);
+    if (ramColor) ramBar.style.background = ramColor;
+
+    // Disk
+    document.getElementById('disk-percent').textContent = d.disk.percent + '%';
+    document.getElementById('disk-detail').textContent = d.disk.used_gb + ' / ' + d.disk.total_gb + ' GB';
+    const diskBar = document.getElementById('disk-bar');
+    diskBar.style.width = d.disk.percent + '%';
+    const diskColor = colorForPercent(d.disk.percent);
+    if (diskColor) diskBar.style.background = diskColor;
+
+    // Network speed
+    const now = Date.now();
+    if (lastNet && lastNetTime) {
+      const dt = (now - lastNetTime) / 1000;
+      const downSpeed = (d.network.recv_bytes - lastNet.recv_bytes) / dt;
+      const upSpeed   = (d.network.sent_bytes - lastNet.sent_bytes) / dt;
+      document.getElementById('net-down').textContent = fmtSpeed(Math.max(0, downSpeed));
+      document.getElementById('net-up').textContent   = fmtSpeed(Math.max(0, upSpeed));
+    }
+    document.getElementById('net-total').textContent =
+      'Total: ↓ ' + d.network.recv_gb + ' GB · ↑ ' + d.network.sent_gb + ' GB';
+    lastNet = d.network;
+    lastNetTime = now;
+
+  } catch (e) {
+    console.error('Stats update failed:', e);
   }
+}
 
-  function fmtStorage(bytes) {
-    if (bytes >= 1e12) return (bytes / 1e12).toFixed(1) + ' TB';
-    if (bytes >= 1e9)  return (bytes / 1e9).toFixed(1) + ' GB';
-    return (bytes / 1e6).toFixed(0) + ' MB';
-  }
-
-  function fmtRate(bps) {
-    if (bps < 0) bps = 0;
-    if (bps >= 1048576) return (bps / 1048576).toFixed(2) + ' MB/s';
-    if (bps >= 1024)    return (bps / 1024).toFixed(1) + ' KB/s';
-    return bps.toFixed(0) + ' B/s';
-  }
-
-  function poll() {
-    fetch('{% url "server_stats" %}')
-      .then(function (r) { return r.json(); })
-      .then(function (d) {
-        var badge = document.getElementById('srv-badge');
-        badge.style.color = 'var(--success)';
-        badge.style.opacity = badge.style.opacity === '0.3' ? '1' : '0.3';
-
-        // CPU
-        var cpuPct = d.cpu;
-        document.getElementById('srv-cpu-val').textContent = cpuPct.toFixed(1) + '%';
-        document.getElementById('srv-cpu-bar').style.width = cpuPct + '%';
-        document.getElementById('srv-cpu-bar').style.background = barColor(cpuPct);
-
-        // RAM
-        var ramPct = d.ram.percent;
-        document.getElementById('srv-ram-val').textContent = ramPct.toFixed(1) + '%';
-        document.getElementById('srv-ram-bar').style.width = ramPct + '%';
-        document.getElementById('srv-ram-bar').style.background = barColor(ramPct);
-        document.getElementById('srv-ram-detail').textContent =
-          fmtStorage(d.ram.used) + ' / ' + fmtStorage(d.ram.total);
-
-        // Disk
-        var diskPct = d.disk.percent;
-        document.getElementById('srv-disk-val').textContent = diskPct.toFixed(1) + '%';
-        document.getElementById('srv-disk-bar').style.width = diskPct + '%';
-        document.getElementById('srv-disk-bar').style.background = barColor(diskPct);
-        document.getElementById('srv-disk-detail').textContent =
-          fmtStorage(d.disk.used) + ' / ' + fmtStorage(d.disk.total);
-
-        // Network rates
-        if (prevNet) {
-          var dt = d.net.ts - prevNet.ts;
-          if (dt > 0) {
-            var recv = (d.net.bytes_recv - prevNet.bytes_recv) / dt;
-            var sent = (d.net.bytes_sent - prevNet.bytes_sent) / dt;
-            document.getElementById('srv-net-recv').textContent = fmtRate(recv);
-            document.getElementById('srv-net-sent').textContent = fmtRate(sent);
-          }
-        } else {
-          document.getElementById('srv-net-recv').textContent = '—';
-          document.getElementById('srv-net-sent').textContent = '—';
-        }
-        var totalIO = fmtStorage(d.net.bytes_recv) + ' in / ' + fmtStorage(d.net.bytes_sent) + ' out';
-        document.getElementById('srv-net-total').textContent = 'Total: ' + totalIO;
-        prevNet = d.net;
-      })
-      .catch(function () {
-        var badge = document.getElementById('srv-badge');
-        badge.textContent = '● Error';
-        badge.style.color = 'var(--danger)';
-      });
-  }
-
-  poll();
-  setInterval(poll, 3000);
-})();
+updateServerStats();
+setInterval(updateServerStats, 2000);
 </script>
 {% endif %}
 
