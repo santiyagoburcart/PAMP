@@ -70,7 +70,7 @@ def sync_panel_admins(self):
 
     # After saving all admin data, run PAMP limit enforcement
     try:
-        _check_and_enforce_limits()
+        check_and_enforce_limits()
     except Exception as e:
         logger.error("Limit enforcement error: %s", e)
         errors.append(f"enforcement: {e}")
