@@ -58,7 +58,7 @@ def dashboard(request):
     total_remaining = totals['total_remaining'] or 0
     total_hidden = total_limit - total_used - total_remaining
 
-    # Build over-limit list — only admins currently at/above 80% of PAMP limit
+    # Build over-limit list — strictly only admins currently at/above 80% of PAMP limit
     over_limit_list = []
     for lc in AdminLimit.objects.select_related('panel_admin').filter(limit_bytes__gt=0):
         a = lc.panel_admin
@@ -66,20 +66,24 @@ def dashboard(request):
         if lc.limit_bytes <= 0:
             continue
         pct = round((used / lc.limit_bytes) * 100, 1)
-        if pct >= 80:
-            if pct >= 100:
-                state = 'blocked' if a.pamp_blocked else 'over'
-            else:
-                state = 'at_risk'
-            over_limit_list.append({
-                'username': a.username,
-                'pamp_limit_fmt': _fmt_bytes(lc.limit_bytes),
-                'admin_used_fmt': _fmt_bytes(used),
-                'pamp_pct': pct,
-                'state': state,
-                'pamp_blocked': a.pamp_blocked,
-                'pamp_blocked_at': a.pamp_blocked_at,
-            })
+
+        if pct < 80:
+            continue
+
+        if pct >= 100:
+            state = 'blocked' if a.pamp_blocked else 'over'
+        else:
+            state = 'at_risk'
+
+        over_limit_list.append({
+            'username': a.username,
+            'pamp_limit_fmt': _fmt_bytes(lc.limit_bytes),
+            'admin_used_fmt': _fmt_bytes(used),
+            'pamp_pct': pct,
+            'state': state,
+            'pamp_blocked': a.pamp_blocked,
+            'pamp_blocked_at': a.pamp_blocked_at,
+        })
     over_limit_list.sort(key=lambda x: x['pamp_pct'], reverse=True)
 
     context = {
