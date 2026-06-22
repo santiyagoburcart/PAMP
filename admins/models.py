@@ -55,6 +55,28 @@ class PanelAdmin(models.Model):
     def __str__(self):
         return self.username
 
+    # ── effective status (panel status + PAMP enforcement) ────────────────
+    @property
+    def effective_status(self):
+        """Return (code, label, color) for the admin's true current state."""
+        if self.status == 'disabled':
+            return ('panel_disabled', 'Disabled', '#ef4444')
+        if self.pamp_blocked:
+            return ('pamp_limited', 'Limited (PAMP)', '#f59e0b')
+        return ('active', 'Active', '#10b981')
+
+    @property
+    def status_code(self):
+        return self.effective_status[0]
+
+    @property
+    def status_label(self):
+        return self.effective_status[1]
+
+    @property
+    def status_color(self):
+        return self.effective_status[2]
+
     # ── compatibility aliases ──────────────────────────────────────────────
     @property
     def users_count(self):
