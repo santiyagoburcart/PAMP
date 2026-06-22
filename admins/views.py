@@ -359,32 +359,49 @@ def backup_database(request):
         return HttpResponse(f'Backup error: {e}', status=500)
 
 
+import os as _os
+_host_proc = _os.environ.get('HOST_PROC')
+if _host_proc:
+    psutil.PROCFS_PATH = _host_proc
+
+
 @login_required
 def server_stats(request):
-    """Return live server resource metrics as JSON. Staff/superuser only."""
-    if not (request.user.is_superuser or request.user.is_staff):
+    """Return real-time server resource stats as JSON. Superuser only."""
+    if not request.user.is_superuser:
         return JsonResponse({'error': 'forbidden'}, status=403)
 
-    cpu = psutil.cpu_percent(interval=0.1)
-    mem = psutil.virtual_memory()
-    disk = psutil.disk_usage('/')
-    net = psutil.net_io_counters()
+    try:
+        cpu_percent = psutil.cpu_percent(interval=0.5)
+        cpu_count = psutil.cpu_count()
 
-    return JsonResponse({
-        'cpu': cpu,
-        'ram': {
-            'percent': mem.percent,
-            'used': mem.used,
-            'total': mem.total,
-        },
-        'disk': {
-            'percent': disk.percent,
-            'used': disk.used,
-            'total': disk.total,
-        },
-        'net': {
-            'bytes_sent': net.bytes_sent,
-            'bytes_recv': net.bytes_recv,
-            'ts': time.time(),
-        },
-    })
+        mem = psutil.virtual_memory()
+
+        disk = psutil.disk_usage('/')
+
+        net = psutil.net_io_counters()
+
+        return JsonResponse({
+            'cpu': {
+                'percent': cpu_percent,
+                'cores': cpu_count,
+            },
+            'memory': {
+                'percent': mem.percent,
+                'used_gb': round(mem.used / 1024 ** 3, 2),
+                'total_gb': round(mem.total / 1024 ** 3, 2),
+            },
+            'disk': {
+                'percent': disk.percent,
+                'used_gb': round(disk.used / 1024 ** 3, 2),
+                'total_gb': round(disk.total / 1024 ** 3, 2),
+            },
+            'network': {
+                'sent_gb': round(net.bytes_sent / 1024 ** 3, 2),
+                'recv_gb': round(net.bytes_recv / 1024 ** 3, 2),
+                'sent_bytes': net.bytes_sent,
+                'recv_bytes': net.bytes_recv,
+            },
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
