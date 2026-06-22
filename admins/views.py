@@ -330,19 +330,26 @@ def backup_database(request):
         cmd = [
             'mysqldump',
             f'--host={db["HOST"]}',
-            f'--port={db["PORT"]}',
+            f'--port={str(db["PORT"])}',
             f'--user={db["USER"]}',
             f'--password={db["PASSWORD"]}',
+            '--protocol=TCP',
+            '--single-transaction',
+            '--no-tablespaces',
+            '--skip-lock-tables',
             db['NAME'],
         ]
-        result = subprocess.run(cmd, capture_output=True, timeout=60)
+        result = subprocess.run(cmd, capture_output=True, timeout=120)
         if result.returncode != 0:
-            return HttpResponse(f'Backup failed: {result.stderr.decode()[:200]}', status=500)
+            err = result.stderr.decode()[:300]
+            return HttpResponse(f'Backup failed: {err}', status=500)
 
         response = HttpResponse(result.stdout, content_type='application/sql')
         response['Content-Disposition'] = f'attachment; filename="pamp_backup_{timestamp}.sql"'
         return response
     except FileNotFoundError:
-        return HttpResponse('mysqldump not available in web container', status=500)
+        return HttpResponse('mysqldump not found — check Dockerfile build', status=500)
+    except subprocess.TimeoutExpired:
+        return HttpResponse('Backup timed out', status=500)
     except Exception as e:
         return HttpResponse(f'Backup error: {e}', status=500)
