@@ -13,6 +13,7 @@ urlpatterns = [
     path('sync/status/', views.sync_status, name='sync_status'),
     path('settings/sync-interval/', views.update_sync_interval, name='update_sync_interval'),
     path('backup/database/', views.backup_database, name='backup_database'),
+    path('server-stats/', views.server_stats, name='server_stats'),
     path('login/', auth_views.LoginView.as_view(template_name='admins/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
 ]
