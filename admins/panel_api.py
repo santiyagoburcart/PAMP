@@ -294,11 +294,13 @@ class PanelAPIClient:
 
             # Admin-level fields from the panel API
             data_limit = admin_data.get('data_limit')           # None = unlimited
-            has_data_limit = data_limit is not None
+            has_data_limit = data_limit is not None and data_limit != 0
             admin_limit_bytes = int(data_limit) if has_data_limit else 0
             used_traffic = admin_data.get('used_traffic') or 0   # total used by this admin's users
             total_users = admin_data.get('total_users') or 0
-            status = admin_data.get('status', 'active')
+            # is_disabled is the authoritative field; status string is kept for display
+            is_disabled = admin_data.get('is_disabled', False)
+            status = 'disabled' if is_disabled else admin_data.get('status', 'active')
 
             # Remaining quota for limited admins
             if has_data_limit:
