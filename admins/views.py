@@ -37,7 +37,12 @@ def _enrich(panel_admin):
     """Return context dict with all formatted values for portal/detail views."""
     a = panel_admin
     hidden = a.total_user_limit - a.total_user_used - a.admin_remaining
-    sold = a.sold_limit_bytes
+    if a.is_unlimited:
+        sold_fmt = "0 GB"
+        sold_val = 0
+    else:
+        sold_val = a.sold_limit_bytes
+        sold_fmt = _fmt_bytes_signed(sold_val)
     return {
         'obj': a,
         'panel_admin': a,
@@ -48,8 +53,8 @@ def _enrich(panel_admin):
         'admin_used_fmt': a.admin_used_fmt,
         'admin_remaining_fmt': a.admin_remaining_fmt,
         'usage_percent': a.usage_percent,
-        'sold_limit_fmt': _fmt_bytes_signed(sold),
-        'sold_limit_value': sold,
+        'sold_limit_fmt': sold_fmt,
+        'sold_limit_value': sold_val,
     }
 
 
