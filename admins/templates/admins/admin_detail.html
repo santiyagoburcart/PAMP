@@ -223,6 +223,7 @@ function doCustomLimit(action) {
 <script>
 function confirmAdminAction(username, targetId, action, icon, title, body, confirmLabel, confirmColor) {
   showConfirmModal(icon, title, body, confirmLabel, confirmColor, function() {
+    showLoading('Applying changes…');
     const url = (action === 'remove_limit_special')
       ? '/panel/' + encodeURIComponent(username) + '/remove-limit/'
       : '/panel/' + encodeURIComponent(username) + '/action/';
