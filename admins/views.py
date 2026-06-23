@@ -79,48 +79,32 @@ def dashboard(request):
     total_remaining = totals['total_remaining'] or 0
     total_hidden = total_limit - total_used - total_remaining
 
-    # Build over-limit list — strictly only admins currently at/above 80% of PAMP limit
+    # Build over-limit list — admins at/above 80% of their Pasargad data_limit
     over_limit_list = []
-    for lc in AdminLimit.objects.select_related('panel_admin').filter(limit_bytes__gt=0):
-        a = lc.panel_admin
-        used = a.admin_used_bytes
-        if lc.limit_bytes <= 0:
+    for a in PanelAdmin.objects.all():
+        if not a.admin_limit_bytes or a.admin_limit_bytes <= 0:
             continue
-        pct = round((used / lc.limit_bytes) * 100, 1)
-
+        pct = round((a.admin_used_bytes / a.admin_limit_bytes) * 100, 1)
         if pct < 80:
             continue
-
-        if pct >= 100:
-            state = 'blocked' if a.pamp_blocked else 'over'
-        else:
-            state = 'at_risk'
-
         over_limit_list.append({
             'username': a.username,
-            'pamp_limit_fmt': _fmt_bytes(lc.limit_bytes),
-            'admin_used_fmt': _fmt_bytes(used),
-            'pamp_pct': pct,
-            'state': state,
-            'pamp_blocked': a.pamp_blocked,
-            'pamp_blocked_at': a.pamp_blocked_at,
+            'limit_fmt': _fmt_bytes(a.admin_limit_bytes),
+            'used_fmt': _fmt_bytes(a.admin_used_bytes),
+            'pct': pct,
+            'state': 'over' if pct >= 100 else 'at_risk',
+            'status_label': a.status_label,
+            'status_color': a.status_color,
         })
-    over_limit_list.sort(key=lambda x: x['pamp_pct'], reverse=True)
-
-    # Build a per-admin PAMP limit lookup for the dashboard table
-    pamp_limits = {
-        lc.panel_admin_id: _fmt_bytes(lc.limit_bytes)
-        for lc in AdminLimit.objects.filter(limit_bytes__gt=0)
-    }
+    over_limit_list.sort(key=lambda x: x['pct'], reverse=True)
 
     context = {
         'admins': admins,
-        'pamp_limits': pamp_limits,
         'admin_count': admins.count(),
         'total_count': PanelAdmin.objects.count(),
-        'active_count': PanelAdmin.objects.filter(status='active', pamp_blocked=False).count(),
+        'active_count': PanelAdmin.objects.filter(status='active').count(),
         'disabled_count': PanelAdmin.objects.filter(status='disabled').count(),
-        'limited_count': PanelAdmin.objects.filter(pamp_blocked=True).count(),
+        'near_limit_count': len(over_limit_list),
         'total_limit_fmt': _fmt_bytes(total_limit),
         'total_used_fmt': _fmt_bytes(total_used),
         'total_remaining_fmt': _fmt_bytes(total_remaining),
