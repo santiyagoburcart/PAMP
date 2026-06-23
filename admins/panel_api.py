@@ -149,52 +149,58 @@ class PanelAPIClient:
             'expired_users': counts['expired'],
         }
 
-    def disable_admin(self, username: str) -> bool:
-        """Disable all users under an admin and mark the admin as disabled."""
+    def disable_admin(self, username: str) -> tuple:
+        """Disable admin + all their users on Pasargad. Returns (success: bool, message: str)."""
         enc = quote(username, safe='')
-        ok = True
+        errors = []
         try:
-            resp = self._session.post(
+            r = self._session.post(
                 f"{self.base_url}/api/admin/{enc}/users/disable",
                 headers=self._get_headers(),
-                timeout=15,
+                timeout=30,
             )
-            if resp.status_code not in (200, 204):
-                ok = False
-        except requests.RequestException as e:
-            logger.error("disable_admin users call failed for %s: %s", username, e)
-            ok = False
+            if r.status_code not in (200, 204):
+                errors.append(f"users/disable HTTP {r.status_code}: {r.text[:80]}")
+        except Exception as e:
+            errors.append(f"users/disable error: {e}")
         try:
-            resp2 = self._session.put(
+            r2 = self._session.put(
                 f"{self.base_url}/api/admin/{enc}",
                 headers=self._get_headers(),
                 json={"status": "disabled"},
-                timeout=15,
+                timeout=30,
             )
-            if resp2.status_code not in (200, 204):
-                ok = False
-        except requests.RequestException as e:
-            logger.error("disable_admin status call failed for %s: %s", username, e)
-            ok = False
-        return ok
+            if r2.status_code not in (200, 204):
+                errors.append(f"status update HTTP {r2.status_code}: {r2.text[:80]}")
+        except Exception as e:
+            errors.append(f"status update error: {e}")
+        if errors:
+            msg = "; ".join(errors)
+            logger.error("disable_admin %s: %s", username, msg)
+            return False, msg
+        return True, "Admin and users disabled on Pasargad"
 
-    def enable_admin(self, username: str) -> bool:
-        """Re-enable a previously blocked admin account."""
+    def enable_admin(self, username: str) -> tuple:
+        """Re-enable admin on Pasargad. Returns (success: bool, message: str)."""
         enc = quote(username, safe='')
         try:
             resp = self._session.put(
                 f"{self.base_url}/api/admin/{enc}",
                 headers=self._get_headers(),
                 json={"status": "active"},
-                timeout=15,
+                timeout=30,
             )
-            return resp.status_code in (200, 204)
-        except requests.RequestException as e:
+            if resp.status_code in (200, 204):
+                return True, "Admin enabled on Pasargad"
+            msg = f"HTTP {resp.status_code}: {resp.text[:120]}"
+            logger.error("enable_admin %s: %s", username, msg)
+            return False, msg
+        except Exception as e:
             logger.error("enable_admin failed for %s: %s", username, e)
-            return False
+            return False, f"Error: {str(e)[:120]}"
 
-    def disable_all_users(self, admin_username: str) -> bool:
-        """Disable all users belonging to an admin."""
+    def disable_all_users(self, admin_username: str) -> tuple:
+        """Disable all users for an admin. Returns (success: bool, message: str)."""
         if not self._token:
             self.authenticate()
         enc = quote(admin_username, safe='')
@@ -205,61 +211,71 @@ class PanelAPIClient:
                 timeout=30,
             )
             if resp.status_code in (200, 204):
-                return True
+                return True, "All users disabled"
+            # Bulk endpoint failed — fall back to per-user
             users = self.get_users(admin_username=admin_username)
             if not users:
-                return False
-            success_count = 0
-            for user in users:
-                uname = user.get("username")
+                return False, f"Bulk endpoint HTTP {resp.status_code}, no users to fall back on"
+            ok = fail = 0
+            for u in users:
+                uname = u.get("username")
                 if not uname:
                     continue
                 r = self._session.put(
-                    f"{self.base_url}/api/user/{quote(uname, safe='')}",
+                    f"{self.base_url}/api/user/{quote(uname, safe='')}/disabled",
                     headers=self._get_headers(),
-                    json={"status": "disabled"},
-                    timeout=10,
+                    json={"disabled": True},
+                    timeout=15,
                 )
+                (ok if r.status_code in (200, 204) else fail)
                 if r.status_code in (200, 204):
-                    success_count += 1
-            return success_count > 0
+                    ok += 1
+                else:
+                    fail += 1
+            msg = f"Disabled {ok} users" + (f" ({fail} failed)" if fail else "")
+            return ok > 0, msg
         except Exception as e:
             logger.error("disable_all_users for %s failed: %s", admin_username, e)
-            return False
+            return False, f"Error: {str(e)[:120]}"
 
-    def enable_all_users(self, admin_username: str) -> bool:
-        """Enable all users belonging to an admin."""
+    def enable_all_users(self, admin_username: str) -> tuple:
+        """Enable (activate) all users for an admin. Returns (success: bool, message: str)."""
         if not self._token:
             self.authenticate()
         enc = quote(admin_username, safe='')
         try:
+            # Correct endpoint is /users/activate, NOT /users/enable (404)
             resp = self._session.post(
-                f"{self.base_url}/api/admin/{enc}/users/enable",
+                f"{self.base_url}/api/admin/{enc}/users/activate",
                 headers=self._get_headers(),
                 timeout=30,
             )
             if resp.status_code in (200, 204):
-                return True
+                return True, "All users activated"
+            # Bulk endpoint failed — fall back to per-user
             users = self.get_users(admin_username=admin_username)
             if not users:
-                return False
-            success_count = 0
-            for user in users:
-                uname = user.get("username")
+                return False, f"Bulk endpoint HTTP {resp.status_code}, no users to fall back on"
+            ok = fail = 0
+            for u in users:
+                uname = u.get("username")
                 if not uname:
                     continue
                 r = self._session.put(
-                    f"{self.base_url}/api/user/{quote(uname, safe='')}",
+                    f"{self.base_url}/api/user/{quote(uname, safe='')}/disabled",
                     headers=self._get_headers(),
-                    json={"status": "active"},
-                    timeout=10,
+                    json={"disabled": False},
+                    timeout=15,
                 )
                 if r.status_code in (200, 204):
-                    success_count += 1
-            return success_count > 0
+                    ok += 1
+                else:
+                    fail += 1
+            msg = f"Activated {ok} users" + (f" ({fail} failed)" if fail else "")
+            return ok > 0, msg
         except Exception as e:
             logger.error("enable_all_users for %s failed: %s", admin_username, e)
-            return False
+            return False, f"Error: {str(e)[:120]}"
 
     def sync_all_admins(self):
         """
