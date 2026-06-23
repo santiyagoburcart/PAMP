@@ -87,11 +87,14 @@ class PanelAPIClient:
         return ok
 
     def set_admin_data_limit(self, username: str, limit_bytes: int) -> tuple:
-        """Set admin data_limit on Pasargad. Returns (success: bool, message: str)."""
+        """Set admin data_limit on Pasargad. Returns (success: bool, message: str).
+        Note: Pasargad ignores data_limit:null — send 0 to mean unlimited."""
         if not self._token:
             self.authenticate()
         enc = quote(username, safe='')
-        payload = {"data_limit": int(limit_bytes) if limit_bytes and limit_bytes > 0 else None}
+        removing = not limit_bytes or limit_bytes <= 0
+        # Pasargad treats 0 as "unlimited" (null); sending null is silently ignored
+        payload = {"data_limit": 0 if removing else int(limit_bytes)}
         try:
             resp = self._session.put(
                 f"{self.base_url}/api/admin/{enc}",
@@ -108,7 +111,8 @@ class PanelAPIClient:
                     timeout=30,
                 )
             if resp.status_code in (200, 204):
-                return True, "Limit updated on Pasargad"
+                msg = "Limit removed — admin is now unlimited" if removing else "Limit updated on Pasargad"
+                return True, msg
             msg = f"HTTP {resp.status_code}: {resp.text[:120]}"
             logger.error("set_admin_data_limit %s: %s", username, msg)
             return False, msg
