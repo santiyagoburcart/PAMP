@@ -96,6 +96,31 @@ class PanelAPIClient:
             logger.error("set_admin_limit failed for %s: %s", username, e)
             return False
 
+    def set_admin_data_limit(self, username: str, limit_bytes: int) -> bool:
+        """Set the admin's data_limit on the Pasargad panel. limit_bytes=0 or None = unlimited."""
+        if not self._token:
+            self.authenticate()
+        try:
+            payload = {"data_limit": int(limit_bytes) if limit_bytes and limit_bytes > 0 else None}
+            resp = self._session.put(
+                f"{self.base_url}/api/admin/{username}",
+                headers=self._get_headers(),
+                json=payload,
+                timeout=15,
+            )
+            if resp.status_code == 401:
+                self._token = None
+                resp = self._session.put(
+                    f"{self.base_url}/api/admin/{username}",
+                    headers=self._get_headers(),
+                    json=payload,
+                    timeout=15,
+                )
+            return resp.status_code in (200, 204)
+        except requests.RequestException as e:
+            logger.error("set_admin_data_limit %s failed: %s", username, e)
+            return False
+
     def get_admin_user_stats(self, admin_username):
         """
         Fetch users for one admin and compute:
