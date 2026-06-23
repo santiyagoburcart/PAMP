@@ -280,11 +280,11 @@ setInterval(updateServerStats, 2000);
   {% endif %}
 </div>
 
-<!-- Over Limit / At-Risk Section (superuser only) -->
+<!-- Near / Over Limit Section (superuser only) -->
 {% if user.is_superuser %}
 <div style="margin-top:32px;">
   <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:10px;">
-    <span style="color:var(--danger);">⚠</span> Admins Over / At Risk of PAMP Limit
+    <span style="color:var(--danger);">⚠</span> Admins Near / Over Limit
     <span style="
       background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);
       border-radius:20px;padding:2px 10px;font-size:11px;color:var(--danger);
@@ -297,11 +297,10 @@ setInterval(updateServerStats, 2000);
         <thead>
           <tr>
             <th>Username</th>
-            <th>PAMP Limit</th>
+            <th>Limit</th>
             <th>Used</th>
             <th>Usage %</th>
             <th>Status</th>
-            <th>Blocked At</th>
           </tr>
         </thead>
         <tbody>
@@ -310,28 +309,25 @@ setInterval(updateServerStats, 2000);
           <td class="username-cell">
             <a href="{% url 'admin_detail' item.username %}">{{ item.username }}</a>
           </td>
-          <td style="font-size:12px;">{{ item.pamp_limit_fmt }}</td>
-          <td style="font-size:12px;color:var(--danger);">{{ item.admin_used_fmt }}</td>
+          <td style="font-size:12px;">{{ item.limit_fmt }}</td>
+          <td style="font-size:12px;color:var(--danger);">{{ item.used_fmt }}</td>
           <td>
             <div class="progress-wrap">
               <div class="progress-track">
                 <div class="progress-fill"
-                     style="width:{% if item.pamp_pct > 100 %}100{% else %}{{ item.pamp_pct }}{% endif %}%;
-                            background:{% if item.pamp_pct >= 100 %}var(--danger){% else %}var(--warning){% endif %};"></div>
+                     style="width:{% if item.pct > 100 %}100{% else %}{{ item.pct }}{% endif %}%;
+                            background:{% if item.pct >= 100 %}var(--danger){% else %}var(--warning){% endif %};"></div>
               </div>
-              <span class="progress-pct" style="color:{% if item.pamp_pct >= 100 %}var(--danger){% else %}var(--warning){% endif %};">{{ item.pamp_pct }}%</span>
+              <span class="progress-pct" style="color:{% if item.pct >= 100 %}var(--danger){% else %}var(--warning){% endif %};">{{ item.pct }}%</span>
             </div>
           </td>
           <td>
-            {% if item.state == 'blocked' %}
-              <span class="badge badge-disabled">🔒 Blocked</span>
-            {% elif item.state == 'over' %}
+            {% if item.state == 'over' %}
               <span class="badge" style="background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.3);">Over Limit</span>
             {% else %}
               <span class="badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);">⚠ At Risk</span>
             {% endif %}
           </td>
-          <td class="last-sync">{{ item.pamp_blocked_at|date:"M d, H:i"|default:"—" }}</td>
         </tr>
         {% endfor %}
         </tbody>
@@ -340,7 +336,7 @@ setInterval(updateServerStats, 2000);
   </div>
   {% else %}
   <div class="glass" style="padding:24px;text-align:center;color:var(--muted);font-size:13px;">
-    ✓ No admins are at risk of their PAMP limit
+    ✓ No admins are near their data limit
   </div>
   {% endif %}
 </div>
