@@ -631,6 +631,7 @@ function confirmSetLimit(username, action, valueGb, targetId, csrfToken) {
     (isSet ? 'Set ' : isReduce ? '−' : '+') + gbLabel,
     color,
     function() {
+      showLoading('Applying changes…');
       htmx.ajax('POST', '/panel/' + encodeURIComponent(username) + '/set-limit/', {
         target: '#' + targetId,
         swap: 'innerHTML',
