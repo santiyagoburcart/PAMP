@@ -291,45 +291,37 @@ def admin_action(request, username):
     client.authenticate()
 
     if action == 'disable_admin':
-        success = client.disable_admin(username)
+        success, message = client.disable_admin(username)
         if success:
             panel_admin.status = 'disabled'
             panel_admin.is_active = False
             panel_admin.save(update_fields=['status', 'is_active'])
-            return HttpResponse(
-                '<div class="action-result error" style="margin-bottom:12px;">🔒 Admin disabled</div>',
-            )
-        return HttpResponse('<div class="action-result error">✗ Failed to disable admin</div>')
+            return HttpResponse(f'<div class="action-result error">🔒 {message}</div>')
+        return HttpResponse(f'<div class="action-result error">✗ Failed to disable: {message}</div>')
 
     elif action == 'enable_admin':
-        success = client.enable_admin(username)
+        success, message = client.enable_admin(username)
         if success:
             panel_admin.status = 'active'
             panel_admin.is_active = True
             panel_admin.save(update_fields=['status', 'is_active'])
-            return HttpResponse(
-                '<div class="action-result success" style="margin-bottom:12px;">✓ Admin enabled</div>',
-            )
-        return HttpResponse('<div class="action-result error">✗ Failed to enable admin</div>')
+            return HttpResponse(f'<div class="action-result success">✓ {message}</div>')
+        return HttpResponse(f'<div class="action-result error">✗ Failed to enable: {message}</div>')
 
     elif action == 'disable_users':
-        success = client.disable_all_users(username)
+        success, message = client.disable_all_users(username)
         if success:
             panel_admin.active_user_count = 0
             panel_admin.disabled_users = panel_admin.user_count
             panel_admin.save(update_fields=['active_user_count', 'disabled_users'])
-            return HttpResponse(
-                '<div class="action-result error" style="margin-bottom:12px;">👥🔒 All users disabled</div>',
-            )
-        return HttpResponse('<div class="action-result error">✗ Failed to disable users</div>')
+            return HttpResponse(f'<div class="action-result error">👥🔒 {message}</div>')
+        return HttpResponse(f'<div class="action-result error">✗ Failed: {message}</div>')
 
     elif action == 'enable_users':
-        success = client.enable_all_users(username)
+        success, message = client.enable_all_users(username)
         if success:
-            return HttpResponse(
-                '<div class="action-result success" style="margin-bottom:12px;">👥✓ All users enabled</div>',
-            )
-        return HttpResponse('<div class="action-result error">✗ Failed to enable users</div>')
+            return HttpResponse(f'<div class="action-result success">👥✓ {message}</div>')
+        return HttpResponse(f'<div class="action-result error">✗ Failed: {message}</div>')
 
     return HttpResponse('<div class="action-result error">✗ Unknown action</div>')
 
