@@ -65,6 +65,13 @@
   <h3>Set PAMP Limit</h3>
   <div id="limit-result-{{ a.username }}"></div>
 
+  <div style="margin-bottom:14px;padding:10px 14px;background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2);border-radius:10px;font-size:13px;">
+    <span style="color:rgba(241,245,249,0.6);">Current PAMP Limit:</span>
+    <span style="color:#a5b4fc;font-weight:600;margin-left:6px;">
+      {% if has_pamp_limit %}{{ current_pamp_limit_fmt }}{% else %}Not set{% endif %}
+    </span>
+  </div>
+
   <p style="color:var(--muted);font-size:12px;margin-bottom:8px;">Set total limit:</p>
   <div class="limit-group">
     {% for gb in "10 50 100 500 1000 2000"|split:" " %}
