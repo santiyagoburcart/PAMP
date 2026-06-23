@@ -22,12 +22,6 @@
   <div class="detail-section">
     <h3>Traffic</h3>
     <div class="detail-row"><span class="key">Admin Limit</span><span class="val">{{ admin_limit_fmt }}</span></div>
-    <div class="detail-row">
-      <span class="key">PAMP Limit</span>
-      <span class="val" style="color:{% if has_pamp_limit %}#a5b4fc{% else %}rgba(241,245,249,0.35){% endif %};font-weight:600;">
-        {% if has_pamp_limit %}{{ current_pamp_limit_fmt }}{% else %}Not set{% endif %}
-      </span>
-    </div>
     <div class="detail-row"><span class="key">Total User Limit</span><span class="val">{{ total_user_limit_fmt }}</span></div>
     <div class="detail-row"><span class="key">Total Used</span><span class="val">{{ admin_used_fmt }}</span></div>
     <div class="detail-row"><span class="key">Remaining</span><span class="val" style="color:var(--success);">{{ admin_remaining_fmt }}</span></div>
