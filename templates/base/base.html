@@ -70,6 +70,7 @@
       border-radius: var(--radius);
     }
 
+    /* ── Layout ─────────────────────────────────────────────────────────── */
     .layout { display: flex; min-height: 100vh; position: relative; z-index: 1; }
 
     .sidebar {
@@ -80,6 +81,8 @@
       display: flex; flex-direction: column;
       padding: 28px 0;
       position: fixed; height: 100vh; top: 0; left: 0;
+      transition: transform .3s ease;
+      z-index: 100;
     }
     .sidebar-logo {
       padding: 0 24px 32px;
@@ -113,29 +116,56 @@
       background: linear-gradient(90deg, rgba(99,102,241,0.2), transparent);
       border-left-color: var(--accent);
     }
-    .nav-icon { width: 18px; text-align: center; }
+    .nav-icon { width: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .sidebar-footer {
       padding: 20px 24px;
       border-top: 1px solid var(--glass-border);
       margin-top: auto;
     }
-    .sidebar-footer .username { margin-bottom: 6px; font-size: 12px; color: var(--text); }
-    .sidebar-footer a { color: var(--muted); text-decoration: none; font-size: 12px; transition: color .2s; }
-    .sidebar-footer a:hover { color: var(--text); }
+    .sidebar-footer .username { margin-bottom: 6px; font-size: 12px; color: var(--text); font-weight: 600; }
+    .sidebar-footer a {
+      color: var(--muted); text-decoration: none; font-size: 12px;
+      transition: color .2s; display: flex; align-items: center; gap: 8px;
+    }
+    .sidebar-footer a:hover { color: var(--danger); }
+
+    /* Sidebar overlay for mobile */
+    .sidebar-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px);
+      z-index: 99;
+    }
+    .sidebar-overlay.open { display: block; }
 
     .main { margin-left: 240px; flex: 1; display: flex; flex-direction: column; }
     .topbar {
       background: rgba(255,255,255,0.04);
       backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--glass-border);
-      padding: 16px 32px;
+      padding: 14px 32px;
       display: flex; align-items: center; justify-content: space-between;
       position: sticky; top: 0; z-index: 10;
     }
     .topbar-title { font-size: 15px; font-weight: 600; }
     .content { padding: 32px; flex: 1; }
 
-    /* Stats */
+    /* Mobile hamburger button — hidden on desktop */
+    .mobile-menu-btn {
+      display: none;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+      width: 40px; height: 40px;
+      color: var(--text);
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* ── Stats ──────────────────────────────────────────────────────────── */
     .stats-row {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -162,31 +192,109 @@
     .stat-card .value.danger { color: var(--danger); }
     .stat-card .sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
 
-    /* Buttons */
+    /* ── Buttons ────────────────────────────────────────────────────────── */
     .btn {
-      padding: 8px 18px;
-      border-radius: var(--radius-sm);
-      border: none; font-size: 13px; font-weight: 500;
-      cursor: pointer; transition: all .2s;
-      display: inline-flex; align-items: center; gap: 6px;
+      padding: 10px 18px;
+      border-radius: 12px;
+      border: none;
+      font-size: 13px; font-weight: 600;
+      cursor: pointer;
+      transition: all .25s cubic-bezier(0.4, 0, 0.2, 1);
+      display: inline-flex; align-items: center; gap: 8px;
       text-decoration: none;
+      position: relative; overflow: hidden;
     }
-    .btn:active { transform: scale(.96); }
+    .btn::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(180deg, rgba(255,255,255,0.12), transparent);
+      opacity: 0; transition: opacity .25s;
+    }
+    .btn:hover::after { opacity: 1; }
+    .btn:active { transform: scale(.97); }
+
     .btn-primary {
       background: linear-gradient(135deg, var(--accent), var(--accent2));
       color: #fff;
-      box-shadow: 0 4px 15px rgba(99,102,241,0.35);
+      box-shadow: 0 4px 16px rgba(99,102,241,0.35), inset 0 1px 0 rgba(255,255,255,0.2);
     }
-    .btn-primary:hover { box-shadow: 0 6px 20px rgba(99,102,241,0.5); transform: translateY(-1px); }
+    .btn-primary:hover {
+      box-shadow: 0 6px 24px rgba(99,102,241,0.5), inset 0 1px 0 rgba(255,255,255,0.3);
+      transform: translateY(-2px);
+    }
     .btn-glass {
       background: var(--glass); color: var(--text);
       border: 1px solid var(--glass-border);
-      backdrop-filter: blur(10px);
+      backdrop-filter: blur(12px);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
     }
-    .btn-glass:hover { background: var(--glass-hover); border-color: rgba(255,255,255,0.2); }
-    .btn-sm { padding: 5px 12px; font-size: 12px; }
+    .btn-glass:hover {
+      background: var(--glass-hover);
+      border-color: rgba(255,255,255,0.25);
+      transform: translateY(-1px);
+    }
+    .btn-sm { padding: 5px 12px; font-size: 12px; border-radius: 8px; }
 
-    /* Inputs */
+    /* Action buttons */
+    .btn-danger-glass {
+      background: rgba(239,68,68,0.12);
+      border: 1px solid rgba(239,68,68,0.3);
+      color: #fca5a5;
+      padding: 13px 18px;
+      border-radius: 12px;
+      font-size: 13px; font-weight: 600;
+      cursor: pointer;
+      transition: all .25s cubic-bezier(0.4, 0, 0.2, 1);
+      text-align: center;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+    .btn-danger-glass:hover {
+      background: rgba(239,68,68,0.2);
+      border-color: rgba(239,68,68,0.5);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(239,68,68,0.25);
+    }
+    .btn-danger-glass:active { transform: scale(.97); }
+
+    .btn-success-glass {
+      background: rgba(16,185,129,0.12);
+      border: 1px solid rgba(16,185,129,0.3);
+      color: #6ee7b7;
+      padding: 13px 18px;
+      border-radius: 12px;
+      font-size: 13px; font-weight: 600;
+      cursor: pointer;
+      transition: all .25s cubic-bezier(0.4, 0, 0.2, 1);
+      text-align: center;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+    .btn-success-glass:hover {
+      background: rgba(16,185,129,0.2);
+      border-color: rgba(16,185,129,0.5);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(16,185,129,0.25);
+    }
+    .btn-success-glass:active { transform: scale(.97); }
+
+    /* Limit preset buttons */
+    .limit-group { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+    .limit-btn {
+      padding: 8px 16px;
+      background: var(--glass); border: 1px solid var(--glass-border);
+      border-radius: 10px; color: var(--text);
+      font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: all .2s;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+    .limit-btn:hover { transform: translateY(-1px); border-color: var(--accent); color: #c7d2fe; }
+    .limit-btn.set:hover { border-color: rgba(99,102,241,0.6); }
+    .limit-btn.add { color: #6ee7b7; border-color: rgba(16,185,129,0.3); }
+    .limit-btn.add:hover { border-color: rgba(16,185,129,0.6); }
+    .custom-limit-wrap { display: flex; gap: 8px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+
+    /* ── Inputs ─────────────────────────────────────────────────────────── */
     .input {
       background: var(--glass);
       border: 1px solid var(--glass-border);
@@ -199,7 +307,7 @@
     .input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
     .input::placeholder { color: var(--muted); }
 
-    /* Card / table */
+    /* ── Card / table ───────────────────────────────────────────────────── */
     .card {
       background: var(--glass);
       backdrop-filter: blur(20px);
@@ -224,7 +332,7 @@
     .username-cell a { color: var(--text); text-decoration: none; font-weight: 600; transition: color .2s; }
     .username-cell a:hover { color: var(--accent); }
 
-    /* Badge */
+    /* ── Badge ──────────────────────────────────────────────────────────── */
     .badge {
       display: inline-block; padding: 3px 10px;
       border-radius: 20px; font-size: 11px; font-weight: 600;
@@ -233,13 +341,13 @@
     .badge-disabled { background: rgba(239,68,68,0.15); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }
     .badge-sudo { background: rgba(99,102,241,0.2); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.3); }
 
-    /* Progress */
+    /* ── Progress ───────────────────────────────────────────────────────── */
     .progress-wrap { display: flex; align-items: center; gap: 8px; }
     .progress-track { flex: 1; height: 5px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; min-width: 60px; }
     .progress-fill { height: 100%; border-radius: 3px; transition: width .4s ease; }
     .progress-pct { font-size: 11px; color: var(--muted); min-width: 34px; text-align: right; }
 
-    /* Limit actions */
+    /* ── Limit / action results ─────────────────────────────────────────── */
     .action-result {
       padding: 8px 16px; border-radius: var(--radius-sm);
       font-size: 13px; backdrop-filter: blur(10px); display: inline-block; margin-top: 8px;
@@ -247,20 +355,7 @@
     .action-result.success { background: rgba(16,185,129,0.15); color: var(--success); border: 1px solid rgba(16,185,129,0.3); }
     .action-result.error { background: rgba(239,68,68,0.15); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }
 
-    .limit-group { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
-    .limit-btn {
-      padding: 6px 14px;
-      background: var(--glass); border: 1px solid var(--glass-border);
-      border-radius: var(--radius-sm); color: var(--text);
-      font-size: 12px; font-weight: 500; cursor: pointer; transition: all .2s;
-    }
-    .limit-btn:hover { background: var(--glass-hover); }
-    .limit-btn.set:hover { border-color: var(--accent); color: var(--accent); }
-    .limit-btn.add { color: var(--success); border-color: rgba(16,185,129,0.3); }
-    .limit-btn.add:hover { border-color: var(--success); }
-    .custom-limit-wrap { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
-
-    /* Portal */
+    /* ── Portal ─────────────────────────────────────────────────────────── */
     .portal-hero {
       background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.15));
       border: 1px solid rgba(99,102,241,0.3);
@@ -307,40 +402,79 @@
     .toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
     .empty { text-align: center; padding: 60px; color: var(--muted); }
 
-    @media (max-width: 900px) {
-      .sidebar { display: none; }
+    /* ── Responsive breakpoints ─────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      .sidebar.open {
+        transform: translateX(0);
+      }
       .main { margin-left: 0; }
+      .mobile-menu-btn { display: flex; }
+      .content { padding: 16px; }
+      .topbar { padding: 12px 16px; }
+      .stats-row { grid-template-columns: 1fr 1fr; gap: 10px; }
       .detail-grid { grid-template-columns: 1fr; }
+      .card { overflow-x: auto; }
+      table { min-width: 580px; }
+      .portal-hero-name { font-size: 22px; }
+      .stat-card .value { font-size: 22px; }
+      .portal-hero { padding: 22px; }
+    }
+    @media (max-width: 480px) {
+      .stats-row { grid-template-columns: 1fr; }
+      .toolbar { flex-direction: column; align-items: stretch; }
+      .toolbar form { flex-direction: column; }
+      .input { width: 100%; }
+      .custom-limit-wrap { flex-direction: column; align-items: stretch; }
     }
   </style>
   {% block head %}{% endblock %}
 </head>
 <body>
 <div class="layout">
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">
-      <div class="logo-icon">⬡</div>
+      <div class="logo-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      </div>
       <span class="logo-text">PAMP</span>
     </div>
     <nav class="nav">
       {% if user.is_superuser or user.is_staff %}
       <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
-        <span class="nav-icon">◈</span> Dashboard
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+        </span>
+        Dashboard
       </a>
       {% endif %}
       <a href="{% url 'portal' %}" class="{% if request.resolver_match.url_name == 'portal' %}active{% endif %}">
-        <span class="nav-icon">◉</span> My Panel
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </span>
+        My Panel
       </a>
     </nav>
     <div class="sidebar-footer">
       <div class="username">{{ user.username }}</div>
-      <a href="{% url 'logout' %}">⎋ Sign out</a>
+      <a href="{% url 'logout' %}">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign out
+      </a>
     </div>
   </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
   <div class="main">
     <div class="topbar">
-      <span class="topbar-title">{% block topbar_title %}PAMP{% endblock %}</span>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button class="mobile-menu-btn" onclick="toggleSidebar()" aria-label="Toggle menu">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <span class="topbar-title">{% block topbar_title %}PAMP{% endblock %}</span>
+      </div>
       <div style="display:flex;align-items:center;gap:12px;">
         <span id="sync-status"></span>
         {% if user.is_superuser %}
@@ -349,7 +483,8 @@
           hx-target="#sync-status"
           hx-swap="innerHTML"
           hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
-          ↻ Sync Now
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          <span class="btn-label">Sync</span>
         </button>
         {% endif %}
       </div>
@@ -359,36 +494,37 @@
     </div>
   </div>
 </div>
+
 <!-- Confirm Modal -->
 <div id="confirm-modal" style="
   display:none;position:fixed;inset:0;z-index:1000;
-  background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);
-  align-items:center;justify-content:center;
+  background:rgba(0,0,0,0.65);backdrop-filter:blur(10px);
+  align-items:center;justify-content:center;padding:20px;
 ">
   <div style="
-    background:linear-gradient(135deg,rgba(20,22,40,0.98),rgba(15,17,35,0.98));
-    border:1px solid rgba(255,255,255,0.12);
-    border-radius:20px;padding:32px;width:400px;max-width:90vw;
-    box-shadow:0 20px 60px rgba(0,0,0,0.5),0 0 0 1px rgba(99,102,241,0.2);
-    animation:modal-in .2s ease;
+    background:linear-gradient(135deg,rgba(28,30,52,0.98),rgba(18,20,38,0.98));
+    border:1px solid var(--glass-border);
+    border-radius:24px;padding:32px;width:100%;max-width:420px;
+    box-shadow:0 24px 70px rgba(0,0,0,0.55);
+    animation:modal-in .25s cubic-bezier(0.34,1.56,0.64,1);
   ">
     <div style="font-size:36px;text-align:center;margin-bottom:16px;" id="modal-icon">⚡</div>
     <div style="font-size:18px;font-weight:700;text-align:center;margin-bottom:8px;color:#f1f5f9;" id="modal-title">Confirm Action</div>
     <div style="font-size:13px;color:rgba(241,245,249,0.6);text-align:center;margin-bottom:28px;line-height:1.7;" id="modal-body"></div>
     <div style="display:flex;gap:12px;">
       <button onclick="closeModal()" style="
-        flex:1;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);
-        background:rgba(255,255,255,0.05);color:rgba(241,245,249,0.7);
-        font-size:14px;cursor:pointer;transition:all .2s;
-      " onmouseover="this.style.background='rgba(255,255,255,0.09)'"
-         onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+        flex:1;padding:13px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);
+        background:rgba(255,255,255,0.06);color:rgba(241,245,249,0.7);
+        font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;
+      " onmouseover="this.style.background='rgba(255,255,255,0.1)'"
+         onmouseout="this.style.background='rgba(255,255,255,0.06)'">
         Cancel
       </button>
       <button id="modal-confirm-btn" style="
-        flex:1;padding:12px;border-radius:10px;border:none;
+        flex:1;padding:13px;border-radius:12px;border:none;
         background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;
         font-size:14px;font-weight:600;cursor:pointer;
-        box-shadow:0 4px 15px rgba(99,102,241,0.4);transition:all .2s;
+        box-shadow:0 4px 16px rgba(99,102,241,0.4);transition:all .2s;
       " onmouseover="this.style.transform='translateY(-1px)'"
          onmouseout="this.style.transform='translateY(0)'">
         Confirm
@@ -397,14 +533,54 @@
   </div>
 </div>
 
+<!-- Loading Overlay -->
+<div id="loading-overlay" style="
+  display:none;position:fixed;inset:0;z-index:2000;
+  background:rgba(5,7,20,0.75);backdrop-filter:blur(12px);
+  align-items:center;justify-content:center;
+">
+  <div style="background:var(--glass);backdrop-filter:blur(30px);border:1px solid var(--glass-border);border-radius:24px;padding:40px 48px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.4);">
+    <div class="spinner" style="width:54px;height:54px;margin:0 auto 20px;border:3px solid rgba(99,102,241,0.15);border-top-color:#8b5cf6;border-right-color:#6366f1;border-radius:50%;animation:spin 0.7s linear infinite;"></div>
+    <div id="loading-text" style="color:#f1f5f9;font-size:14px;font-weight:600;letter-spacing:.3px;">Processing…</div>
+  </div>
+</div>
+
+<!-- Result Popup -->
+<div id="result-popup" style="
+  display:none;position:fixed;inset:0;z-index:2100;
+  background:rgba(5,7,20,0.7);backdrop-filter:blur(12px);
+  align-items:center;justify-content:center;padding:20px;
+">
+  <div style="background:linear-gradient(135deg,rgba(28,30,52,0.98),rgba(18,20,38,0.98));border:1px solid var(--glass-border);border-radius:24px;padding:36px 32px;width:100%;max-width:400px;text-align:center;box-shadow:0 24px 70px rgba(0,0,0,0.55);animation:modal-in .3s cubic-bezier(0.34,1.56,0.64,1);">
+    <div id="result-icon-wrap" style="width:72px;height:72px;margin:0 auto 20px;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+      <div id="result-icon" style="font-size:36px;font-weight:700;line-height:1;"></div>
+    </div>
+    <div id="result-title" style="font-size:19px;font-weight:700;margin-bottom:8px;color:#f1f5f9;"></div>
+    <div id="result-message" style="font-size:14px;color:rgba(241,245,249,0.6);margin-bottom:28px;line-height:1.6;"></div>
+    <button onclick="closeResultPopup()" style="width:100%;padding:13px;border-radius:14px;border:none;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:15px;font-weight:600;cursor:pointer;box-shadow:0 4px 16px rgba(99,102,241,0.4);transition:all .2s;">OK</button>
+  </div>
+</div>
+
 <style>
 @keyframes modal-in {
-  from { opacity:0; transform:scale(.92) translateY(10px); }
+  from { opacity:0; transform:scale(.88) translateY(16px); }
   to   { opacity:1; transform:scale(1)   translateY(0);    }
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+@keyframes pulse {
+  0%, 100% { opacity:1; transform:scale(1); }
+  50%       { opacity:.5; transform:scale(.85); }
 }
 </style>
 
 <script>
+/* ── Sidebar toggle ───────────────────────────────────────────────────── */
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
+}
+
+/* ── Confirm modal ────────────────────────────────────────────────────── */
 let _modalCallback = null;
 
 function showConfirmModal(icon, title, body, confirmLabel, confirmColor, callback) {
@@ -415,8 +591,7 @@ function showConfirmModal(icon, title, body, confirmLabel, confirmColor, callbac
   btn.textContent = confirmLabel || 'Confirm';
   btn.style.background = confirmColor || 'linear-gradient(135deg,#6366f1,#8b5cf6)';
   _modalCallback = callback;
-  const modal = document.getElementById('confirm-modal');
-  modal.style.display = 'flex';
+  document.getElementById('confirm-modal').style.display = 'flex';
 }
 
 function closeModal() {
@@ -433,6 +608,7 @@ document.getElementById('confirm-modal').addEventListener('click', function(e) {
   if (e.target === this) closeModal();
 });
 
+/* ── Limit confirm helper ─────────────────────────────────────────────── */
 function confirmSetLimit(username, action, valueGb, targetId, csrfToken) {
   const gbNum = parseFloat(valueGb);
   const gbLabel = gbNum >= 1000 ? (gbNum / 1000).toFixed(1) + ' TB' : gbNum + ' GB';
@@ -440,7 +616,6 @@ function confirmSetLimit(username, action, valueGb, targetId, csrfToken) {
   const color = isSet
     ? 'linear-gradient(135deg,#6366f1,#8b5cf6)'
     : 'linear-gradient(135deg,#059669,#10b981)';
-
   showConfirmModal(
     isSet ? '⚡' : '➕',
     isSet ? 'Set PAMP Limit' : 'Add to PAMP Limit',
@@ -458,94 +633,49 @@ function confirmSetLimit(username, action, valueGb, targetId, csrfToken) {
     }
   );
 }
-</script>
 
-<!-- Loading Overlay -->
-<div id="loading-overlay" style="
-  display:none;position:fixed;inset:0;z-index:2000;
-  background:rgba(5,7,20,0.7);backdrop-filter:blur(8px);
-  align-items:center;justify-content:center;
-">
-  <div style="text-align:center;">
-    <div class="spinner" style="
-      width:60px;height:60px;margin:0 auto 20px;
-      border:3px solid rgba(99,102,241,0.2);
-      border-top-color:#6366f1;
-      border-radius:50%;
-      animation:spin 0.8s linear infinite;
-    "></div>
-    <div id="loading-text" style="
-      color:#f1f5f9;font-size:15px;font-weight:500;
-    ">Processing...</div>
-  </div>
-</div>
-
-<!-- Result Popup -->
-<div id="result-popup" style="
-  display:none;position:fixed;inset:0;z-index:2100;
-  background:rgba(5,7,20,0.6);backdrop-filter:blur(8px);
-  align-items:center;justify-content:center;
-">
-  <div style="
-    background:linear-gradient(135deg,rgba(20,22,40,0.98),rgba(15,17,35,0.98));
-    border:1px solid rgba(255,255,255,0.12);
-    border-radius:20px;padding:36px;width:380px;text-align:center;
-    box-shadow:0 20px 60px rgba(0,0,0,0.5);
-    animation:modal-in .25s ease;
-  ">
-    <div id="result-icon" style="font-size:56px;margin-bottom:16px;"></div>
-    <div id="result-title" style="font-size:18px;font-weight:700;margin-bottom:8px;color:#f1f5f9;"></div>
-    <div id="result-message" style="font-size:14px;color:rgba(241,245,249,0.6);margin-bottom:24px;line-height:1.6;"></div>
-    <button onclick="closeResultPopup()" style="
-      padding:11px 32px;border-radius:10px;border:none;
-      background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;
-      font-size:14px;font-weight:600;cursor:pointer;
-      box-shadow:0 4px 15px rgba(99,102,241,0.4);
-    ">OK</button>
-  </div>
-</div>
-
-<style>
-@keyframes spin { to { transform:rotate(360deg); } }
-</style>
-
-<script>
+/* ── Loading overlay ──────────────────────────────────────────────────── */
 function showLoading(text) {
-  document.getElementById('loading-text').textContent = text || 'Processing...';
+  document.getElementById('loading-text').textContent = text || 'Processing…';
   document.getElementById('loading-overlay').style.display = 'flex';
 }
 function hideLoading() {
   document.getElementById('loading-overlay').style.display = 'none';
 }
+
+/* ── Result popup ─────────────────────────────────────────────────────── */
 function showResultPopup(success, title, message) {
   hideLoading();
-  document.getElementById('result-icon').textContent = success ? '✅' : '❌';
+  const iconWrap = document.getElementById('result-icon-wrap');
+  const iconEl   = document.getElementById('result-icon');
+  iconEl.textContent = success ? '✓' : '✕';
+  iconEl.style.color = success ? '#10b981' : '#ef4444';
+  iconWrap.style.background = success
+    ? 'radial-gradient(circle, rgba(16,185,129,0.25), rgba(16,185,129,0.05))'
+    : 'radial-gradient(circle, rgba(239,68,68,0.25), rgba(239,68,68,0.05))';
   document.getElementById('result-title').textContent = title || (success ? 'Success' : 'Failed');
   document.getElementById('result-message').textContent = message || '';
-  var popup = document.getElementById('result-popup');
+  const popup = document.getElementById('result-popup');
   popup.style.display = 'flex';
   popup._shouldReload = success;
 }
 function closeResultPopup() {
-  var popup = document.getElementById('result-popup');
+  const popup = document.getElementById('result-popup');
   popup.style.display = 'none';
-  if (popup._shouldReload) {
-    window.location.reload();
-  }
+  if (popup._shouldReload) window.location.reload();
 }
 
+/* ── HTMX hooks ───────────────────────────────────────────────────────── */
 document.addEventListener('htmx:beforeRequest', function(e) {
-  var elt = e.detail.elt;
+  const elt = e.detail.elt;
   if (elt && (elt.hasAttribute('hx-post') || elt.closest('[hx-post]'))) {
-    showLoading('Processing your request...');
+    showLoading('Processing your request…');
   }
 });
-
 document.addEventListener('htmx:afterRequest', function(e) {
   hideLoading();
-  var resp = e.detail.xhr.responseText || '';
-  var cleanMsg = resp.replace(/<[^>]+>/g, '').trim();
-
+  const resp = e.detail.xhr.responseText || '';
+  const cleanMsg = resp.replace(/<[^>]+>/g, '').trim();
   if (e.detail.successful) {
     if (resp.includes('success') || resp.includes('✓') || resp.includes('✅') || resp.includes('🔒') || resp.includes('👥')) {
       showResultPopup(true, 'Done', cleanMsg || 'Action completed successfully');
@@ -556,8 +686,7 @@ document.addEventListener('htmx:afterRequest', function(e) {
     showResultPopup(false, 'Error', 'Request failed. Please try again.');
   }
 });
-
-document.addEventListener('htmx:responseError', function(e) {
+document.addEventListener('htmx:responseError', function() {
   showResultPopup(false, 'Error', 'Server error. Please try again.');
 });
 </script>
