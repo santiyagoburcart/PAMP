@@ -68,13 +68,6 @@ def sync_panel_admins(self):
     if deleted_count:
         logger.info("Removed %d admins no longer on panel", deleted_count)
 
-    # After saving all admin data, run PAMP limit enforcement
-    try:
-        check_and_enforce_limits()
-    except Exception as e:
-        logger.error("Limit enforcement error: %s", e)
-        errors.append(f"enforcement: {e}")
-
     duration = time.time() - start
     status = SyncLog.STATUS_SUCCESS if not errors else SyncLog.STATUS_PARTIAL
     SyncLog.objects.create(
