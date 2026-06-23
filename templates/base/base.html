@@ -613,19 +613,25 @@ function confirmSetLimit(username, action, valueGb, targetId, csrfToken) {
   const gbNum = parseFloat(valueGb);
   const gbLabel = gbNum >= 1000 ? (gbNum / 1000).toFixed(1) + ' TB' : gbNum + ' GB';
   const isSet = action === 'set';
+  const isReduce = action === 'reduce';
   const color = isSet
     ? 'linear-gradient(135deg,#6366f1,#8b5cf6)'
-    : 'linear-gradient(135deg,#059669,#10b981)';
+    : isReduce
+      ? 'linear-gradient(135deg,#d97706,#f59e0b)'
+      : 'linear-gradient(135deg,#059669,#10b981)';
+  const icon = isSet ? '⚡' : isReduce ? '−' : '➕';
+  const titleMap = { set: 'Set Admin Limit', add: 'Add to Admin Limit', reduce: 'Reduce Admin Limit' };
+  const bodyPrefix = isSet ? 'Set limit to' : isReduce ? 'Reduce by' : 'Add';
   showConfirmModal(
-    isSet ? '⚡' : '➕',
-    isSet ? 'Set PAMP Limit' : 'Add to PAMP Limit',
-    (isSet ? 'Set limit to' : 'Add') +
+    icon,
+    titleMap[action] || 'Set Admin Limit',
+    bodyPrefix +
       ' <strong style="color:#f1f5f9">' + gbLabel + '</strong> for admin' +
       ' <strong style="color:#a5b4fc">' + username + '</strong>?',
-    isSet ? 'Set ' + gbLabel : 'Add ' + gbLabel,
+    (isSet ? 'Set ' : isReduce ? '−' : '+') + gbLabel,
     color,
     function() {
-      htmx.ajax('POST', '/panel/' + username + '/set-limit/', {
+      htmx.ajax('POST', '/panel/' + encodeURIComponent(username) + '/set-limit/', {
         target: '#' + targetId,
         swap: 'innerHTML',
         values: { action: action, value_gb: gbNum, csrfmiddlewaretoken: csrfToken }
