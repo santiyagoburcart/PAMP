@@ -314,7 +314,7 @@ def admin_action(request, username):
             panel_admin.active_user_count = 0
             panel_admin.disabled_users = panel_admin.user_count
             panel_admin.save(update_fields=['active_user_count', 'disabled_users'])
-            return HttpResponse(f'<div class="action-result error">👥🔒 {message}</div>')
+            return HttpResponse(f'<div class="action-result success">👥🔒 {message}</div>')
         return HttpResponse(f'<div class="action-result error">✗ Failed: {message}</div>')
 
     elif action == 'enable_users':
