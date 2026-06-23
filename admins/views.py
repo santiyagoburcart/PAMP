@@ -107,8 +107,15 @@ def dashboard(request):
         })
     over_limit_list.sort(key=lambda x: x['pamp_pct'], reverse=True)
 
+    # Build a per-admin PAMP limit lookup for the dashboard table
+    pamp_limits = {
+        lc.panel_admin_id: _fmt_bytes(lc.limit_bytes)
+        for lc in AdminLimit.objects.filter(limit_bytes__gt=0)
+    }
+
     context = {
         'admins': admins,
+        'pamp_limits': pamp_limits,
         'admin_count': admins.count(),
         'total_count': PanelAdmin.objects.count(),
         'active_count': PanelAdmin.objects.filter(status='active', pamp_blocked=False).count(),
