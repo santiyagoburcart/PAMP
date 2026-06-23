@@ -688,9 +688,9 @@ document.addEventListener('htmx:afterRequest', function(e) {
     showResultPopup(false, 'Error', 'Request failed (HTTP ' + e.detail.xhr.status + '). Please try again.');
     return;
   }
-  if (resp.includes('action-result success') || resp.includes('✓') || resp.includes('✅')) {
+  if (resp.includes('action-result success')) {
     showResultPopup(true, 'Success', cleanMsg || 'Action completed');
-  } else if (resp.includes('action-result error') || resp.includes('✗') || resp.includes('❌') || resp.includes('Failed')) {
+  } else if (resp.includes('action-result error')) {
     showResultPopup(false, 'Failed', cleanMsg || 'Action failed');
   } else if (cleanMsg) {
     showResultPopup(true, 'Done', cleanMsg);
