@@ -92,9 +92,16 @@ class PanelAdmin(models.Model):
 
     # ── traffic calculations ───────────────────────────────────────────────
     @property
+    def is_unlimited(self):
+        """Admin has no traffic limit on the panel (unlimited)."""
+        return not self.admin_limit_bytes or self.admin_limit_bytes <= 0
+
+    @property
     def sold_limit_bytes(self):
-        """Sold Limit = total_user_limit − total_used − remaining. Signed, not clamped."""
-        return self.total_user_limit - self.total_user_used - self.admin_remaining
+        """Sold Limit = remaining − total_user_limit − total_user_used. Zero if unlimited."""
+        if self.is_unlimited:
+            return 0
+        return self.admin_remaining - self.total_user_limit - self.total_user_used
 
     @property
     def hidden_traffic(self):
