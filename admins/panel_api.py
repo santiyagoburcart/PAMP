@@ -161,10 +161,11 @@ class PanelAPIClient:
 
     def disable_admin(self, username: str) -> bool:
         """Disable all users under an admin and mark the admin as disabled."""
+        enc = quote(username, safe='')
         ok = True
         try:
             resp = self._session.post(
-                f"{self.base_url}/api/admin/{username}/users/disable",
+                f"{self.base_url}/api/admin/{enc}/users/disable",
                 headers=self._get_headers(),
                 timeout=15,
             )
@@ -175,7 +176,7 @@ class PanelAPIClient:
             ok = False
         try:
             resp2 = self._session.put(
-                f"{self.base_url}/api/admin/{username}",
+                f"{self.base_url}/api/admin/{enc}",
                 headers=self._get_headers(),
                 json={"status": "disabled"},
                 timeout=15,
@@ -189,9 +190,10 @@ class PanelAPIClient:
 
     def enable_admin(self, username: str) -> bool:
         """Re-enable a previously blocked admin account."""
+        enc = quote(username, safe='')
         try:
             resp = self._session.put(
-                f"{self.base_url}/api/admin/{username}",
+                f"{self.base_url}/api/admin/{enc}",
                 headers=self._get_headers(),
                 json={"status": "active"},
                 timeout=15,
@@ -205,9 +207,10 @@ class PanelAPIClient:
         """Disable all users belonging to an admin."""
         if not self._token:
             self.authenticate()
+        enc = quote(admin_username, safe='')
         try:
             resp = self._session.post(
-                f"{self.base_url}/api/admin/{admin_username}/users/disable",
+                f"{self.base_url}/api/admin/{enc}/users/disable",
                 headers=self._get_headers(),
                 timeout=30,
             )
@@ -222,7 +225,7 @@ class PanelAPIClient:
                 if not uname:
                     continue
                 r = self._session.put(
-                    f"{self.base_url}/api/user/{uname}",
+                    f"{self.base_url}/api/user/{quote(uname, safe='')}",
                     headers=self._get_headers(),
                     json={"status": "disabled"},
                     timeout=10,
@@ -238,9 +241,10 @@ class PanelAPIClient:
         """Enable all users belonging to an admin."""
         if not self._token:
             self.authenticate()
+        enc = quote(admin_username, safe='')
         try:
             resp = self._session.post(
-                f"{self.base_url}/api/admin/{admin_username}/users/enable",
+                f"{self.base_url}/api/admin/{enc}/users/enable",
                 headers=self._get_headers(),
                 timeout=30,
             )
@@ -255,7 +259,7 @@ class PanelAPIClient:
                 if not uname:
                     continue
                 r = self._session.put(
-                    f"{self.base_url}/api/user/{uname}",
+                    f"{self.base_url}/api/user/{quote(uname, safe='')}",
                     headers=self._get_headers(),
                     json={"status": "active"},
                     timeout=10,
