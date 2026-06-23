@@ -125,28 +125,18 @@ def portal(request):
     except PanelAdmin.DoesNotExist:
         return render(request, 'admins/portal_not_found.html')
 
-    if panel_admin.pamp_blocked or panel_admin.status == 'disabled':
-        support_telegram = '@support'
-        try:
-            support_telegram = panel_admin.limit_config.support_telegram or '@support'
-        except AdminLimit.DoesNotExist:
-            pass
-        reason = 'limit' if panel_admin.pamp_blocked else 'disabled'
+    if panel_admin.status == 'disabled':
         return render(request, 'admins/portal_blocked.html', {
             'admin': panel_admin,
-            'support_telegram': support_telegram,
-            'reason': reason,
+            'support_telegram': '@support',
+            'reason': 'disabled',
         })
 
     show_warning = False
     warning_pct = 0
-    try:
-        lc = panel_admin.limit_config
-        if lc.limit_bytes > 0:
-            warning_pct = round((panel_admin.admin_used_bytes / lc.limit_bytes) * 100, 1)
-            show_warning = warning_pct >= 80
-    except AdminLimit.DoesNotExist:
-        pass
+    if panel_admin.has_data_limit and panel_admin.admin_limit_bytes > 0:
+        warning_pct = round((panel_admin.admin_used_bytes / panel_admin.admin_limit_bytes) * 100, 1)
+        show_warning = warning_pct >= 80
 
     context = _enrich(panel_admin)
     context['show_warning'] = show_warning
