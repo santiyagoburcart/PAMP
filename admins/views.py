@@ -296,7 +296,7 @@ def admin_action(request, username):
             panel_admin.status = 'disabled'
             panel_admin.is_active = False
             panel_admin.save(update_fields=['status', 'is_active'])
-            return HttpResponse(f'<div class="action-result error">🔒 {message}</div>')
+            return HttpResponse(f'<div class="action-result success">🔒 {message}</div>')
         return HttpResponse(f'<div class="action-result error">✗ Failed to disable: {message}</div>')
 
     elif action == 'enable_admin':
