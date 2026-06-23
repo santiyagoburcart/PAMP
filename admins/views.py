@@ -234,16 +234,16 @@ def remove_limit(request, username):
     client = PanelAPIClient()
     client.authenticate()
 
-    success = client.set_admin_data_limit(username, 0)
+    success, message = client.set_admin_data_limit(username, 0)
     if not success:
-        return HttpResponse('<div class="action-result error">✗ Failed to remove limit on panel</div>')
+        return HttpResponse(f'<div class="action-result error">✗ Failed: {message}</div>')
 
     panel_admin.admin_limit_bytes = 0
     panel_admin.has_data_limit = False
     panel_admin.admin_remaining = 0
     panel_admin.save(update_fields=['admin_limit_bytes', 'has_data_limit', 'admin_remaining'])
 
-    return HttpResponse('<div class="action-result success">✓ Limit removed — admin is now unlimited</div>')
+    return HttpResponse(f'<div class="action-result success">✓ {message} — admin is now unlimited</div>')
 
 
 @login_required
