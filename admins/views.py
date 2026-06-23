@@ -204,9 +204,9 @@ def set_limit(request, username):
     else:
         return HttpResponse('<div class="action-result error">✗ Unknown action</div>')
 
-    success = client.set_admin_data_limit(username, new_limit_bytes)
+    success, message = client.set_admin_data_limit(username, new_limit_bytes)
     if not success:
-        return HttpResponse('<div class="action-result error">✗ Failed to update limit on panel</div>')
+        return HttpResponse(f'<div class="action-result error">✗ Failed: {message}</div>')
 
     panel_admin.admin_limit_bytes = new_limit_bytes
     panel_admin.has_data_limit = new_limit_bytes > 0
@@ -217,7 +217,7 @@ def set_limit(request, username):
     label = "Unlimited" if new_limit_bytes <= 0 else (
         f"{new_gb:.0f} GB" if new_gb < 1000 else f"{new_gb / 1000:.1f} TB"
     )
-    return HttpResponse(f'<div class="action-result success">✓ Admin limit set to {label} on Pasargad</div>')
+    return HttpResponse(f'<div class="action-result success">✓ Limit set to {label} — {message}</div>')
 
 
 @login_required
