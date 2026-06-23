@@ -314,7 +314,7 @@ class PanelAPIClient:
             results.append({
                 'username': uname,
                 'is_sudo': admin_data.get('is_owner', admin_data.get('is_sudo', False)),
-                'is_active': not admin_data.get('is_disabled', False),
+                'is_active': not is_disabled,
                 'status': status,
                 'has_data_limit': has_data_limit,
                 'admin_limit_bytes': admin_limit_bytes,
