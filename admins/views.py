@@ -165,11 +165,13 @@ def login_redirect(request):
 @login_required
 def trigger_sync(request):
     if request.method == 'POST':
-        sync_panel_admins.delay()
-        return HttpResponse(
-            '<span style="background:rgba(16,185,129,0.2);color:#10b981;border:1px solid rgba(16,185,129,0.3);'
-            'padding:4px 12px;border-radius:6px;font-size:12px;">↻ Sync queued</span>'
-        )
+        # Run synchronously so the page reload after the popup reflects fresh data.
+        # (.delay() returns immediately and the reload races the async Celery task.)
+        result = sync_panel_admins.apply(throw=False)
+        if result.failed():
+            err = str(result.result)[:120]
+            return HttpResponse(f'<div class="action-result error">✗ Sync failed: {err}</div>')
+        return HttpResponse(f'<div class="action-result success">✓ {result.result}</div>')
     return redirect('dashboard')
 
 
