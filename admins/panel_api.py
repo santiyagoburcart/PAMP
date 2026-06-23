@@ -154,35 +154,32 @@ class PanelAPIClient:
         }
 
     def disable_admin(self, username: str) -> tuple:
-        """Disable admin + all their users on Pasargad. Returns (success: bool, message: str)."""
+        """Disable admin panel access on Pasargad (does NOT touch their users).
+        Returns (success: bool, message: str)."""
         enc = quote(username, safe='')
-        errors = []
         try:
-            r = self._session.post(
-                f"{self.base_url}/api/admin/{enc}/users/disable",
-                headers=self._get_headers(),
-                timeout=30,
-            )
-            if r.status_code not in (200, 204):
-                errors.append(f"users/disable HTTP {r.status_code}: {r.text[:80]}")
-        except Exception as e:
-            errors.append(f"users/disable error: {e}")
-        try:
-            r2 = self._session.put(
+            resp = self._session.put(
                 f"{self.base_url}/api/admin/{enc}",
                 headers=self._get_headers(),
                 json={"status": "disabled"},
                 timeout=30,
             )
-            if r2.status_code not in (200, 204):
-                errors.append(f"status update HTTP {r2.status_code}: {r2.text[:80]}")
-        except Exception as e:
-            errors.append(f"status update error: {e}")
-        if errors:
-            msg = "; ".join(errors)
+            if resp.status_code == 401:
+                self._token = None
+                resp = self._session.put(
+                    f"{self.base_url}/api/admin/{enc}",
+                    headers=self._get_headers(),
+                    json={"status": "disabled"},
+                    timeout=30,
+                )
+            if resp.status_code in (200, 204):
+                return True, "Admin access disabled on Pasargad"
+            msg = f"HTTP {resp.status_code}: {resp.text[:120]}"
             logger.error("disable_admin %s: %s", username, msg)
             return False, msg
-        return True, "Admin and users disabled on Pasargad"
+        except Exception as e:
+            logger.error("disable_admin failed for %s: %s", username, e)
+            return False, f"Error: {str(e)[:120]}"
 
     def enable_admin(self, username: str) -> tuple:
         """Re-enable admin on Pasargad. Returns (success: bool, message: str)."""
