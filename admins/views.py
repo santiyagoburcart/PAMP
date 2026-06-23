@@ -210,56 +210,47 @@ def trigger_sync(request):
 def set_limit(request, username):
     if request.method != 'POST':
         return HttpResponse(status=405)
-    if not (request.user.is_superuser or request.user.username == username):
-        return HttpResponse(status=403)
+    if not request.user.is_superuser:
+        return HttpResponse('<div class="action-result error">✗ Permission denied</div>')
 
-    action = request.POST.get('action', 'set')
+    action = request.POST.get('action')
     try:
         value_gb = float(request.POST.get('value_gb', 0))
-    except (ValueError, TypeError):
-        return HttpResponse('<div class="action-result error">✗ Invalid value</div>', status=400)
-
-    panel_admin = get_object_or_404(PanelAdmin, username=username)
+    except (TypeError, ValueError):
+        return HttpResponse('<div class="action-result error">✗ Invalid value</div>')
 
     from .panel_api import PanelAPIClient
+
+    panel_admin = get_object_or_404(PanelAdmin, username=username)
     client = PanelAPIClient()
     client.authenticate()
 
-    if action == 'add':
-        try:
-            current_gb = panel_admin.limit_config.limit_bytes / (1024 ** 3)
-        except AdminLimit.DoesNotExist:
-            current_gb = panel_admin.admin_limit_bytes / (1024 ** 3) if panel_admin.has_data_limit else 0
-        new_limit_gb = current_gb + value_gb
+    current_limit = panel_admin.admin_limit_bytes or 0
+    gb = 1024 ** 3
+
+    if action == 'set':
+        new_limit_bytes = int(value_gb * gb)
+    elif action == 'add':
+        new_limit_bytes = int(current_limit + value_gb * gb)
+    elif action == 'reduce':
+        new_limit_bytes = max(0, int(current_limit - value_gb * gb))
     else:
-        new_limit_gb = value_gb
+        return HttpResponse('<div class="action-result error">✗ Unknown action</div>')
 
-    new_limit_bytes = int(new_limit_gb * 1024 ** 3)
+    success = client.set_admin_data_limit(username, new_limit_bytes)
+    if not success:
+        return HttpResponse('<div class="action-result error">✗ Failed to update limit on panel</div>')
 
-    # Save PAMP limit to AdminLimit
-    lc, _ = AdminLimit.objects.get_or_create(panel_admin=panel_admin)
-    lc.limit_bytes = new_limit_bytes
-    lc.save(update_fields=['limit_bytes'])
+    panel_admin.admin_limit_bytes = new_limit_bytes
+    panel_admin.has_data_limit = new_limit_bytes > 0
+    panel_admin.admin_remaining = max(0, new_limit_bytes - panel_admin.admin_used_bytes)
+    panel_admin.save(update_fields=['admin_limit_bytes', 'has_data_limit', 'admin_remaining'])
 
-    # Unblock if new limit gives headroom
-    if panel_admin.pamp_blocked and panel_admin.admin_used_bytes < new_limit_bytes:
-        try:
-            client.enable_admin(username)
-        except Exception as e:
-            logger.warning("enable_admin failed for %s: %s", username, e)
-        panel_admin.pamp_blocked = False
-        panel_admin.pamp_blocked_at = None
-        panel_admin.save(update_fields=['pamp_blocked', 'pamp_blocked_at'])
-
-    # Also set the limit on the Sigma panel
-    client.set_admin_limit(username, new_limit_gb)
-
-    sync_panel_admins.delay()
-
-    gb_label = f"{new_limit_gb:.0f} GB" if new_limit_gb < 1000 else f"{new_limit_gb / 1000:.1f} TB"
-    return HttpResponse(
-        f'<div class="action-result success">✓ PAMP limit set to {gb_label}</div>'
+    new_gb = new_limit_bytes / gb
+    label = "Unlimited" if new_limit_bytes <= 0 else (
+        f"{new_gb:.0f} GB" if new_gb < 1000 else f"{new_gb / 1000:.1f} TB"
     )
+    return HttpResponse(f'<div class="action-result success">✓ Admin limit set to {label} on Pasargad</div>')
 
 
 @login_required
