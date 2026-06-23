@@ -1,5 +1,6 @@
 import logging
 import requests
+from urllib.parse import quote
 from django.conf import settings
 
 logger = logging.getLogger('admins')
