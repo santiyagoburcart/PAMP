@@ -56,14 +56,12 @@
 <!-- Set Limit (superuser only) -->
 {% if user.is_superuser %}
 <div class="detail-section" style="margin-bottom:28px;">
-  <h3>Set PAMP Limit</h3>
+  <h3>Set Admin Limit</h3>
   <div id="limit-result-{{ a.username }}"></div>
 
   <div style="margin-bottom:14px;padding:10px 14px;background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2);border-radius:10px;font-size:13px;">
-    <span style="color:rgba(241,245,249,0.6);">Current PAMP Limit:</span>
-    <span style="color:#a5b4fc;font-weight:600;margin-left:6px;">
-      {% if has_pamp_limit %}{{ current_pamp_limit_fmt }}{% else %}Not set{% endif %}
-    </span>
+    <span style="color:rgba(241,245,249,0.6);">Current Limit:</span>
+    <span style="color:#a5b4fc;font-weight:600;margin-left:6px;">{{ admin_limit_fmt }}</span>
   </div>
 
   <p style="color:var(--muted);font-size:12px;margin-bottom:8px;">Set total limit:</p>
@@ -86,24 +84,34 @@
     {% endfor %}
   </div>
 
+  <p style="color:var(--muted);font-size:12px;margin:12px 0 8px;">Reduce from current limit:</p>
+  <div class="limit-group">
+    {% for gb in "5,10,30,50,100"|split:"," %}
+    <button class="limit-btn" style="border-color:rgba(245,158,11,0.3);color:#fcd34d;"
+      onclick="confirmSetLimit('{{ a.username }}','reduce',{{ gb }},'limit-result-{{ a.username }}','{{ csrf_token }}')">
+      −{{ gb }}GB
+    </button>
+    {% endfor %}
+  </div>
+
   <div class="custom-limit-wrap">
     <input type="number" id="custom-gb-{{ a.username }}" class="input" placeholder="Custom GB" min="1" style="width:130px;">
     <button class="btn btn-glass btn-sm" onclick="doCustomLimit('set')">Set Custom</button>
     <button class="btn btn-glass btn-sm" onclick="doCustomLimit('add')">Add Custom</button>
+    <button class="btn btn-glass btn-sm" onclick="doCustomLimit('reduce')">Reduce Custom</button>
   </div>
 
-  {% if has_pamp_limit %}
   <div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.08);">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
       <div>
-        <span style="font-size:12px;color:var(--muted);">Current PAMP Limit:</span>
-        <span style="font-size:14px;font-weight:600;color:#f1f5f9;margin-left:8px;">{{ current_pamp_limit_fmt }}</span>
+        <span style="font-size:12px;color:var(--muted);">Current Limit:</span>
+        <span style="font-size:14px;font-weight:600;color:#f1f5f9;margin-left:8px;">{{ admin_limit_fmt }}</span>
       </div>
       <button class="btn-danger-glass" style="padding:8px 18px;"
         onclick="confirmAdminAction(
           '{{ a.username }}', 'remove_limit_special',
-          '🗑️', 'Remove PAMP Limit',
-          'Remove the PAMP limit for <strong>{{ a.username }}</strong>? This will unblock them and remove all usage restrictions.',
+          '🗑️', 'Remove Admin Limit',
+          'Remove the limit for <strong>{{ a.username }}</strong>? This will make them unlimited on Pasargad.',
           'Remove Limit',
           'linear-gradient(135deg,#dc2626,#ef4444)'
         )">
@@ -111,7 +119,6 @@
       </button>
     </div>
   </div>
-  {% endif %}
 </div>
 
 <script>
