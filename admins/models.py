@@ -61,6 +61,8 @@ class PanelAdmin(models.Model):
         """Return (code, label, color) for the admin's true current state."""
         if self.status == 'disabled':
             return ('panel_disabled', 'Disabled', '#ef4444')
+        if self.pamp_blocked:
+            return ('pamp_limited', 'Limited', '#f59e0b')
         return ('active', 'Active', '#10b981')
 
     @property
