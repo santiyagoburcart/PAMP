@@ -68,6 +68,13 @@ def sync_panel_admins(self):
     if deleted_count:
         logger.info("Removed %d admins no longer on panel", deleted_count)
 
+    # Auto-enforce data limits
+    try:
+        check_and_enforce_limits()
+    except Exception as e:
+        logger.error("Limit enforcement error: %s", e)
+        errors.append(f"enforcement: {e}")
+
     duration = time.time() - start
     status = SyncLog.STATUS_SUCCESS if not errors else SyncLog.STATUS_PARTIAL
     SyncLog.objects.create(
@@ -82,59 +89,43 @@ def sync_panel_admins(self):
 
 
 def check_and_enforce_limits():
-    """Check all admins with a PAMP limit set and block/unblock as needed."""
-    from .models import PanelAdmin, AdminLimit
+    """Block admins who have consumed their Pasargad data_limit; unblock when limit is raised."""
+    from .models import PanelAdmin
     from .panel_api import PanelAPIClient
 
-    configs = AdminLimit.objects.select_related('panel_admin').filter(limit_bytes__gt=0)
-    count = configs.count()
+    limited = PanelAdmin.objects.filter(has_data_limit=True, admin_limit_bytes__gt=0)
+    count = limited.count()
     if not count:
-        logger.info("Enforcement: no admins with PAMP limits, skipping")
+        logger.info("Enforcement: no limited admins, skipping")
         return
 
-    logger.info("Enforcement: checking %d admin(s) with PAMP limits", count)
-
+    logger.info("Enforcement: checking %d limited admin(s)", count)
     client = PanelAPIClient()
     client.authenticate()
 
-    for lc in configs:
-        admin = lc.panel_admin
+    for admin in limited:
         used = admin.admin_used_bytes
-        limit = lc.limit_bytes
-        usage_pct = (used / limit) * 100 if limit > 0 else 0
+        limit = admin.admin_limit_bytes
+        pct = (used / limit * 100) if limit > 0 else 0
 
-        logger.info("Enforcement: %s at %.1f%% (used=%d, limit=%d, blocked=%s)",
-                    admin.username, usage_pct, used, limit, admin.pamp_blocked)
+        if used >= limit and not admin.pamp_blocked:
+            logger.warning("Enforcement: BLOCKING %s at %.1f%% (%d/%d)", admin.username, pct, used, limit)
+            ok, msg = client.disable_admin(admin.username)
+            if ok:
+                admin.pamp_blocked = True
+                admin.pamp_blocked_at = timezone.now()
+                admin.save(update_fields=['pamp_blocked', 'pamp_blocked_at'])
+            else:
+                logger.error("Enforcement: disable_admin %s failed: %s", admin.username, msg)
 
-        if usage_pct >= 100 and not admin.pamp_blocked:
-            logger.warning("Enforcement: BLOCKING %s at %.1f%%", admin.username, usage_pct)
-            try:
-                client.disable_admin(admin.username)
-            except Exception as e:
-                logger.error("disable_admin failed for %s: %s", admin.username, e)
-            admin.pamp_blocked = True
-            admin.pamp_blocked_at = timezone.now()
-            admin.save(update_fields=['pamp_blocked', 'pamp_blocked_at'])
-            if not lc.warning_sent_80:
-                lc.warning_sent_80 = True
-                lc.save(update_fields=['warning_sent_80'])
-
-        elif usage_pct < 100 and admin.pamp_blocked:
-            logger.info("Enforcement: UNBLOCKING %s at %.1f%%", admin.username, usage_pct)
-            try:
-                client.enable_admin(admin.username)
-            except Exception as e:
-                logger.error("enable_admin failed for %s: %s", admin.username, e)
-            admin.pamp_blocked = False
-            admin.pamp_blocked_at = None
-            admin.save(update_fields=['pamp_blocked', 'pamp_blocked_at'])
-
-        # 80% warning flag bookkeeping
-        if usage_pct >= 80 and not lc.warning_sent_80:
-            lc.warning_sent_80 = True
-            lc.save(update_fields=['warning_sent_80'])
-        elif usage_pct < 80 and lc.warning_sent_80:
-            lc.warning_sent_80 = False
-            lc.save(update_fields=['warning_sent_80'])
+        elif used < limit and admin.pamp_blocked:
+            logger.info("Enforcement: UNBLOCKING %s at %.1f%%", admin.username, pct)
+            ok, msg = client.enable_admin(admin.username)
+            if ok:
+                admin.pamp_blocked = False
+                admin.pamp_blocked_at = None
+                admin.save(update_fields=['pamp_blocked', 'pamp_blocked_at'])
+            else:
+                logger.error("Enforcement: enable_admin %s failed: %s", admin.username, msg)
 
     logger.info("Enforcement: done")
