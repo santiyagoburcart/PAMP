@@ -251,6 +251,15 @@ setInterval(updateServerStats, 2000);
             <span style="color:var(--muted);font-size:11px;"> / {{ a.active_user_count }} on</span>
           </td>
           <td>{{ a.admin_limit_fmt }}</td>
+          <td style="font-size:12px;">
+            {% with pl=pamp_limits|get_item:a.id %}
+              {% if pl %}
+                <span style="color:#a5b4fc;font-weight:600;">{{ pl }}</span>
+              {% else %}
+                <span style="color:var(--muted);">—</span>
+              {% endif %}
+            {% endwith %}
+          </td>
           <td>{{ a.total_user_used_fmt }}</td>
           <td>{{ a.admin_remaining_fmt }}</td>
           <td>
