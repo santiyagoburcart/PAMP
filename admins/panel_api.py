@@ -84,10 +84,11 @@ class PanelAPIClient:
         """PUT /api/admin/{username} with data_limit in bytes (None = unlimited)."""
         if not self._token:
             self.authenticate()
+        enc = quote(username, safe='')
         limit_bytes = int(limit_gb * 1024 ** 3) if limit_gb > 0 else None
         try:
             resp = self._session.put(
-                f"{self.base_url}/api/admin/{username}",
+                f"{self.base_url}/api/admin/{enc}",
                 headers=self._get_headers(),
                 json={"data_limit": limit_bytes},
                 timeout=15,
@@ -101,10 +102,11 @@ class PanelAPIClient:
         """Set the admin's data_limit on the Pasargad panel. limit_bytes=0 or None = unlimited."""
         if not self._token:
             self.authenticate()
+        enc = quote(username, safe='')
         try:
             payload = {"data_limit": int(limit_bytes) if limit_bytes and limit_bytes > 0 else None}
             resp = self._session.put(
-                f"{self.base_url}/api/admin/{username}",
+                f"{self.base_url}/api/admin/{enc}",
                 headers=self._get_headers(),
                 json=payload,
                 timeout=15,
@@ -112,11 +114,13 @@ class PanelAPIClient:
             if resp.status_code == 401:
                 self._token = None
                 resp = self._session.put(
-                    f"{self.base_url}/api/admin/{username}",
+                    f"{self.base_url}/api/admin/{enc}",
                     headers=self._get_headers(),
                     json=payload,
                     timeout=15,
                 )
+            if resp.status_code not in (200, 204):
+                logger.error("set_admin_data_limit %s: HTTP %s — %s", username, resp.status_code, resp.text[:200])
             return resp.status_code in (200, 204)
         except requests.RequestException as e:
             logger.error("set_admin_data_limit %s failed: %s", username, e)
