@@ -680,16 +680,21 @@ document.addEventListener('htmx:beforeRequest', function(e) {
 });
 document.addEventListener('htmx:afterRequest', function(e) {
   hideLoading();
-  const resp = e.detail.xhr.responseText || '';
+  const resp = (e.detail.xhr.responseText || '').trim();
   const cleanMsg = resp.replace(/<[^>]+>/g, '').trim();
-  if (e.detail.successful) {
-    if (resp.includes('success') || resp.includes('✓') || resp.includes('✅') || resp.includes('🔒') || resp.includes('👥')) {
-      showResultPopup(true, 'Done', cleanMsg || 'Action completed successfully');
-    } else if (resp.includes('error') || resp.includes('✗') || resp.includes('❌') || resp.includes('Failed')) {
-      showResultPopup(false, 'Failed', cleanMsg || 'Action failed');
-    }
+
+  if (!e.detail.successful) {
+    showResultPopup(false, 'Error', 'Request failed (HTTP ' + e.detail.xhr.status + '). Please try again.');
+    return;
+  }
+  if (resp.includes('action-result success') || resp.includes('✓') || resp.includes('✅')) {
+    showResultPopup(true, 'Success', cleanMsg || 'Action completed');
+  } else if (resp.includes('action-result error') || resp.includes('✗') || resp.includes('❌') || resp.includes('Failed')) {
+    showResultPopup(false, 'Failed', cleanMsg || 'Action failed');
+  } else if (cleanMsg) {
+    showResultPopup(true, 'Done', cleanMsg);
   } else {
-    showResultPopup(false, 'Error', 'Request failed. Please try again.');
+    showResultPopup(false, 'No response', 'Server returned an empty response.');
   }
 });
 document.addEventListener('htmx:responseError', function() {
