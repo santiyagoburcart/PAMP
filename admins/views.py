@@ -255,34 +255,28 @@ def set_limit(request, username):
 
 @login_required
 def remove_limit(request, username):
-    """Remove PAMP limit for an admin and unblock them. Superuser only."""
+    """Remove admin limit — sets unlimited on Pasargad. Superuser only."""
     if not request.user.is_superuser:
         return HttpResponse('<div class="action-result error">✗ Permission denied</div>')
     if request.method != 'POST':
         return HttpResponse(status=405)
 
+    from .panel_api import PanelAPIClient
+
     panel_admin = get_object_or_404(PanelAdmin, username=username)
+    client = PanelAPIClient()
+    client.authenticate()
 
-    AdminLimit.objects.filter(panel_admin=panel_admin).delete()
+    success = client.set_admin_data_limit(username, 0)
+    if not success:
+        return HttpResponse('<div class="action-result error">✗ Failed to remove limit on panel</div>')
 
-    was_blocked = panel_admin.pamp_blocked
-    panel_admin.pamp_blocked = False
-    panel_admin.pamp_blocked_at = None
-    panel_admin.save(update_fields=['pamp_blocked', 'pamp_blocked_at'])
+    panel_admin.admin_limit_bytes = 0
+    panel_admin.has_data_limit = False
+    panel_admin.admin_remaining = 0
+    panel_admin.save(update_fields=['admin_limit_bytes', 'has_data_limit', 'admin_remaining'])
 
-    if was_blocked:
-        from .panel_api import PanelAPIClient
-        client = PanelAPIClient()
-        try:
-            client.authenticate()
-            client.enable_admin(username)
-        except Exception as e:
-            logger.warning("remove_limit: enable_admin failed for %s: %s", username, e)
-
-    sync_panel_admins.delay()
-    return HttpResponse(
-        '<div class="action-result success">✓ PAMP limit removed — admin unblocked</div>'
-    )
+    return HttpResponse('<div class="action-result success">✓ Limit removed — admin is now unlimited</div>')
 
 
 @login_required
