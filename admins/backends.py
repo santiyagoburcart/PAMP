@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 
 
 class PanelAdminBackend(BaseBackend):
-    """Authenticate users directly against the Sigma panel API."""
+    """Authenticate users directly against the panel API."""
 
     def authenticate(self, request, username=None, password=None, **kwargs):
         if not username or not password:
