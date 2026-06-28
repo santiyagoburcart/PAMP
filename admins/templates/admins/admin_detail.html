@@ -149,7 +149,7 @@ function doCustomLimit(action) {
     <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">
       Admin Panel Access
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+    <div class="action-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
       {% if a.status == 'active' %}
       <button class="btn-danger-glass" onclick="confirmAdminAction('{{ a.username }}','action-result-{{ a.pk }}','disable_admin','🔒','Disable Admin','Disable <strong>{{ a.username }}</strong> on the panel. They will not be able to log in or connect.','Disable Admin','linear-gradient(135deg,#dc2626,#ef4444)')">
         🔒 Disable Admin Access
