@@ -12,9 +12,12 @@ class PanelAPIError(Exception):
 
 class PanelAPIClient:
     def __init__(self):
-        self.base_url = settings.PANEL_BASE_URL.rstrip('/')
-        self.username = settings.PANEL_USERNAME
-        self.password = settings.PANEL_PASSWORD
+        from admins.models import PanelConfig
+        cfg = PanelConfig.get_config()
+        # DB config takes priority; fall back to .env values for backwards compatibility
+        self.base_url = (cfg.base_url or getattr(settings, 'PANEL_BASE_URL', '')).rstrip('/')
+        self.username = cfg.username or getattr(settings, 'PANEL_USERNAME', '')
+        self.password = cfg.password or getattr(settings, 'PANEL_PASSWORD', '')
         self._token = None
         self._session = requests.Session()
         self._session.verify = False
