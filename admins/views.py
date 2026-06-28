@@ -428,6 +428,11 @@ def server_stats(request):
         return JsonResponse({'error': 'forbidden'}, status=403)
 
     try:
+        import psutil
+        _host_proc = _os.environ.get('HOST_PROC')
+        if _host_proc:
+            psutil.PROCFS_PATH = _host_proc
+
         cpu_percent = psutil.cpu_percent(interval=0.5)
         cpu_count = psutil.cpu_count()
 
