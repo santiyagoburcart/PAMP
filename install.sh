@@ -37,7 +37,7 @@ fi
 echo ""
 echo -e "${BLUE}━━━━━━━━━━━━━ Configuration ━━━━━━━━━━━━━${NC}"
 
-read -p "Panel URL (e.g. https://sigma.example.com): " PANEL_URL
+read -p "Panel URL (e.g. https://panel.example.com): " PANEL_URL
 read -p "Panel Username: " PANEL_USER
 read -s -p "Panel Password: " PANEL_PASS
 echo ""
