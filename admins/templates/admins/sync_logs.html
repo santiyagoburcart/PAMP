@@ -13,6 +13,22 @@
   }
 </style>
 
+<!-- Stats row -->
+<div class="stats-row" style="margin-bottom:24px;">
+  <div class="stat-card">
+    <div class="label">Total Syncs</div>
+    <div class="value accent">{{ total_syncs }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Successful</div>
+    <div class="value success">{{ success_count }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Failed</div>
+    <div class="value danger">{{ failed_count }}</div>
+  </div>
+</div>
+
 {% if logs %}
 {% with first=logs.0 %}
 <!-- Summary bar -->
