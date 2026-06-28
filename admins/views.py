@@ -250,14 +250,14 @@ def remove_limit(request, username):
 @login_required
 def update_sync_interval(request):
     if not request.user.is_superuser:
-        return HttpResponse(status=403)
+        return HttpResponse('<div class="action-result error">✗ Permission denied</div>', status=403)
     if request.method != 'POST':
         return HttpResponse(status=405)
 
     try:
         minutes = max(1, int(request.POST.get('interval_minutes', 15)))
     except (ValueError, TypeError):
-        return HttpResponse('<span class="action-result error">✗ Invalid value</span>', status=400)
+        return HttpResponse('<div class="action-result error">✗ Invalid value</div>', status=400)
 
     from django_celery_beat.models import PeriodicTask, IntervalSchedule
 
@@ -269,10 +269,23 @@ def update_sync_interval(request):
         every=minutes,
         period=IntervalSchedule.MINUTES,
     )
-    PeriodicTask.objects.filter(name='Sync Panel Admins').update(interval=schedule)
+    # Use update_or_create + save() so django-celery-beat's PeriodicTaskChanged
+    # signal fires and the scheduler picks up the new interval immediately.
+    task, _ = PeriodicTask.objects.get_or_create(
+        name='Sync Panel Admins',
+        defaults={
+            'task': 'admins.tasks.sync_panel_admins',
+            'interval': schedule,
+            'enabled': True,
+        },
+    )
+    task.interval = schedule
+    task.task = 'admins.tasks.sync_panel_admins'
+    task.enabled = True
+    task.save()
 
     return HttpResponse(
-        f'<span class="action-result success">✓ Sync set to every {minutes} minutes</span>'
+        f'<div class="action-result success">✓ Auto-sync set to every {minutes} minutes</div>'
     )
 
 
