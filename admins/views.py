@@ -380,9 +380,6 @@ def backup_database(request):
 
 
 import os as _os
-_host_proc = _os.environ.get('HOST_PROC')
-if _host_proc:
-    psutil.PROCFS_PATH = _host_proc
 
 
 def _read_host_meminfo():
