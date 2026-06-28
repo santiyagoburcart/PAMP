@@ -57,6 +57,16 @@ def _enrich(panel_admin):
     }
 
 
+# ── helpers ─────────────────────────────────────────────────────────────────
+
+def _get_version():
+    try:
+        with open(_os.path.join(dj_settings.BASE_DIR, 'VERSION')) as f:
+            return f.read().strip()
+    except Exception:
+        return 'dev'
+
+
 # ── main views ─────────────────────────────────────────────────────────────
 
 @login_required
