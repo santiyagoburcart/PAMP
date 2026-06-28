@@ -314,114 +314,23 @@ setInterval(updateServerStats, 2000);
 </div>
 {% endif %}
 
-<!-- ── 5. Settings (collapsible, closed by default) ────────────────── -->
+<!-- ── 5. Quick-access footer links (superuser only) ──────────────── -->
 {% if user.is_superuser %}
-<details style="margin-top:32px;">
-  <summary class="collapsible-header">
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9z"/></svg>
+<div style="display:flex;gap:12px;margin-top:32px;flex-wrap:wrap;">
+  <a href="{% url 'sync_logs' %}" class="btn btn-glass" style="font-size:12px;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    View Sync Logs
+    {% if last_sync %}<span style="margin-left:4px;padding:2px 7px;background:rgba(255,255,255,0.08);border-radius:10px;font-size:10px;color:var(--muted);">{{ last_sync.created_at|date:"H:i" }}</span>{% endif %}
+  </a>
+  <a href="{% url 'settings' %}" class="btn btn-glass" style="font-size:12px;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9z"/></svg>
     Settings
-    <svg class="collapsible-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-  </summary>
-  <div class="collapsible-body">
-
-    <!-- Panel Connection -->
-    <div style="margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid var(--glass-border);">
-      <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">Panel Connection</div>
-      <div id="panel-config-result" style="margin-bottom:10px;"></div>
-      <div style="display:flex;flex-direction:column;gap:10px;max-width:480px;">
-        <input type="text" id="cfg-url" name="base_url" class="input" placeholder="Panel URL (https://…)" value="{{ panel_config.base_url }}">
-        <input type="text" id="cfg-user" name="username" class="input" placeholder="Panel Username" value="{{ panel_config.username }}">
-        <input type="password" id="cfg-pass" name="password" class="input" placeholder="Password (leave blank to keep current)">
-        <button class="btn btn-primary btn-sm" style="align-self:flex-start;"
-          hx-post="{% url 'panel_config' %}"
-          hx-include="#cfg-url,#cfg-user,#cfg-pass"
-          hx-target="#panel-config-result"
-          hx-swap="innerHTML"
-          hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
-          Save &amp; Test Connection
-        </button>
-      </div>
-    </div>
-
-    <!-- Auto-Sync Interval -->
-    <div style="margin-bottom:24px;">
-      <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">Auto-Sync Interval</div>
-      <div id="sync-interval-result" style="margin-bottom:10px;"></div>
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-        <span style="color:var(--muted);font-size:13px;">Every</span>
-        <input type="number" id="interval-input" name="interval_minutes" class="input"
-               value="{{ sync_interval }}" min="1" max="1440" style="width:80px;">
-        <span style="color:var(--muted);font-size:13px;">minutes</span>
-        <button class="btn btn-primary btn-sm"
-          hx-post="{% url 'update_sync_interval' %}"
-          hx-include="#interval-input"
-          hx-target="#sync-interval-result"
-          hx-swap="innerHTML"
-          hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
-          Save
-        </button>
-        <div style="display:flex;gap:6px;">
-          {% for m in "5 10 15 30 60"|split:" " %}
-          <button class="limit-btn" style="padding:4px 10px;font-size:11px;"
-                  onclick="document.getElementById('interval-input').value='{{ m }}'">{{ m }}m</button>
-          {% endfor %}
-        </div>
-      </div>
-    </div>
-
-    <!-- Database Backup -->
-    <div style="padding-top:20px;border-top:1px solid var(--glass-border);">
-      <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">Database Backup</div>
-      <p style="color:var(--muted);font-size:12px;margin-bottom:12px;">Download a full SQL dump of the database (admins, limits, settings).</p>
-      <a href="{% url 'backup_database' %}" class="btn btn-primary">⬇ Download SQL Backup</a>
-    </div>
-
-  </div>
-</details>
-{% endif %}
-
-<!-- ── 6. Sync Logs (collapsible, closed by default) ──────────────── -->
-{% if recent_logs %}
-<details style="margin-top:16px;">
-  <summary class="collapsible-header">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
-    Sync Logs
-    <span style="font-size:11px;color:var(--muted);font-weight:400;">last {{ recent_logs|length }}</span>
-    <svg class="collapsible-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-  </summary>
-  <div class="collapsible-body" style="padding:0;">
-    <table>
-      <thead>
-        <tr><th>Time</th><th>Status</th><th>Admins</th><th>Duration</th><th>Error</th></tr>
-      </thead>
-      <tbody>
-        {% for log in recent_logs %}
-        <tr>
-          <td style="color:var(--muted);font-size:12px;">{{ log.created_at|date:"Y-m-d H:i:s" }}</td>
-          <td>
-            {% if log.status == 'success' %}
-              <span class="badge" style="background:rgba(16,185,129,0.15);color:#10b981;border:1px solid rgba(16,185,129,0.3);">✓ Success</span>
-            {% elif log.status == 'failed' %}
-              <span class="badge" style="background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.3);">✕ Failed</span>
-            {% elif log.status == 'partial' %}
-              <span class="badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);">⚠ Partial</span>
-            {% else %}
-              <span class="badge" style="background:rgba(99,102,241,0.15);color:#a5b4fc;border:1px solid rgba(99,102,241,0.3);">● {{ log.status }}</span>
-            {% endif %}
-          </td>
-          <td style="font-size:13px;">{{ log.admins_synced }}</td>
-          <td style="font-size:13px;color:var(--muted);">
-            {% if log.duration_seconds %}{{ log.duration_seconds|floatformat:2 }}s{% else %}—{% endif %}
-          </td>
-          <td style="font-size:12px;color:#fca5a5;">
-            {% if log.error_message %}{{ log.error_message|truncatechars:60 }}{% else %}—{% endif %}
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</details>
+  </a>
+  <a href="{% url 'backup_database' %}" class="btn btn-glass" style="font-size:12px;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    DB Backup
+  </a>
+</div>
 {% endif %}
 
 {% endblock %}
