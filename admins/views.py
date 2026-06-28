@@ -123,6 +123,8 @@ def dashboard(request):
         'recent_logs': SyncLog.objects.all()[:10],
         'sync_interval': SyncSettings.get_interval(),
         'over_limit_admins': over_limit_list,
+        'pamp_version': _get_version(),
+        'github_url': 'https://github.com/santiyagoburcart/PAMP',
     }
     return render(request, 'admins/dashboard.html', context)
 
