@@ -101,10 +101,7 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
-# Panel API
-PANEL_BASE_URL = config('PANEL_BASE_URL', default='')
-PANEL_USERNAME = config('PANEL_USERNAME', default='')
-PANEL_PASSWORD = config('PANEL_PASSWORD', default='')
+# Panel API — credentials are stored in the PanelConfig DB model, editable via Settings UI
 PANEL_SYNC_INTERVAL_MINUTES = config('PANEL_SYNC_INTERVAL_MINUTES', default=15, cast=int)
 
 LOGGING = {
