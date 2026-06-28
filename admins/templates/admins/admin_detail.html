@@ -151,14 +151,14 @@ function doCustomLimit(action) {
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
       {% if a.status == 'active' %}
-      <button class="btn-danger-glass" onclick="confirmAdminAction('{{ a.username }}','action-result-{{ a.pk }}','disable_admin','🔒','Disable Admin','Disable <strong>{{ a.username }}</strong> on the Sigma panel. They will not be able to log in or connect.','Disable Admin','linear-gradient(135deg,#dc2626,#ef4444)')">
+      <button class="btn-danger-glass" onclick="confirmAdminAction('{{ a.username }}','action-result-{{ a.pk }}','disable_admin','🔒','Disable Admin','Disable <strong>{{ a.username }}</strong> on the panel. They will not be able to log in or connect.','Disable Admin','linear-gradient(135deg,#dc2626,#ef4444)')">
         🔒 Disable Admin Access
       </button>
       <div style="display:flex;align-items:center;justify-content:center;padding:12px;color:var(--muted);font-size:12px;background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.15);border-radius:10px;">
         ✓ Admin access is currently enabled
       </div>
       {% else %}
-      <button class="btn-success-glass" onclick="confirmAdminAction('{{ a.username }}','action-result-{{ a.pk }}','enable_admin','✅','Enable Admin','Re-enable <strong>{{ a.username }}</strong> on the Sigma panel.','Enable Admin','linear-gradient(135deg,#059669,#10b981)')">
+      <button class="btn-success-glass" onclick="confirmAdminAction('{{ a.username }}','action-result-{{ a.pk }}','enable_admin','✅','Enable Admin','Re-enable <strong>{{ a.username }}</strong> on the panel.','Enable Admin','linear-gradient(135deg,#059669,#10b981)')">
         ✅ Enable Admin Access
       </button>
       <div style="display:flex;align-items:center;justify-content:center;padding:12px;color:var(--muted);font-size:12px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:10px;">
