@@ -5,35 +5,6 @@
 
 {% block content %}
 <style>
-  details summary::-webkit-details-marker { display: none; }
-  details summary { list-style: none; }
-  .collapsible-header {
-    cursor: pointer;
-    font-size: 13px; font-weight: 600;
-    color: var(--text);
-    padding: 13px 18px;
-    background: var(--glass);
-    border: 1px solid var(--glass-border);
-    border-radius: 12px;
-    display: flex; align-items: center; gap: 10px;
-    user-select: none;
-    transition: background .15s;
-  }
-  .collapsible-header:hover { background: var(--glass-hover); }
-  details[open] .collapsible-header { border-radius: 12px 12px 0 0; }
-  .collapsible-body {
-    padding: 20px;
-    background: var(--glass);
-    border: 1px solid var(--glass-border);
-    border-top: none;
-    border-radius: 0 0 12px 12px;
-  }
-  .collapsible-chevron {
-    margin-left: auto;
-    transition: transform .2s;
-    color: var(--muted);
-  }
-  details[open] .collapsible-chevron { transform: rotate(180deg); }
   @keyframes pulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.4; }
