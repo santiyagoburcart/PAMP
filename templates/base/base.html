@@ -402,32 +402,94 @@
     .toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
     .empty { text-align: center; padding: 60px; color: var(--muted); }
 
-    /* ── Responsive breakpoints ─────────────────────────────────────────── */
-    @media (max-width: 768px) {
-      .sidebar {
-        transform: translateX(-100%);
-      }
-      .sidebar.open {
-        transform: translateX(0);
-      }
-      .main { margin-left: 0; }
-      .mobile-menu-btn { display: flex; }
-      .content { padding: 16px; }
-      .topbar { padding: 12px 16px; }
-      .stats-row { grid-template-columns: 1fr 1fr; gap: 10px; }
+    /* ── Responsive — Tablet (≤1024px) ─────────────────────────────────── */
+    @media (max-width: 1024px) {
+      .stats-row { grid-template-columns: repeat(3, 1fr); }
       .detail-grid { grid-template-columns: 1fr; }
-      .card { overflow-x: auto; }
-      table { min-width: 580px; }
-      .portal-hero-name { font-size: 22px; }
-      .stat-card .value { font-size: 22px; }
-      .portal-hero { padding: 22px; }
+      .settings-grid { grid-template-columns: 1fr !important; }
     }
+
+    /* ── Responsive — Mobile (≤768px) ──────────────────────────────────── */
+    @media (max-width: 768px) {
+      /* Sidebar slides off-canvas */
+      .sidebar { transform: translateX(-100%); width: 260px; }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-left: 0 !important; }
+      .mobile-menu-btn { display: flex !important; }
+
+      /* Spacing */
+      .content { padding: 14px !important; }
+      .topbar { padding: 12px 14px !important; }
+      .topbar-title { font-size: 14px; }
+
+      /* Hide text label on topbar buttons, keep icon */
+      .btn-label { display: none; }
+
+      /* Summary cards: 2-up */
+      .stats-row { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+      .stat-card { padding: 14px 16px !important; }
+      .stat-card .value { font-size: 22px !important; }
+
+      /* Server resource mini-grid: 2-up */
+      .resource-grid { grid-template-columns: 1fr 1fr !important; }
+
+      /* Tables scroll horizontally */
+      .card { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .card::-webkit-scrollbar { height: 4px; }
+      .card::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 2px; }
+      table { min-width: 600px; }
+
+      /* Toolbar stacks */
+      .toolbar { flex-direction: column !important; align-items: stretch !important; gap: 10px !important; }
+      .toolbar form { flex-direction: column !important; width: 100% !important; }
+      .toolbar .input, .toolbar select { width: 100% !important; }
+
+      /* Detail grids: single column */
+      .detail-grid { grid-template-columns: 1fr !important; gap: 14px !important; }
+      .detail-section { padding: 16px !important; }
+
+      /* Admin action button pairs: stack */
+      .action-grid { grid-template-columns: 1fr !important; }
+
+      /* Limit buttons wrap */
+      .limit-group { gap: 6px !important; }
+      .limit-btn { padding: 8px 12px !important; font-size: 12px !important; }
+      .custom-limit-wrap { flex-direction: column !important; align-items: stretch !important; }
+      .custom-limit-wrap .input { width: 100% !important; }
+      .custom-limit-wrap .btn { width: 100% !important; justify-content: center; }
+
+      /* Portal hero smaller */
+      .portal-hero { padding: 20px !important; }
+      .portal-hero-name { font-size: 22px !important; }
+
+      /* Settings card grid: single column */
+      .settings-grid { grid-template-columns: 1fr !important; }
+      .settings-card { padding: 18px !important; }
+
+      /* Modals fit viewport */
+      #confirm-modal > div { max-width: calc(100vw - 32px) !important; }
+      #result-popup > div { max-width: calc(100vw - 32px) !important; }
+      #loading-overlay > div { max-width: calc(100vw - 48px) !important; }
+    }
+
+    /* ── Responsive — Small phone (≤480px) ─────────────────────────────── */
     @media (max-width: 480px) {
-      .stats-row { grid-template-columns: 1fr; }
-      .toolbar { flex-direction: column; align-items: stretch; }
-      .toolbar form { flex-direction: column; }
-      .input { width: 100%; }
-      .custom-limit-wrap { flex-direction: column; align-items: stretch; }
+      /* Single column everywhere */
+      .stats-row { grid-template-columns: 1fr !important; }
+      .resource-grid { grid-template-columns: 1fr !important; }
+      .content { padding: 12px !important; }
+      .stat-card .value { font-size: 20px !important; }
+      .portal-hero-name { font-size: 20px !important; }
+
+      /* Limit preset buttons: 3-up */
+      .limit-btn { flex: 1 1 calc(33% - 8px); text-align: center; }
+
+      /* Full-width inputs on settings page */
+      .settings-card .input { width: 100% !important; }
+
+      /* Summary bar on sync logs page wraps */
+      .sync-summary { flex-direction: column !important; gap: 12px !important; }
+      .sync-summary-divider { display: none !important; }
     }
   </style>
   {% block head %}{% endblock %}
