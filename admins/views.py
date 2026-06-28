@@ -302,6 +302,29 @@ def update_sync_interval(request):
 
 
 @login_required
+def panel_config(request):
+    if not request.user.is_superuser:
+        return HttpResponse('<div class="action-result error">✗ Permission denied</div>', status=403)
+    if request.method != 'POST':
+        return HttpResponse(status=405)
+
+    from admins.models import PanelConfig
+    cfg = PanelConfig.get_config()
+    cfg.base_url = request.POST.get('base_url', '').strip()
+    cfg.username = request.POST.get('username', '').strip()
+    new_password = request.POST.get('password', '').strip()
+    if new_password:
+        cfg.password = new_password
+    cfg.save()
+
+    from admins.panel_api import PanelAPIClient
+    client = PanelAPIClient()
+    if client.login():
+        return HttpResponse('<div class="action-result success">✓ Panel config saved &amp; connection verified</div>')
+    return HttpResponse('<div class="action-result error">✗ Saved, but connection test failed — check credentials</div>')
+
+
+@login_required
 def admin_action(request, username):
     """Handle disable/enable admin and their users. Superuser only."""
     if not request.user.is_superuser:
