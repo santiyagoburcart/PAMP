@@ -7,7 +7,7 @@
 ![Django](https://img.shields.io/badge/Django-5.0-green)
 ![Docker](https://img.shields.io/badge/Docker-ready-blue)
 
-A beautiful glassmorphism web panel for managing Pasargad/Sigma VPN panel admins.
+A beautiful glassmorphism web panel for managing Pasargad VPN panel admins.
 
 </div>
 
