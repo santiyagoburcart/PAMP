@@ -1,0 +1,193 @@
+{% extends "base/base.html" %}
+{% block title %}Settings — PAMP{% endblock %}
+{% block topbar_title %}Settings{% endblock %}
+
+{% block content %}
+<style>
+  .settings-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+  .settings-card {
+    background: var(--glass);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .settings-card-header {
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--glass-border);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .settings-card-header .icon {
+    width: 34px; height: 34px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .settings-card-header .title { font-size: 14px; font-weight: 600; }
+  .settings-card-header .subtitle { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .settings-card-body { padding: 22px; }
+  .field-group { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+  .field-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+  .field-wrap { display: flex; flex-direction: column; gap: 6px; }
+  .result-zone { min-height: 20px; }
+  @media (max-width: 900px) {
+    .settings-grid { grid-template-columns: 1fr; }
+  }
+</style>
+
+<div style="max-width:900px;">
+
+  <div class="settings-grid">
+
+    <!-- Panel Connection -->
+    <div class="settings-card">
+      <div class="settings-card-header">
+        <div class="icon" style="background:linear-gradient(135deg,rgba(99,102,241,0.3),rgba(139,92,246,0.2));border:1px solid rgba(99,102,241,0.3);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="#a5b4fc"/></svg>
+        </div>
+        <div>
+          <div class="title">Panel Connection</div>
+          <div class="subtitle">URL and credentials for the Pasargad VPN panel</div>
+        </div>
+      </div>
+      <div class="settings-card-body">
+        <div class="result-zone" id="panel-config-result" style="margin-bottom:14px;"></div>
+        <div class="field-group">
+          <div class="field-wrap">
+            <div class="field-label">Panel URL</div>
+            <input type="text" id="cfg-url" name="base_url" class="input" style="width:100%;"
+                   placeholder="https://panel.example.com" value="{{ panel_config.base_url }}">
+          </div>
+          <div class="field-wrap">
+            <div class="field-label">Username</div>
+            <input type="text" id="cfg-user" name="username" class="input" style="width:100%;"
+                   placeholder="admin" value="{{ panel_config.username }}">
+          </div>
+          <div class="field-wrap">
+            <div class="field-label">Password</div>
+            <input type="password" id="cfg-pass" name="password" class="input" style="width:100%;"
+                   placeholder="Leave blank to keep current password">
+          </div>
+        </div>
+        {% if panel_config.updated_at %}
+        <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">
+          Last updated: {{ panel_config.updated_at|date:"Y-m-d H:i" }}
+        </div>
+        {% endif %}
+        <button class="btn btn-primary"
+          hx-post="{% url 'panel_config' %}"
+          hx-include="#cfg-url,#cfg-user,#cfg-pass"
+          hx-target="#panel-config-result"
+          hx-swap="innerHTML"
+          hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Save &amp; Test Connection
+        </button>
+      </div>
+    </div>
+
+    <!-- Auto-Sync -->
+    <div class="settings-card">
+      <div class="settings-card-header">
+        <div class="icon" style="background:linear-gradient(135deg,rgba(6,182,212,0.3),rgba(59,130,246,0.2));border:1px solid rgba(6,182,212,0.3);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#67e8f9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div>
+          <div class="title">Auto-Sync</div>
+          <div class="subtitle">How often to pull fresh data from the panel</div>
+        </div>
+      </div>
+      <div class="settings-card-body">
+        <div class="result-zone" id="sync-interval-result" style="margin-bottom:14px;"></div>
+        <div style="margin-bottom:16px;">
+          <div class="field-label" style="margin-bottom:8px;">Interval</div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <input type="number" id="interval-input" name="interval_minutes" class="input"
+                   value="{{ sync_interval }}" min="1" max="1440" style="width:90px;">
+            <span style="color:var(--muted);font-size:13px;">minutes</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;">
+          {% for m in "5 10 15 30 60"|split:" " %}
+          <button class="limit-btn" style="padding:5px 12px;font-size:11px;"
+                  onclick="document.getElementById('interval-input').value='{{ m }}'">{{ m }}m</button>
+          {% endfor %}
+          <button class="limit-btn" style="padding:5px 12px;font-size:11px;"
+                  onclick="document.getElementById('interval-input').value='120'">2h</button>
+        </div>
+        <button class="btn btn-primary"
+          hx-post="{% url 'update_sync_interval' %}"
+          hx-include="#interval-input"
+          hx-target="#sync-interval-result"
+          hx-swap="innerHTML"
+          hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13"/><polyline points="7 3 7 8 15 8"/></svg>
+          Save Interval
+        </button>
+      </div>
+    </div>
+
+    <!-- Database Backup -->
+    <div class="settings-card">
+      <div class="settings-card-header">
+        <div class="icon" style="background:linear-gradient(135deg,rgba(16,185,129,0.3),rgba(5,150,105,0.2));border:1px solid rgba(16,185,129,0.3);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6ee7b7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        </div>
+        <div>
+          <div class="title">Database Backup</div>
+          <div class="subtitle">Download a full SQL dump of the database</div>
+        </div>
+      </div>
+      <div class="settings-card-body">
+        <p style="color:var(--muted);font-size:13px;line-height:1.6;margin-bottom:20px;">
+          Downloads a complete SQL backup including all admins, sync logs, limits, and settings. The file can be used to restore the database on a new instance.
+        </p>
+        <a href="{% url 'backup_database' %}" class="btn btn-primary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download SQL Backup
+        </a>
+      </div>
+    </div>
+
+    <!-- About -->
+    <div class="settings-card">
+      <div class="settings-card-header">
+        <div class="icon" style="background:linear-gradient(135deg,rgba(245,158,11,0.3),rgba(234,179,8,0.2));border:1px solid rgba(245,158,11,0.3);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fcd34d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <div>
+          <div class="title">About PAMP</div>
+          <div class="subtitle">Version and project information</div>
+        </div>
+      </div>
+      <div class="settings-card-body">
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+            <span style="color:var(--muted);font-size:13px;">Version</span>
+            <span style="font-weight:600;font-size:13px;color:#a5b4fc;">v{{ pamp_version }}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+            <span style="color:var(--muted);font-size:13px;">License</span>
+            <span style="font-weight:500;font-size:13px;">MIT</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;">
+            <span style="color:var(--muted);font-size:13px;">Source</span>
+            <a href="{{ github_url }}" target="_blank" rel="noopener"
+               style="display:flex;align-items:center;gap:6px;color:#a5b4fc;text-decoration:none;font-size:13px;font-weight:500;transition:color .2s;"
+               onmouseover="this.style.color='#c7d2fe'" onmouseout="this.style.color='#a5b4fc'">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.5.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02.8-.22 1.65-.33 2.5-.33.85 0 1.7.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10.01 10.01 0 0 0 22 12c0-5.52-4.48-10-10-10z"/></svg>
+              GitHub
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
