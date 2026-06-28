@@ -125,6 +125,7 @@ def dashboard(request):
         'over_limit_admins': over_limit_list,
         'pamp_version': _get_version(),
         'github_url': 'https://github.com/santiyagoburcart/PAMP',
+        'panel_config': PanelConfig.get_config(),
     }
     return render(request, 'admins/dashboard.html', context)
 
