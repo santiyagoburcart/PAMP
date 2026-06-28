@@ -2,6 +2,29 @@ from django.db import models
 from django.utils import timezone
 
 
+class PanelConfig(models.Model):
+    """Stores VPN panel connection settings — single row, edited via UI."""
+    base_url = models.CharField(max_length=255, blank=True)
+    username = models.CharField(max_length=150, blank=True)
+    password = models.CharField(max_length=255, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Panel Configuration'
+
+    def __str__(self):
+        return f"Panel: {self.base_url or '(not set)'}"
+
+    @classmethod
+    def get_config(cls):
+        obj, _ = cls.objects.get_or_create(pk=1, defaults={
+            'base_url': '',
+            'username': '',
+            'password': '',
+        })
+        return obj
+
+
 def _fmt_bytes(b):
     b = b or 0
     if b == 0:
