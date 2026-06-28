@@ -309,7 +309,6 @@ def panel_config(request):
     if request.method != 'POST':
         return HttpResponse(status=405)
 
-    from admins.models import PanelConfig
     cfg = PanelConfig.get_config()
     cfg.base_url = request.POST.get('base_url', '').strip()
     cfg.username = request.POST.get('username', '').strip()
@@ -323,6 +322,26 @@ def panel_config(request):
     if client.login():
         return HttpResponse('<div class="action-result success">✓ Panel config saved &amp; connection verified</div>')
     return HttpResponse('<div class="action-result error">✗ Saved, but connection test failed — check credentials</div>')
+
+
+@login_required
+def settings_page(request):
+    if not request.user.is_superuser:
+        from django.shortcuts import redirect
+        return redirect('dashboard')
+    return render(request, 'admins/settings.html', {
+        'panel_config': PanelConfig.get_config(),
+        'sync_interval': SyncSettings.get_interval(),
+    })
+
+
+@login_required
+def sync_logs_page(request):
+    if not request.user.is_superuser:
+        from django.shortcuts import redirect
+        return redirect('dashboard')
+    logs = SyncLog.objects.all()[:100]
+    return render(request, 'admins/sync_logs.html', {'logs': logs})
 
 
 @login_required
