@@ -1,7 +1,6 @@
 import logging
 import requests
 from urllib.parse import quote
-from django.conf import settings
 
 logger = logging.getLogger('admins')
 
@@ -14,10 +13,9 @@ class PanelAPIClient:
     def __init__(self):
         from admins.models import PanelConfig
         cfg = PanelConfig.get_config()
-        # DB config takes priority; fall back to .env values for backwards compatibility
-        self.base_url = (cfg.base_url or getattr(settings, 'PANEL_BASE_URL', '')).rstrip('/')
-        self.username = cfg.username or getattr(settings, 'PANEL_USERNAME', '')
-        self.password = cfg.password or getattr(settings, 'PANEL_PASSWORD', '')
+        self.base_url = cfg.base_url.rstrip('/')
+        self.username = cfg.username
+        self.password = cfg.password
         self._token = None
         self._session = requests.Session()
         self._session.verify = False
