@@ -17,7 +17,7 @@ A beautiful glassmorphism web panel for managing Pasargad VPN panel admins.
 
 - **Admin Dashboard** — Monitor all admins with traffic usage, limits, progress bars
 - **Per-Admin Portal** — Each admin logs in and sees only their own data
-- **PAMP Limits** — Set custom limits independent of Sigma panel
+- **Data Limits** — Set per-admin data limits synced directly to the panel
 - **Auto Enforcement** — Automatically disable users when admin reaches limit
 - **Hidden Traffic Detection** — `total_user_limit − total_user_used − remaining`
 - **Disable/Enable** — Control admin access and their users from the panel
