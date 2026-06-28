@@ -324,6 +324,25 @@ setInterval(updateServerStats, 2000);
   </summary>
   <div class="collapsible-body">
 
+    <!-- Panel Connection -->
+    <div style="margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid var(--glass-border);">
+      <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">Panel Connection</div>
+      <div id="panel-config-result" style="margin-bottom:10px;"></div>
+      <div style="display:flex;flex-direction:column;gap:10px;max-width:480px;">
+        <input type="text" id="cfg-url" name="base_url" class="input" placeholder="Panel URL (https://…)" value="{{ panel_config.base_url }}">
+        <input type="text" id="cfg-user" name="username" class="input" placeholder="Panel Username" value="{{ panel_config.username }}">
+        <input type="password" id="cfg-pass" name="password" class="input" placeholder="Password (leave blank to keep current)">
+        <button class="btn btn-primary btn-sm" style="align-self:flex-start;"
+          hx-post="{% url 'panel_config' %}"
+          hx-include="#cfg-url,#cfg-user,#cfg-pass"
+          hx-target="#panel-config-result"
+          hx-swap="innerHTML"
+          hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+          Save &amp; Test Connection
+        </button>
+      </div>
+    </div>
+
     <!-- Auto-Sync Interval -->
     <div style="margin-bottom:24px;">
       <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">Auto-Sync Interval</div>
