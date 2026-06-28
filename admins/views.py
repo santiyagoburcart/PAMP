@@ -341,7 +341,13 @@ def sync_logs_page(request):
         from django.shortcuts import redirect
         return redirect('dashboard')
     logs = SyncLog.objects.all()[:100]
-    return render(request, 'admins/sync_logs.html', {'logs': logs})
+    total = SyncLog.objects.count()
+    return render(request, 'admins/sync_logs.html', {
+        'logs': logs,
+        'total_syncs': total,
+        'success_count': SyncLog.objects.filter(status='success').count(),
+        'failed_count': SyncLog.objects.filter(status='failed').count(),
+    })
 
 
 @login_required
