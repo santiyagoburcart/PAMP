@@ -173,7 +173,7 @@ function doCustomLimit(action) {
     <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">
       Users Control ({{ a.active_users }} active / {{ a.users_count }} total)
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+    <div class="action-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
       <button class="btn-danger-glass" onclick="confirmAdminAction('{{ a.username }}','action-result-{{ a.pk }}','disable_users','👥🔒','Disable All Users','Disable ALL users of <strong>{{ a.username }}</strong>. All their connections will be cut immediately.','Disable All Users','linear-gradient(135deg,#9f1239,#e11d48)')">
         👥 Disable All Users
       </button>
