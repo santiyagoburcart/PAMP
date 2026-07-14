@@ -121,10 +121,10 @@ class PanelAdmin(models.Model):
 
     @property
     def sold_limit_bytes(self):
-        """Sold Limit = remaining − total_user_limit − total_user_used. Zero if unlimited."""
+        """Sold Limit = remaining − total_user_limit + total_user_used. Zero if unlimited."""
         if self.is_unlimited:
             return 0
-        return self.admin_remaining - self.total_user_limit - self.total_user_used
+        return self.admin_remaining - self.total_user_limit + self.total_user_used
 
     @property
     def hidden_traffic(self):
