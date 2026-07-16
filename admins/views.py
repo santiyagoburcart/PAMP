@@ -327,6 +327,19 @@ def panel_config(request):
 
 
 @login_required
+def reset_deleted_traffic(request, username):
+    if not request.user.is_superuser:
+        return HttpResponse('<div class="action-result error">✗ Permission denied</div>', status=403)
+    if request.method != 'POST':
+        return HttpResponse(status=405)
+    panel_admin = get_object_or_404(PanelAdmin, username=username)
+    panel_admin.deleted_users_used_bytes = 0
+    panel_admin.deleted_traffic_reset_at = timezone.now()
+    panel_admin.save(update_fields=['deleted_users_used_bytes', 'deleted_traffic_reset_at'])
+    return HttpResponse('<div class="action-result success">✓ Deleted-users counter reset to 0</div>')
+
+
+@login_required
 def settings_page(request):
     if not request.user.is_superuser:
         from django.shortcuts import redirect
