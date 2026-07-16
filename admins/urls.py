@@ -8,6 +8,7 @@ urlpatterns = [
     path('portal-redirect/', views.login_redirect, name='login_redirect'),
     path('panel/<str:username>/set-limit/', views.set_limit, name='set_limit'),
     path('panel/<str:username>/remove-limit/', views.remove_limit, name='remove_limit'),
+    path('panel/<str:username>/reset-deleted-traffic/', views.reset_deleted_traffic, name='reset_deleted_traffic'),
     path('panel/<str:username>/action/', views.admin_action, name='admin_action'),
     path('panel/<str:username>/', views.admin_detail, name='admin_detail'),
     path('sync/', views.trigger_sync, name='trigger_sync'),
