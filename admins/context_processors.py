@@ -1,20 +1,16 @@
 import os
 from django.conf import settings
 
-
-def _read_version():
-    try:
-        with open(os.path.join(settings.BASE_DIR, 'VERSION')) as f:
-            return f.read().strip()
-    except Exception:
-        return 'dev'
-
-
-_VERSION = _read_version()
+_VERSION_FILE = os.path.join(settings.BASE_DIR, 'VERSION')
 
 
 def pamp_globals(request):
+    try:
+        with open(_VERSION_FILE) as f:
+            version = f.read().strip()
+    except Exception:
+        version = 'dev'
     return {
-        'pamp_version': _VERSION,
+        'pamp_version': version,
         'github_url': 'https://github.com/santiyagoburcart/PAMP',
     }
