@@ -70,6 +70,11 @@ class PanelAdmin(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     last_synced_at = models.DateTimeField(null=True, blank=True)
 
+    # Cumulative used-traffic of users deleted from the panel.
+    # Added ONLY into total_user_limit (sold volume) so Sold Limit stays correct.
+    deleted_users_used_bytes = models.BigIntegerField(default=0)
+    deleted_traffic_reset_at = models.DateTimeField(null=True, blank=True)
+
     class Meta:
         verbose_name = "Panel Admin"
         verbose_name_plural = "Panel Admins"
