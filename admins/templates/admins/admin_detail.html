@@ -23,6 +23,12 @@
     <h3>Traffic</h3>
     <div class="detail-row"><span class="key">Admin Limit</span><span class="val">{{ admin_limit_fmt }}</span></div>
     <div class="detail-row"><span class="key">Total User Limit</span><span class="val">{{ total_user_limit_fmt }}</span></div>
+    {% if deleted_used_bytes %}
+    <div class="detail-row">
+      <span class="key" style="color:var(--muted);">↳ From deleted users</span>
+      <span class="val" style="color:#f59e0b;font-size:12px;">+{{ deleted_used_fmt }}</span>
+    </div>
+    {% endif %}
     <div class="detail-row"><span class="key">Total Used</span><span class="val">{{ admin_used_fmt }}</span></div>
     <div class="detail-row"><span class="key">Remaining</span><span class="val" style="color:var(--success);">{{ admin_remaining_fmt }}</span></div>
     <div class="detail-row">
@@ -40,6 +46,18 @@
         {{ sold_limit_fmt }}
       </span>
     </div>
+    {% if user.is_superuser %}
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      <div style="font-size:11px;color:var(--muted);line-height:1.5;">
+        Sold volume preserved from deleted users.
+        {% if obj.deleted_traffic_reset_at %}<br>Last reset: {{ obj.deleted_traffic_reset_at|date:"Y-m-d H:i" }}{% endif %}
+      </div>
+      <button class="btn btn-glass btn-sm" style="white-space:nowrap;border-color:rgba(239,68,68,0.3);color:#fca5a5;"
+        onclick="confirmAdminAction('{{ a.username }}','action-result-{{ a.pk }}','reset_deleted_special','🔄','Reset Counter','Reset preserved deleted-users traffic for <strong>{{ a.username }}</strong> to zero?','Reset','linear-gradient(135deg,#dc2626,#ef4444)')">
+        🔄 Reset
+      </button>
+    </div>
+    {% endif %}
   </div>
 
   <div class="detail-section">
