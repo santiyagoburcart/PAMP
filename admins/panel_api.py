@@ -331,6 +331,7 @@ class PanelAPIClient:
                 'disabled_users': user_stats['disabled_users'],
                 'expired_users': user_stats['expired_users'],
                 'raw_data': admin_data,
+                'users': user_stats['users'],  # passed to snapshot tracker
             })
 
         logger.info("Fetched stats for %d admins.", len(results))
