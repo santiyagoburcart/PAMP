@@ -54,6 +54,8 @@ def _enrich(panel_admin):
         'usage_percent': a.usage_percent,
         'sold_limit_fmt': sold_fmt,
         'sold_limit_value': sold_val,
+        'deleted_used_fmt': _fmt_bytes(a.deleted_users_used_bytes or 0),
+        'deleted_used_bytes': a.deleted_users_used_bytes or 0,
     }
 
 
