@@ -79,7 +79,7 @@ def sync_panel_admins(self):
 
     for data in admins_data:
         try:
-            PanelAdmin.objects.update_or_create(
+            obj, _ = PanelAdmin.objects.update_or_create(
                 username=data['username'],
                 defaults={
                     'is_sudo': data['is_sudo'],
@@ -100,6 +100,22 @@ def sync_panel_admins(self):
                     'last_synced_at': now,
                 },
             )
+
+            # Detect deleted users and accumulate their used-traffic into sold volume.
+            # Must reload obj so deleted_users_used_bytes reflects any prior accumulation.
+            obj.refresh_from_db(fields=['deleted_users_used_bytes'])
+            track_deleted_users(obj, data.get('users', []))
+
+            # Re-read after track_deleted_users may have updated deleted_users_used_bytes.
+            obj.refresh_from_db(fields=['deleted_users_used_bytes'])
+            preserved = obj.deleted_users_used_bytes or 0
+            if preserved:
+                # Add preserved sold volume on top of fresh Pasargad value (no double-count:
+                # total_user_limit was just written from Pasargad, then we add once).
+                PanelAdmin.objects.filter(pk=obj.pk).update(
+                    total_user_limit=data['total_user_limit'] + preserved
+                )
+
             User.objects.get_or_create(username=data['username'])
             synced += 1
         except Exception as e:
