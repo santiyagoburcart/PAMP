@@ -6,6 +6,50 @@ from django.utils import timezone
 logger = logging.getLogger('admins')
 
 
+def track_deleted_users(panel_admin, current_users):
+    """
+    Compare current users to last snapshot. Accumulate used-traffic of deleted users
+    into panel_admin.deleted_users_used_bytes, then refresh the snapshot table.
+    Only the sold-volume field (total_user_limit) is affected — called by sync loop.
+    """
+    from .models import UserTrafficSnapshot
+
+    current_map = {
+        u['username']: (u.get('used_traffic') or 0)
+        for u in current_users
+        if u.get('username')
+    }
+
+    prev = {
+        s.user_username: s.used_traffic_bytes
+        for s in UserTrafficSnapshot.objects.filter(panel_admin=panel_admin)
+    }
+
+    deleted = set(prev.keys()) - set(current_map.keys())
+    added = sum(prev[u] for u in deleted)
+
+    if added > 0:
+        panel_admin.deleted_users_used_bytes = (panel_admin.deleted_users_used_bytes or 0) + added
+        panel_admin.save(update_fields=['deleted_users_used_bytes'])
+        logger.info(
+            "Snapshot: %s — %d deleted user(s), +%d bytes to sold volume",
+            panel_admin.username, len(deleted), added,
+        )
+
+    if deleted:
+        UserTrafficSnapshot.objects.filter(
+            panel_admin=panel_admin, user_username__in=deleted
+        ).delete()
+
+    # Upsert snapshots for all currently live users
+    for uname, used in current_map.items():
+        UserTrafficSnapshot.objects.update_or_create(
+            panel_admin=panel_admin,
+            user_username=uname,
+            defaults={'used_traffic_bytes': used},
+        )
+
+
 @shared_task(bind=True, max_retries=3, default_retry_delay=60)
 def sync_panel_admins(self):
     from .models import PanelAdmin, SyncLog
