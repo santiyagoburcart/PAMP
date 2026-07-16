@@ -242,10 +242,17 @@ function doCustomLimit(action) {
 function confirmAdminAction(username, targetId, action, icon, title, body, confirmLabel, confirmColor) {
   showConfirmModal(icon, title, body, confirmLabel, confirmColor, function() {
     showLoading('Applying changes…');
-    const url = (action === 'remove_limit_special')
-      ? '/panel/' + encodeURIComponent(username) + '/remove-limit/'
-      : '/panel/' + encodeURIComponent(username) + '/action/';
-    const postAction = (action === 'remove_limit_special') ? 'remove' : action;
+    let url, postAction;
+    if (action === 'remove_limit_special') {
+      url = '/panel/' + encodeURIComponent(username) + '/remove-limit/';
+      postAction = 'remove';
+    } else if (action === 'reset_deleted_special') {
+      url = '/panel/' + encodeURIComponent(username) + '/reset-deleted-traffic/';
+      postAction = 'reset';
+    } else {
+      url = '/panel/' + encodeURIComponent(username) + '/action/';
+      postAction = action;
+    }
     htmx.ajax('POST', url, {
       target: '#' + targetId,
       swap: 'innerHTML',
