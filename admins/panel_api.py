@@ -152,6 +152,7 @@ class PanelAPIClient:
             'limited_users': counts['limited'],
             'disabled_users': counts['disabled'],
             'expired_users': counts['expired'],
+            'users': users,  # raw list passed to snapshot tracker — avoids a second API call
         }
 
     def disable_admin(self, username: str) -> tuple:
