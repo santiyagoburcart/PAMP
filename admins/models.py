@@ -258,3 +258,18 @@ class SyncSettings(models.Model):
 
     def __str__(self):
         return f"Sync every {self.interval_minutes} minutes"
+
+
+class UserTrafficSnapshot(models.Model):
+    """Last-known used_traffic per user — used to detect deletions on the next sync."""
+    panel_admin = models.ForeignKey(PanelAdmin, on_delete=models.CASCADE, related_name='user_snapshots')
+    user_username = models.CharField(max_length=255)
+    used_traffic_bytes = models.BigIntegerField(default=0)
+    last_seen = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('panel_admin', 'user_username')
+        indexes = [models.Index(fields=['panel_admin', 'user_username'])]
+
+    def __str__(self):
+        return f"{self.panel_admin.username}/{self.user_username}"
