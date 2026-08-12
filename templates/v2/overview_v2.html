@@ -1,0 +1,48 @@
+{% extends "v2/base_v2.html" %}
+{% block title %}PAMP — Overview{% endblock %}
+{% block nav_overview %}active{% endblock %}
+{% block head %}<style>.gauge{mask:none}.gauge:after{inset:9px;background:#0d1530;border-radius:50%}</style>{% endblock %}
+{% block content %}
+<header class="header">
+  <div><h1>Overview</h1><p>Real-time resource usage and server health at a glance.</p></div>
+  <div class="tools">
+    <div class="search">⌕ &nbsp; Search anything... <span style="margin-left:auto">⌘ K</span></div>
+    <div class="tool">◔</div><div class="tool">☾</div>
+  </div>
+</header>
+
+<div class="top-controls">
+  <div class="select"><i class="online-dot"></i>Realtime ⌄</div>
+  <div class="tool">⟳</div>
+</div>
+
+<section class="cards" style="grid-template-columns:repeat(4,1fr)">
+  <article class="card metric" style="--c:#823eff;--n:{{ cpu_percent }}">
+    <div class="label"><span class="icon">⊞</span>CPU Usage</div>
+    <div class="num">{{ cpu_percent }}%</div>
+    <small>{{ cpu_cores_used }} / {{ cpu_cores_total }} Cores</small>
+    <div class="gauge" data-value="{{ cpu_percent }}%"></div>
+    <div class="spark"></div>
+  </article>
+  <article class="card metric" style="--c:#397eff;--n:{{ mem_percent }}">
+    <div class="label"><span class="icon">▣</span>Memory</div>
+    <div class="num">{{ mem_percent }}%</div>
+    <small>{{ mem_used }} / {{ mem_total }}</small>
+    <div class="gauge" data-value="{{ mem_percent }}%"></div>
+    <div class="spark"></div>
+  </article>
+  <article class="card metric" style="--c:#ff940d;--n:{{ disk_percent }}">
+    <div class="label"><span class="icon">▦</span>Disk Usage</div>
+    <div class="num">{{ disk_percent }}%</div>
+    <small>{{ disk_used }} / {{ disk_total }}</small>
+    <div class="gauge" data-value="{{ disk_percent }}%"></div>
+    <div class="spark"></div>
+  </article>
+  <article class="card metric" style="--c:#1dce94;--n:100">
+    <div class="label"><span class="icon">◇</span>Uptime</div>
+    <div class="num">{{ uptime_display|default:"—" }}</div>
+    <small>All systems</small>
+    <div class="spark"></div>
+  </article>
+</section>
+{% endblock %}
