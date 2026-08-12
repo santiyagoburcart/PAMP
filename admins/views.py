@@ -566,3 +566,58 @@ def server_stats(request):
         })
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def overview_v2(request):
+    if not request.user.is_superuser:
+        return redirect('portal')
+
+    import psutil
+    import os as _os2
+
+    _host_proc = _os2.environ.get('HOST_PROC')
+    if _host_proc:
+        psutil.PROCFS_PATH = _host_proc
+
+    cpu = psutil.cpu_percent(interval=0.3)
+    cpu_count = psutil.cpu_count() or 1
+
+    mem_host = _read_host_meminfo()
+    if mem_host:
+        mem_used_b, mem_total_b, mem_percent = mem_host
+    else:
+        m = psutil.virtual_memory()
+        mem_used_b, mem_total_b, mem_percent = m.used, m.total, m.percent
+
+    disk_path = '/host/root' if _os2.path.exists('/host/root') else '/'
+    disk = psutil.disk_usage(disk_path)
+
+    def _human(n):
+        n = float(n)
+        for u in ['B', 'KB', 'MB', 'GB', 'TB']:
+            if n < 1024:
+                return f'{n:.2f} {u}'
+            n /= 1024
+        return f'{n:.2f} PB'
+
+    try:
+        up = int(time.time() - psutil.boot_time())
+        d, h = up // 86400, (up % 86400) // 3600
+        uptime_display = f'{d}d {h}h'
+    except Exception:
+        uptime_display = '—'
+
+    ctx = {
+        'cpu_percent': round(cpu),
+        'cpu_cores_used': round(cpu_count * cpu / 100),
+        'cpu_cores_total': cpu_count,
+        'mem_percent': round(mem_percent),
+        'mem_used': _human(mem_used_b),
+        'mem_total': _human(mem_total_b),
+        'disk_percent': round(disk.percent),
+        'disk_used': _human(disk.used),
+        'disk_total': _human(disk.total),
+        'uptime_display': uptime_display,
+    }
+    return render(request, 'v2/overview_v2.html', ctx)
