@@ -1,0 +1,40 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block title %}PAMP{% endblock %}</title>
+<link rel="stylesheet" href="{% static 'css/pamp-v2.css' %}">
+{% block head %}{% endblock %}
+</head>
+<body>
+<button class="hamburger" onclick="document.querySelector('.side').classList.toggle('open');document.querySelector('.side-overlay').classList.toggle('open')">☰</button>
+<div class="side-overlay" onclick="document.querySelector('.side').classList.remove('open');this.classList.remove('open')"></div>
+<div class="shell">
+  <aside class="side">
+    <div class="logo"><span class="logo-mark">✧</span>PAMP <span class="brand-chev">⌄</span></div>
+    <nav class="nav">
+      <a href="/v2/overview/" class="{% block nav_overview %}{% endblock %}">⌘ <span>Overview</span><b class="pill">New</b></a>
+      <a href="#" class="{% block nav_dashboard %}{% endblock %}">⌂ <span>Dashboard</span></a>
+      <a href="#" class="{% block nav_panel %}{% endblock %}">⊕ <span>My Panel</span></a>
+      <a href="#" class="{% block nav_logs %}{% endblock %}">↻ <span>Sync Logs</span></a>
+      <a href="#" class="{% block nav_settings %}{% endblock %}">⚙ <span>Settings</span></a>
+    </nav>
+    <div class="side-bottom">
+      <div class="sync-card">
+        <div class="sync-top"><i class="online-dot"></i>Active Sync</div>
+        <p>All systems operational<br>Last sync: {{ last_sync|default:"—" }}</p>
+        <div class="sync-wave"></div>
+      </div>
+      <div class="user-card">
+        <span class="avatar"></span>
+        <div><strong>{{ request.user.username }}</strong><small>Super Admin</small></div>
+        <span>⌄</span>
+      </div>
+    </div>
+  </aside>
+  <main class="main">{% block content %}{% endblock %}</main>
+</div>
+</body>
+</html>
