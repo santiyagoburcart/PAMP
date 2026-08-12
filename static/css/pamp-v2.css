@@ -22,5 +22,4 @@
 }
 @media(max-width:520px){.cards{grid-template-columns:1fr!important}.top-controls{flex-wrap:wrap}}
 /* Fix: margin:auto on .main was vertically centering content in the 100vh grid */
-.shell{align-items:start}
 .main{margin:0 auto!important;align-self:start}
