@@ -588,3 +588,57 @@ def overview_v2(request):
         uptime_display = '—'
 
     return render(request, 'v2/overview_v2.html', {'uptime_display': uptime_display})
+
+
+@login_required
+def dashboard_v2(request):
+    if not request.user.is_superuser:
+        return redirect('portal')
+
+    admins = PanelAdmin.objects.all()
+    totals = admins.aggregate(
+        total_limit=Sum('total_user_limit'),
+        total_used=Sum('total_user_used'),
+        total_remaining=Sum('admin_remaining'),
+        total_users=Sum('user_count'),
+        total_active=Sum('active_user_count'),
+    )
+
+    total_limit = totals['total_limit'] or 0
+    total_used = totals['total_used'] or 0
+    total_remaining = totals['total_remaining'] or 0
+
+    over_limit_list = []
+    for a in PanelAdmin.objects.all():
+        if not a.admin_limit_bytes or a.admin_limit_bytes <= 0:
+            continue
+        pct = round((a.admin_used_bytes / a.admin_limit_bytes) * 100, 1)
+        if pct < 80:
+            continue
+        over_limit_list.append({
+            'username': a.username,
+            'limit_fmt': _fmt_bytes(a.admin_limit_bytes),
+            'used_fmt': _fmt_bytes(a.admin_used_bytes),
+            'pct': pct,
+            'state': 'over' if pct >= 100 else 'at_risk',
+            'status_label': a.status_label,
+            'status_color': a.status_color,
+        })
+    over_limit_list.sort(key=lambda x: x['pct'], reverse=True)
+
+    context = {
+        'admins': admins,
+        'admin_count': admins.count(),
+        'active_count': PanelAdmin.objects.filter(status='active').count(),
+        'disabled_count': PanelAdmin.objects.filter(status='disabled').count(),
+        'pamp_limited_count': PanelAdmin.objects.filter(pamp_blocked=True).count(),
+        'near_limit_count': len(over_limit_list),
+        'total_limit_fmt': _fmt_bytes(total_limit),
+        'total_used_fmt': _fmt_bytes(total_used),
+        'total_remaining_fmt': _fmt_bytes(total_remaining),
+        'total_users': totals['total_users'] or 0,
+        'total_active': totals['total_active'] or 0,
+        'last_sync': SyncLog.objects.first(),
+        'over_limit_admins': over_limit_list,
+    }
+    return render(request, 'v2/dashboard_v2.html', context)
