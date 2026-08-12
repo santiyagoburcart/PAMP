@@ -13,29 +13,35 @@
 
 <div class="top-controls">
   <div class="select"><i class="online-dot"></i>Realtime ⌄</div>
-  <div class="tool">⟳</div>
+  <div class="tool" onclick="refreshStats()">⟳</div>
 </div>
 
-<section class="cards" style="grid-template-columns:repeat(4,1fr)">
-  <article class="card metric" style="--c:#823eff;--n:{{ cpu_percent }}">
+<section class="cards" style="grid-template-columns:repeat(5,1fr)">
+  <article class="card metric" id="card-cpu" style="--c:#823eff;--n:0">
     <div class="label"><span class="icon">⊞</span>CPU Usage</div>
-    <div class="num">{{ cpu_percent }}%</div>
-    <small>{{ cpu_cores_used }} / {{ cpu_cores_total }} Cores</small>
-    <div class="gauge" data-value="{{ cpu_percent }}%"></div>
+    <div class="num" id="cpu-num">—</div>
+    <small id="cpu-sub">— Cores</small>
+    <div class="gauge" id="cpu-gauge" data-value="—"></div>
     <div class="spark"></div>
   </article>
-  <article class="card metric" style="--c:#397eff;--n:{{ mem_percent }}">
+  <article class="card metric" id="card-mem" style="--c:#397eff;--n:0">
     <div class="label"><span class="icon">▣</span>Memory</div>
-    <div class="num">{{ mem_percent }}%</div>
-    <small>{{ mem_used }} / {{ mem_total }}</small>
-    <div class="gauge" data-value="{{ mem_percent }}%"></div>
+    <div class="num" id="mem-num">—</div>
+    <small id="mem-sub">—</small>
+    <div class="gauge" id="mem-gauge" data-value="—"></div>
     <div class="spark"></div>
   </article>
-  <article class="card metric" style="--c:#ff940d;--n:{{ disk_percent }}">
+  <article class="card metric" id="card-disk" style="--c:#ff940d;--n:0">
     <div class="label"><span class="icon">▦</span>Disk Usage</div>
-    <div class="num">{{ disk_percent }}%</div>
-    <small>{{ disk_used }} / {{ disk_total }}</small>
-    <div class="gauge" data-value="{{ disk_percent }}%"></div>
+    <div class="num" id="disk-num">—</div>
+    <small id="disk-sub">—</small>
+    <div class="gauge" id="disk-gauge" data-value="—"></div>
+    <div class="spark"></div>
+  </article>
+  <article class="card metric" id="card-bw" style="--c:#16c6c6;--n:0">
+    <div class="label"><span class="icon">◉</span>Bandwidth</div>
+    <div class="num" id="bw-num" style="font-size:20px">—</div>
+    <small id="bw-sub">↓ — · ↑ —</small>
     <div class="spark"></div>
   </article>
   <article class="card metric" style="--c:#1dce94;--n:100">
@@ -45,4 +51,65 @@
     <div class="spark"></div>
   </article>
 </section>
+
+<script>
+let lastNet = null, lastNetTime = null;
+
+function fmtSpeed(bps){
+  bps = parseFloat(bps) || 0;
+  const u = ['B/s','KB/s','MB/s','GB/s']; let i = 0;
+  while(bps >= 1024 && i < u.length - 1){ bps /= 1024; i++; }
+  return bps.toFixed(1) + ' ' + u[i];
+}
+function setGauge(cardId, gaugeId, numId, pct){
+  const p = Math.round(pct);
+  document.getElementById(cardId).style.setProperty('--n', p);
+  const g = document.getElementById(gaugeId);
+  if(g) g.setAttribute('data-value', p + '%');
+  document.getElementById(numId).textContent = p + '%';
+}
+
+async function refreshStats(){
+  try{
+    const r = await fetch('/api/server-stats/', {headers: {'X-Requested-With': 'XMLHttpRequest'}});
+    if(!r.ok) return;
+    const d = await r.json();
+    if(d.error) return;
+
+    // CPU
+    setGauge('card-cpu', 'cpu-gauge', 'cpu-num', d.cpu.percent);
+    document.getElementById('cpu-sub').textContent = (d.cpu.cores || 0) + ' Cores';
+
+    // Memory
+    setGauge('card-mem', 'mem-gauge', 'mem-num', d.memory.percent);
+    document.getElementById('mem-sub').textContent =
+      (d.memory.used_gb ?? '—') + ' GB / ' + (d.memory.total_gb ?? '—') + ' GB';
+
+    // Disk
+    setGauge('card-disk', 'disk-gauge', 'disk-num', d.disk.percent);
+    document.getElementById('disk-sub').textContent =
+      (d.disk.used_gb ?? '—') + ' GB / ' + (d.disk.total_gb ?? '—') + ' GB';
+
+    // Bandwidth — delta speed between polls, same as v1
+    const now = Date.now();
+    const recv = d.network.recv_bytes, sent = d.network.sent_bytes;
+    if(lastNet !== null){
+      const dt = (now - lastNetTime) / 1000;
+      if(dt > 0){
+        const down = Math.max(0, (recv - lastNet.recv) / dt);
+        const up   = Math.max(0, (sent - lastNet.sent) / dt);
+        const total = down + up;
+        document.getElementById('bw-num').textContent = fmtSpeed(total);
+        document.getElementById('bw-sub').textContent = '↓ ' + fmtSpeed(down) + ' · ↑ ' + fmtSpeed(up);
+        const cap = 100 * 1024 * 1024 / 8;
+        document.getElementById('card-bw').style.setProperty('--n', Math.min(100, Math.round(total / cap * 100)));
+      }
+    }
+    lastNet = {recv, sent}; lastNetTime = now;
+  }catch(e){/* ignore transient errors */}
+}
+
+refreshStats();
+setInterval(refreshStats, 2000);
+</script>
 {% endblock %}
