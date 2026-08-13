@@ -24,4 +24,6 @@ urlpatterns = [
     path('v2/overview/', views.overview_v2, name='overview_v2'),
     path('v2/dashboard/', views.dashboard_v2, name='dashboard_v2'),
     path('v2/panel/', views.portal_v2, name='portal_v2'),
+    path('v2/sync-logs/', views.sync_logs_v2, name='sync_logs_v2'),
+    path('v2/settings/', views.settings_v2, name='settings_v2'),
 ]
