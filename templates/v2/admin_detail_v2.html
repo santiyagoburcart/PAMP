@@ -1,0 +1,203 @@
+{% extends "v2/base_v2.html" %}
+{% block title %}PAMP — {{ obj.username }}{% endblock %}
+{% block content %}{% with a=obj %}
+<header class="header">
+  <div>
+    <h1>{{ a.username }}</h1>
+    <p>
+      <span style="display:inline-flex;align-items:center;gap:7px">
+        <span style="font-size:12px;padding:2px 9px;border-radius:5px;background:{{ a.status_color }}22;color:{{ a.status_color }};border:1px solid {{ a.status_color }}44">● {{ a.status_label }}</span>
+        {% if a.is_sudo %}<span style="font-size:11px;padding:2px 8px;border-radius:5px;background:#7c3aed33;color:#a78bfa;border:1px solid #7c3aed55">sudo</span>{% endif %}
+        <span style="color:#8896b9;font-size:12px">{{ a.users_count }} users · synced {% if a.last_synced_at %}{{ a.last_synced_at|date:"H:i" }}{% else %}never{% endif %}</span>
+      </span>
+    </p>
+  </div>
+  <div class="tools">
+    <a href="/v2/dashboard/" style="height:35px;padding:0 16px;background:#101936;border:1px solid #162449;border-radius:10px;color:#acb8d8;display:inline-flex;align-items:center;text-decoration:none;font-size:12px">← Dashboard</a>
+  </div>
+</header>
+
+<!-- Traffic + Users grid -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+
+  <!-- Traffic card -->
+  <article class="card">
+    <div class="panel-title">Traffic</div>
+    <div class="dist">
+
+      <div class="dist-row" style="grid-template-columns:1fr auto;border-bottom:1px solid #1c294a;padding-bottom:8px;margin-bottom:4px">
+        <span style="color:#8896b9">Admin Limit</span>
+        <b>{{ admin_limit_fmt }}</b>
+      </div>
+
+      <div class="dist-row" style="grid-template-columns:1fr auto">
+        <span style="color:#8896b9">Total Sold</span>
+        <b>{{ total_user_limit_fmt }}</b>
+      </div>
+
+      <div class="dist-row" style="grid-template-columns:1fr auto">
+        <span style="color:#8896b9">Total Used</span>
+        <b>{{ admin_used_fmt }}</b>
+      </div>
+
+      <div class="dist-row" style="grid-template-columns:1fr auto">
+        <span style="color:#8896b9">Remaining</span>
+        <b style="color:#12cf7f">{{ admin_remaining_fmt }}</b>
+      </div>
+
+      {% if deleted_used_bytes %}
+      <div class="dist-row" style="grid-template-columns:1fr auto">
+        <span style="color:#8896b9">From deleted users</span>
+        <b style="color:#ff8d12">+{{ deleted_used_fmt }}</b>
+      </div>
+      {% endif %}
+
+      <div class="dist-row" style="grid-template-columns:1fr auto;border-top:1px solid #1c294a;padding-top:8px;margin-top:4px">
+        <span style="color:#8896b9">Sold Limit</span>
+        <b style="color:{% if sold_limit_value > 0 %}#12cf7f{% elif sold_limit_value < 0 %}#ef4444{% else %}#8896b9{% endif %}">{{ sold_limit_fmt }}</b>
+      </div>
+
+    </div>
+
+    <div style="margin-top:18px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:#8896b9;margin-bottom:6px">
+        <span>Usage (sold volume)</span>
+        <span style="color:{% if usage_percent >= 100 %}#ef4444{% elif usage_percent >= 80 %}#f59e0b{% else %}#8896b9{% endif %};font-weight:700">{{ usage_percent }}%</span>
+      </div>
+      <div class="mini" style="width:100%">
+        <i style="--w:{% if usage_percent > 100 %}100{% else %}{{ usage_percent }}{% endif %}%;--c:{% if usage_percent >= 100 %}#ef4444{% elif usage_percent >= 80 %}#f59e0b{% else %}#823eff{% endif %}"></i>
+      </div>
+    </div>
+
+    {% if request.user.is_superuser and deleted_used_bytes %}
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid #1c294a;display:flex;justify-content:space-between;align-items:center;gap:10px">
+      <small style="color:#9aa6c8;font-size:11px">Preserved traffic from deleted users</small>
+      <button class="limit-btn2" style="color:#ff8098;border-color:#ff547044;background:#44161f66"
+        onclick="confirmAdminAction('{{ a.username }}','action-result-{{ a.pk }}','reset_deleted_special','↻','Reset Counter','Reset preserved deleted-users traffic for <strong>{{ a.username }}</strong> to zero?','Reset','linear-gradient(90deg,#dc2626,#ef4444)')">
+        ↻ Reset
+      </button>
+    </div>
+    {% endif %}
+    <div id="action-result-{{ a.pk }}"></div>
+  </article>
+
+  <!-- Users card -->
+  <article class="card">
+    <div class="panel-title">Users</div>
+    <div class="dist">
+
+      <div class="dist-row" style="grid-template-columns:1fr auto;border-bottom:1px solid #1c294a;padding-bottom:8px;margin-bottom:4px">
+        <span style="color:#8896b9">Total</span>
+        <b>{{ a.users_count }}</b>
+      </div>
+
+      <div class="dist-row" style="grid-template-columns:1fr auto">
+        <span style="color:#8896b9">Active</span>
+        <b style="color:#12cf7f">{{ a.active_users }}</b>
+      </div>
+
+      <div class="dist-row" style="grid-template-columns:1fr auto">
+        <span style="color:#8896b9">On Hold</span>
+        <b style="color:#357dff">{{ a.on_hold_users }}</b>
+      </div>
+
+      <div class="dist-row" style="grid-template-columns:1fr auto">
+        <span style="color:#8896b9">Limited</span>
+        <b style="color:#ff8d12">{{ a.limited_users }}</b>
+      </div>
+
+      <div class="dist-row" style="grid-template-columns:1fr auto">
+        <span style="color:#8896b9">Disabled</span>
+        <b style="color:#ef4444">{{ a.disabled_users }}</b>
+      </div>
+
+      <div class="dist-row" style="grid-template-columns:1fr auto">
+        <span style="color:#8896b9">Expired</span>
+        <b style="color:#6b7a9a">{{ a.expired_users }}</b>
+      </div>
+
+    </div>
+  </article>
+
+</div>
+
+{% if request.user.is_superuser %}
+
+<!-- Limit management -->
+<article class="card" style="margin-bottom:16px">
+  <div class="panel-title">Set Admin Limit</div>
+  <div id="limit-result-{{ a.pk }}" style="margin-bottom:10px"></div>
+
+  <div style="margin-bottom:14px">
+    <small style="color:#9aa6c8;display:block;margin-bottom:8px;font-size:11px">Set to</small>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="limit-btn2" onclick="confirmSetLimit('{{ a.username }}','set',10,'limit-result-{{ a.pk }}')">10 GB</button>
+      <button class="limit-btn2" onclick="confirmSetLimit('{{ a.username }}','set',50,'limit-result-{{ a.pk }}')">50 GB</button>
+      <button class="limit-btn2" onclick="confirmSetLimit('{{ a.username }}','set',100,'limit-result-{{ a.pk }}')">100 GB</button>
+      <button class="limit-btn2" onclick="confirmSetLimit('{{ a.username }}','set',500,'limit-result-{{ a.pk }}')">500 GB</button>
+      <button class="limit-btn2" onclick="confirmSetLimit('{{ a.username }}','set',1000,'limit-result-{{ a.pk }}')">1 TB</button>
+      <button class="limit-btn2" onclick="confirmSetLimit('{{ a.username }}','set',2000,'limit-result-{{ a.pk }}')">2 TB</button>
+    </div>
+  </div>
+
+  <div style="margin-bottom:14px">
+    <small style="color:#9aa6c8;display:block;margin-bottom:8px;font-size:11px">Add</small>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="limit-btn2" onclick="confirmSetLimit('{{ a.username }}','add',5,'limit-result-{{ a.pk }}')">+5 GB</button>
+      <button class="limit-btn2" onclick="confirmSetLimit('{{ a.username }}','add',10,'limit-result-{{ a.pk }}')">+10 GB</button>
+      <button class="limit-btn2" onclick="confirmSetLimit('{{ a.username }}','add',30,'limit-result-{{ a.pk }}')">+30 GB</button>
+      <button class="limit-btn2" onclick="confirmSetLimit('{{ a.username }}','add',50,'limit-result-{{ a.pk }}')">+50 GB</button>
+      <button class="limit-btn2" onclick="confirmSetLimit('{{ a.username }}','add',100,'limit-result-{{ a.pk }}')">+100 GB</button>
+      <button class="limit-btn2" onclick="confirmSetLimit('{{ a.username }}','add',200,'limit-result-{{ a.pk }}')">+200 GB</button>
+    </div>
+  </div>
+
+  <div style="margin-bottom:14px">
+    <small style="color:#9aa6c8;display:block;margin-bottom:8px;font-size:11px">Reduce</small>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="limit-btn2" onclick="confirmSetLimit('{{ a.username }}','reduce',5,'limit-result-{{ a.pk }}')">−5 GB</button>
+      <button class="limit-btn2" onclick="confirmSetLimit('{{ a.username }}','reduce',10,'limit-result-{{ a.pk }}')">−10 GB</button>
+      <button class="limit-btn2" onclick="confirmSetLimit('{{ a.username }}','reduce',30,'limit-result-{{ a.pk }}')">−30 GB</button>
+      <button class="limit-btn2" onclick="confirmSetLimit('{{ a.username }}','reduce',50,'limit-result-{{ a.pk }}')">−50 GB</button>
+      <button class="limit-btn2" onclick="confirmSetLimit('{{ a.username }}','reduce',100,'limit-result-{{ a.pk }}')">−100 GB</button>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-top:1px solid #1c294a;padding-top:14px">
+    <input id="custom-limit-input" type="number" min="1" placeholder="Custom GB" class="search"
+           style="width:130px;height:38px;padding:0 12px;background:#101936;border:1px solid #162449;border-radius:10px;color:#cdd6f0;font-size:13px;outline:none">
+    <button class="limit-btn2" onclick="doCustomLimit('{{ a.username }}','set','limit-result-{{ a.pk }}')">Set</button>
+    <button class="limit-btn2" onclick="doCustomLimit('{{ a.username }}','add','limit-result-{{ a.pk }}')">Add</button>
+    <button class="limit-btn2" onclick="doCustomLimit('{{ a.username }}','reduce','limit-result-{{ a.pk }}')">Reduce</button>
+    <button class="limit-btn2" style="margin-left:auto;color:#ff8098;border-color:#ff547044;background:#44161f66"
+      onclick="confirmAdminAction('{{ a.username }}','limit-result-{{ a.pk }}','remove_limit_special','⊘','Remove Limit','Remove the data limit for <strong>{{ a.username }}</strong> (make unlimited)?','Remove','linear-gradient(90deg,#dc2626,#ef4444)')">
+      ⊘ Remove Limit
+    </button>
+  </div>
+</article>
+
+<!-- Admin actions -->
+<article class="card">
+  <div class="panel-title">Admin Actions</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <button class="act-btn"
+      onclick="confirmAdminAction('{{ a.username }}','action-result-{{ a.pk }}','disable_admin','⛔','Disable Admin Access','Disable panel access for <strong>{{ a.username }}</strong>?','Disable','linear-gradient(90deg,#dc2626,#ef4444)')">
+      ⛔ Disable Admin Access
+    </button>
+    <button class="act-btn"
+      onclick="confirmAdminAction('{{ a.username }}','action-result-{{ a.pk }}','enable_admin','✓','Enable Admin Access','Enable panel access for <strong>{{ a.username }}</strong>?','Enable','linear-gradient(90deg,#0f9d58,#12cf7f)')">
+      ✓ Enable Admin Access
+    </button>
+    <button class="act-btn"
+      onclick="confirmAdminAction('{{ a.username }}','action-result-{{ a.pk }}','disable_users','⛔','Disable All Users','Disable ALL users of <strong>{{ a.username }}</strong>?','Disable All','linear-gradient(90deg,#dc2626,#ef4444)')">
+      ⛔ Disable All Users
+    </button>
+    <button class="act-btn"
+      onclick="confirmAdminAction('{{ a.username }}','action-result-{{ a.pk }}','enable_users','✓','Enable All Users','Enable ALL users of <strong>{{ a.username }}</strong>?','Enable All','linear-gradient(90deg,#0f9d58,#12cf7f)')">
+      ✓ Enable All Users
+    </button>
+  </div>
+</article>
+
+{% endif %}
+{% endwith %}{% endblock %}
