@@ -671,3 +671,28 @@ def portal_v2(request):
         'a': panel_admin,
     })
     return render(request, 'v2/portal_v2.html', ctx)
+
+
+@login_required
+def sync_logs_v2(request):
+    if not request.user.is_superuser:
+        return redirect('portal')
+    logs = SyncLog.objects.all()[:100]
+    context = {
+        'logs': logs,
+        'total_syncs': SyncLog.objects.count(),
+        'success_count': SyncLog.objects.filter(status='success').count(),
+        'failed_count': SyncLog.objects.filter(status='failed').count(),
+    }
+    return render(request, 'v2/sync_logs_v2.html', context)
+
+
+@login_required
+def settings_v2(request):
+    if not request.user.is_superuser:
+        return redirect('portal')
+    context = {
+        'panel_config': PanelConfig.get_config(),
+        'sync_interval': SyncSettings.get_interval(),
+    }
+    return render(request, 'v2/settings_v2.html', context)
