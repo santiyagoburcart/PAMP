@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{% block title %}PAMP{% endblock %}</title>
 <link rel="stylesheet" href="{% static 'css/pamp-v2.css' %}">
+<script src="{% static 'js/htmx.min.js' %}" defer></script>
 {% block head %}{% endblock %}
 </head>
 <body>
@@ -34,7 +35,109 @@
       </div>
     </div>
   </aside>
-  <main class="main">{% block content %}{% endblock %}</main>
+  <main class="main">{% csrf_token %}{% block content %}{% endblock %}</main>
 </div>
+
+<!-- Confirm modal -->
+<div id="confirm-modal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(3,7,20,.7);backdrop-filter:blur(6px);align-items:center;justify-content:center">
+  <div style="background:linear-gradient(145deg,#101a38,#0b132b);border:1px solid #263669;border-radius:16px;padding:26px;max-width:420px;width:calc(100% - 40px);box-shadow:0 20px 60px #0009">
+    <div id="modal-icon" style="font-size:30px;margin-bottom:12px"></div>
+    <div id="modal-title" style="font-size:17px;font-weight:700;margin-bottom:8px;color:#f6f7ff"></div>
+    <div id="modal-body" style="font-size:13px;color:#aab6d5;line-height:1.7;margin-bottom:20px"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button onclick="closeModal()" style="height:38px;padding:0 18px;border-radius:9px;border:1px solid #26345b;background:#101936;color:#b8c4e1;cursor:pointer">Cancel</button>
+      <button id="modal-confirm-btn" style="height:38px;padding:0 18px;border-radius:9px;border:0;color:#fff;font-weight:650;cursor:pointer">Confirm</button>
+    </div>
+  </div>
+</div>
+<!-- Loading overlay -->
+<div id="loading-overlay" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(3,7,20,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center">
+  <div style="text-align:center">
+    <div style="width:46px;height:46px;border:3px solid #2a3a66;border-top-color:#9146ff;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto"></div>
+    <div id="loading-text" style="margin-top:14px;color:#c2cbe3;font-size:13px">Applying changes…</div>
+  </div>
+</div>
+<!-- Result popup -->
+<div id="result-popup" style="display:none;position:fixed;inset:0;z-index:2100;background:rgba(3,7,20,.7);backdrop-filter:blur(6px);align-items:center;justify-content:center">
+  <div style="background:linear-gradient(145deg,#101a38,#0b132b);border:1px solid #263669;border-radius:16px;padding:28px;max-width:400px;width:calc(100% - 40px);text-align:center">
+    <div id="result-icon-wrap" style="width:56px;height:56px;border-radius:50%;display:grid;place-items:center;margin:0 auto 14px;font-size:26px"></div>
+    <div id="result-title" style="font-size:17px;font-weight:700;color:#f6f7ff;margin-bottom:6px"></div>
+    <div id="result-message" style="font-size:13px;color:#aab6d5;line-height:1.6;margin-bottom:20px"></div>
+    <button onclick="closeResultPopup()" style="height:40px;padding:0 30px;border-radius:9px;border:0;background:linear-gradient(90deg,#6c2ddb,#8c38ee);color:#fff;font-weight:650;cursor:pointer">OK</button>
+  </div>
+</div>
+<style>
+@keyframes spin{to{transform:rotate(360deg)}}
+.action-result{padding:10px 14px;border-radius:9px;font-size:13px;margin-top:8px}
+.action-result.success{background:#0e443a88;color:#12cf7f;border:1px solid #12cf7f44}
+.action-result.error{background:#44161f88;color:#ff5470;border:1px solid #ff547044}
+.limit-btn2{height:36px;padding:0 14px;border-radius:9px;border:1px solid #26345b;background:#101936;color:#c3cceb;cursor:pointer;font-size:12px;font-weight:600}
+.limit-btn2:hover{background:#182449;border-color:#3a4d80}
+.act-btn{height:44px;border-radius:10px;border:1px solid #26345b;background:#101936;color:#d8dff3;cursor:pointer;font-weight:600;font-size:13px}
+.act-btn:hover{background:#182449}
+</style>
+<script>
+var _modalCallback=null,_shouldReload=false;
+function showConfirmModal(icon,title,body,confirmLabel,confirmColor,cb){
+  document.getElementById('modal-icon').textContent=icon||'';
+  document.getElementById('modal-title').textContent=title||'';
+  document.getElementById('modal-body').innerHTML=body||'';
+  var btn=document.getElementById('modal-confirm-btn');
+  btn.textContent=confirmLabel||'Confirm';
+  btn.style.background=confirmColor||'linear-gradient(90deg,#6c2ddb,#8c38ee)';
+  _modalCallback=cb;
+  document.getElementById('confirm-modal').style.display='flex';
+}
+function closeModal(){document.getElementById('confirm-modal').style.display='none';_modalCallback=null;}
+document.getElementById('modal-confirm-btn').onclick=function(){var cb=_modalCallback;closeModal();if(cb)cb();};
+function showLoading(t){document.getElementById('loading-text').textContent=t||'Applying changes…';document.getElementById('loading-overlay').style.display='flex';}
+function hideLoading(){document.getElementById('loading-overlay').style.display='none';}
+function showResultPopup(success,title,message){
+  hideLoading();
+  var wrap=document.getElementById('result-icon-wrap');
+  wrap.textContent=success?'✓':'✕';
+  wrap.style.background=success?'#0e443a':'#44161f';
+  wrap.style.color=success?'#12cf7f':'#ff5470';
+  document.getElementById('result-title').textContent=title||(success?'Success':'Error');
+  document.getElementById('result-message').textContent=message||'';
+  _shouldReload=success;
+  document.getElementById('result-popup').style.display='flex';
+}
+function closeResultPopup(){document.getElementById('result-popup').style.display='none';if(_shouldReload)window.location.reload();}
+function confirmAdminAction(username,targetId,action,icon,title,body,confirmLabel,confirmColor){
+  showConfirmModal(icon,title,body,confirmLabel,confirmColor,function(){
+    showLoading();
+    var url,postAction;
+    if(action==='remove_limit_special'){url='/panel/'+encodeURIComponent(username)+'/remove-limit/';postAction='remove';}
+    else if(action==='reset_deleted_special'){url='/panel/'+encodeURIComponent(username)+'/reset-deleted-traffic/';postAction='reset';}
+    else{url='/panel/'+encodeURIComponent(username)+'/action/';postAction=action;}
+    htmx.ajax('POST',url,{target:'#'+targetId,swap:'innerHTML',values:{action:postAction,csrfmiddlewaretoken:getCsrf()}});
+  });
+}
+function confirmSetLimit(username,action,valueGb,targetId){
+  var labels={set:'Set limit to',add:'Add',reduce:'Reduce by'};
+  showConfirmModal('◐','Confirm Limit Change',
+    labels[action]+' <strong>'+valueGb+' GB</strong> for <strong>'+username+'</strong>?',
+    'Apply','linear-gradient(90deg,#6c2ddb,#8c38ee)',function(){
+    showLoading();
+    htmx.ajax('POST','/panel/'+encodeURIComponent(username)+'/set-limit/',
+      {target:'#'+targetId,swap:'innerHTML',values:{action:action,value_gb:valueGb,csrfmiddlewaretoken:getCsrf()}});
+  });
+}
+function doCustomLimit(username,action,targetId){
+  var v=document.getElementById('custom-limit-input').value;
+  if(!v||isNaN(v)){alert('Enter a valid number');return;}
+  confirmSetLimit(username,action,Number(v),targetId);
+}
+function getCsrf(){var el=document.querySelector('[name=csrfmiddlewaretoken]');return el?el.value:'';}
+document.body.addEventListener('htmx:afterRequest',function(e){
+  var t=(e.detail.xhr&&e.detail.xhr.responseText)||'';
+  var clean=t.replace(/<[^>]+>/g,'').replace(/[✓✕✗]/g,'').trim();
+  if(t.indexOf('action-result success')>-1)showResultPopup(true,'Success',clean);
+  else if(t.indexOf('action-result error')>-1)showResultPopup(false,'Error',clean);
+  else if(clean)showResultPopup(true,'Done',clean);
+});
+document.body.addEventListener('htmx:responseError',function(){showResultPopup(false,'Error','Request failed');});
+</script>
 </body>
 </html>
