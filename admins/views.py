@@ -642,3 +642,32 @@ def dashboard_v2(request):
         'over_limit_admins': over_limit_list,
     }
     return render(request, 'v2/dashboard_v2.html', context)
+
+
+@login_required
+def portal_v2(request):
+    try:
+        panel_admin = PanelAdmin.objects.get(username=request.user.username)
+    except PanelAdmin.DoesNotExist:
+        return render(request, 'v2/portal_v2.html', {'not_found': True})
+
+    is_blocked = panel_admin.status == 'disabled' or panel_admin.pamp_blocked
+    block_reason = 'disabled' if panel_admin.status == 'disabled' else ('pamp_limited' if panel_admin.pamp_blocked else None)
+    support_telegram = panel_admin.support_telegram or '@support'
+
+    show_warning = False
+    warning_pct = 0
+    if panel_admin.has_data_limit and panel_admin.admin_limit_bytes > 0:
+        warning_pct = round((panel_admin.admin_used_bytes / panel_admin.admin_limit_bytes) * 100, 1)
+        show_warning = warning_pct >= 80
+
+    ctx = _enrich(panel_admin)
+    ctx.update({
+        'is_blocked': is_blocked,
+        'block_reason': block_reason,
+        'support_telegram': support_telegram,
+        'show_warning': show_warning,
+        'warning_pct': warning_pct,
+        'a': panel_admin,
+    })
+    return render(request, 'v2/portal_v2.html', ctx)
