@@ -26,4 +26,5 @@ urlpatterns = [
     path('v2/panel/', views.portal_v2, name='portal_v2'),
     path('v2/sync-logs/', views.sync_logs_v2, name='sync_logs_v2'),
     path('v2/settings/', views.settings_v2, name='settings_v2'),
+    path('v2/panel/<path:username>/', views.admin_detail_v2, name='admin_detail_v2'),
 ]

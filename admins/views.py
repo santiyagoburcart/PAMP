@@ -696,3 +696,12 @@ def settings_v2(request):
         'sync_interval': SyncSettings.get_interval(),
     }
     return render(request, 'v2/settings_v2.html', context)
+
+
+@login_required
+def admin_detail_v2(request, username):
+    panel_admin = get_object_or_404(PanelAdmin, username=username)
+    if not (request.user.is_superuser or request.user.is_staff or request.user.username == username):
+        return redirect('portal')
+    context = _enrich(panel_admin)
+    return render(request, 'v2/admin_detail_v2.html', context)
