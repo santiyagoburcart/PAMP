@@ -1,0 +1,70 @@
+{% extends "v2/base_v2.html" %}
+{% block title %}PAMP — Sync Logs{% endblock %}
+{% block nav_logs %}active{% endblock %}
+{% block content %}
+<header class="header">
+  <div><h1>Sync Logs</h1><p>History of panel synchronization runs.</p></div>
+</header>
+
+<section class="cards" style="grid-template-columns:repeat(3,1fr)">
+  <article class="card metric" style="--c:#823eff">
+    <div class="label"><span class="icon">↻</span>Total Syncs</div>
+    <div class="num">{{ total_syncs }}</div>
+    <small>All runs</small>
+  </article>
+  <article class="card metric" style="--c:#12cf7f">
+    <div class="label"><span class="icon">✓</span>Successful</div>
+    <div class="num" style="color:#12cf7f">{{ success_count }}</div>
+    <small>Completed OK</small>
+  </article>
+  <article class="card metric" style="--c:#ff5470">
+    <div class="label"><span class="icon">✕</span>Failed</div>
+    <div class="num" style="color:#ff5470">{{ failed_count }}</div>
+    <small>Errored</small>
+  </article>
+</section>
+
+<article class="card table-card" style="overflow-x:auto">
+  <div class="panel-title">Recent Syncs</div>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Time</th>
+        <th>Status</th>
+        <th>Admins Synced</th>
+        <th>Duration</th>
+        <th>Error</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for log in logs %}
+      <tr>
+        <td style="color:#9aa6c8;white-space:nowrap">{{ log.created_at|date:"Y-m-d H:i:s" }}</td>
+        <td>
+          {% if log.status == 'success' %}
+            <span class="status" style="color:#12cf7f;background:#0e443a88">✓ Success</span>
+          {% elif log.status == 'failed' %}
+            <span class="status" style="color:#ff5470;background:#44161f88">✕ Failed</span>
+          {% elif log.status == 'partial' %}
+            <span class="status" style="color:#ff8d12;background:#44311688">⚠ Partial</span>
+          {% else %}
+            <span class="status" style="color:#a5b4fc;background:#23294c88">● {{ log.status }}</span>
+          {% endif %}
+        </td>
+        <td>{{ log.admins_synced }}</td>
+        <td style="color:#9aa6c8">{% if log.duration_seconds %}{{ log.duration_seconds|floatformat:2 }}s{% else %}—{% endif %}</td>
+        <td style="color:#fca5a5;font-size:11px;max-width:280px">
+          {% if log.error_message %}{{ log.error_message|truncatechars:80 }}{% else %}—{% endif %}
+        </td>
+      </tr>
+    {% empty %}
+      <tr>
+        <td colspan="5" style="text-align:center;color:#8b98ba;padding:32px 0">
+          ◎ No sync logs yet
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</article>
+{% endblock %}
