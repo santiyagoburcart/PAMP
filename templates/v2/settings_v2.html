@@ -1,0 +1,98 @@
+{% extends "v2/base_v2.html" %}
+{% block title %}PAMP — Settings{% endblock %}
+{% block nav_settings %}active{% endblock %}
+{% block head %}
+<script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
+<style>
+.v2-input{width:100%;height:40px;padding:0 14px;background:#101936;border:1px solid #162449;border-radius:10px;color:#cdd6f0;font-size:13px;outline:none}
+.v2-input:focus{border-color:#6d3fff;box-shadow:0 0 0 2px #6d3fff33}
+.v2-input::placeholder{color:#506080}
+</style>
+{% endblock %}
+{% block content %}
+<header class="header">
+  <div><h1>Settings</h1><p>Panel connection, sync schedule, backup and about.</p></div>
+</header>
+
+<div style="max-width:680px;display:flex;flex-direction:column;gap:16px">
+
+  <!-- Panel Connection -->
+  <article class="card">
+    <div class="panel-title">Panel Connection</div>
+    <div id="panel-config-result" style="margin-bottom:10px;font-size:12px"></div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <input type="text" id="cfg-url" name="base_url" class="v2-input"
+             placeholder="Panel URL (https://...)" value="{{ panel_config.base_url }}">
+      <input type="text" id="cfg-user" name="username" class="v2-input"
+             placeholder="Panel Username" value="{{ panel_config.username }}">
+      <input type="password" id="cfg-pass" name="password" class="v2-input"
+             placeholder="Password (blank = keep current)">
+      {% if panel_config.updated_at %}
+      <div style="font-size:11px;color:#6b7a9a">Last updated: {{ panel_config.updated_at|date:"Y-m-d H:i" }}</div>
+      {% endif %}
+      <button class="report" style="width:auto;padding:0 22px;height:40px;margin:0"
+              hx-post="{% url 'panel_config' %}"
+              hx-include="#cfg-url,#cfg-user,#cfg-pass"
+              hx-target="#panel-config-result"
+              hx-swap="innerHTML"
+              hx-headers='{"X-CSRFToken":"{{ csrf_token }}"}'>
+        Save &amp; Test Connection
+      </button>
+    </div>
+  </article>
+
+  <!-- Auto-Sync -->
+  <article class="card">
+    <div class="panel-title">Auto-Sync</div>
+    <div id="sync-interval-result" style="margin-bottom:10px;font-size:12px"></div>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <span style="color:#9aa6c8">Every</span>
+      <input type="number" id="interval-input" name="interval_minutes" class="v2-input"
+             style="width:90px" value="{{ sync_interval }}" min="1" max="1440">
+      <span style="color:#9aa6c8">minutes</span>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        {% for m in "5,15,30,60"|split:"," %}
+        <button class="select" style="height:32px;cursor:pointer;font-size:11px"
+                onclick="document.getElementById('interval-input').value='{{ m }}'">{{ m }}m</button>
+        {% endfor %}
+        <button class="select" style="height:32px;cursor:pointer;font-size:11px"
+                onclick="document.getElementById('interval-input').value='120'">2h</button>
+      </div>
+      <button class="report" style="width:auto;padding:0 18px;height:38px;margin:0"
+              hx-post="{% url 'update_sync_interval' %}"
+              hx-include="#interval-input"
+              hx-target="#sync-interval-result"
+              hx-swap="innerHTML"
+              hx-headers='{"X-CSRFToken":"{{ csrf_token }}"}'>
+        Save
+      </button>
+    </div>
+  </article>
+
+  <!-- Database Backup -->
+  <article class="card">
+    <div class="panel-title">Database Backup</div>
+    <p style="color:#9aa6c8;font-size:13px;margin:0 0 14px">Downloads a complete SQL backup including all admins, sync logs, limits, and settings.</p>
+    <a href="{% url 'backup_database' %}" class="report"
+       style="width:auto;padding:0 22px;height:40px;margin:0;display:inline-flex;align-items:center;text-decoration:none">
+      ⬇ Download SQL Backup
+    </a>
+  </article>
+
+  <!-- About -->
+  <article class="card">
+    <div class="panel-title">About PAMP</div>
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:11px;color:#6b7a9a;margin-bottom:4px">Version</div>
+        <div style="font-weight:700;font-size:16px;color:#a78bfa">v{{ pamp_version }}</div>
+      </div>
+      <a href="{{ github_url }}" target="_blank" rel="noopener" class="report"
+         style="margin-left:auto;width:auto;padding:0 22px;height:38px;margin-top:0;display:inline-flex;align-items:center;text-decoration:none">
+        View on GitHub
+      </a>
+    </div>
+  </article>
+
+</div>
+{% endblock %}
