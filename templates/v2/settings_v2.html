@@ -51,12 +51,11 @@
              style="width:90px" value="{{ sync_interval }}" min="1" max="1440">
       <span style="color:#9aa6c8">minutes</span>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
-        {% for m in "5,15,30,60"|split:"," %}
-        <button class="select" style="height:32px;cursor:pointer;font-size:11px"
-                onclick="document.getElementById('interval-input').value='{{ m }}'">{{ m }}m</button>
-        {% endfor %}
-        <button class="select" style="height:32px;cursor:pointer;font-size:11px"
-                onclick="document.getElementById('interval-input').value='120'">2h</button>
+        <button class="select" style="height:32px;cursor:pointer;font-size:11px" onclick="document.getElementById('interval-input').value='5'">5m</button>
+        <button class="select" style="height:32px;cursor:pointer;font-size:11px" onclick="document.getElementById('interval-input').value='15'">15m</button>
+        <button class="select" style="height:32px;cursor:pointer;font-size:11px" onclick="document.getElementById('interval-input').value='30'">30m</button>
+        <button class="select" style="height:32px;cursor:pointer;font-size:11px" onclick="document.getElementById('interval-input').value='60'">1h</button>
+        <button class="select" style="height:32px;cursor:pointer;font-size:11px" onclick="document.getElementById('interval-input').value='120'">2h</button>
       </div>
       <button class="report" style="width:auto;padding:0 18px;height:38px;margin:0"
               hx-post="{% url 'update_sync_interval' %}"
