@@ -1,0 +1,177 @@
+{% extends "v2/base_v2.html" %}
+{% block title %}PAMP — My Panel{% endblock %}
+{% block nav_panel %}active{% endblock %}
+{% block content %}
+
+{% if not_found %}
+<header class="header">
+  <div><h1>My Panel</h1><p>Your quota and panel access at a glance.</p></div>
+</header>
+<article class="card" style="padding:40px;text-align:center;color:#8896b9">
+  <div style="font-size:2rem;margin-bottom:12px">◎</div>
+  <div style="font-weight:600;margin-bottom:6px">No panel record found for your account.</div>
+  <div style="font-size:12px">Contact your administrator to be added to the panel.</div>
+</article>
+
+{% else %}
+
+<header class="header">
+  <div>
+    <h1>My Panel</h1>
+    <p>
+      <span style="display:inline-flex;align-items:center;gap:7px">
+        {{ a.username }}
+        {% if is_blocked %}
+          <span style="font-size:11px;padding:2px 9px;border-radius:5px;background:rgba(239,68,68,.15);color:#ef4444;border:1px solid rgba(239,68,68,.3)">
+            {% if block_reason == 'disabled' %}Disabled{% else %}Limited{% endif %}
+          </span>
+        {% else %}
+          <span style="font-size:11px;padding:2px 9px;border-radius:5px;background:rgba(18,207,127,.12);color:#12cf7f;border:1px solid rgba(18,207,127,.3)">Active</span>
+        {% endif %}
+      </span>
+    </p>
+  </div>
+</header>
+
+<!-- ── Blocked banner ─────────────────────────────────────────────────── -->
+{% if is_blocked %}
+<article class="card" style="border-color:#ef444466;background:linear-gradient(135deg,#2a1020,#1a0d18);margin-bottom:16px;padding:20px 24px">
+  <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+    <div>
+      <div style="font-size:15px;font-weight:700;color:#ff8098;margin-bottom:4px">
+        {% if block_reason == 'disabled' %}Access Disabled{% else %}Access Limited{% endif %}
+      </div>
+      <div style="color:#c9b6c0;font-size:13px">
+        {% if block_reason == 'disabled' %}
+          Your panel access has been disabled by the administrator.
+        {% else %}
+          You've reached your traffic limit. All your users have been suspended.
+        {% endif %}
+      </div>
+    </div>
+    <a href="https://t.me/{{ support_telegram|cut:'@' }}" target="_blank"
+       style="margin-left:auto;height:38px;padding:0 20px;border-radius:9px;background:linear-gradient(90deg,#6c2ddb,#8c38ee);color:#fff;font-weight:650;text-decoration:none;display:inline-flex;align-items:center;white-space:nowrap;box-shadow:0 5px 17px #7c3aed55">
+      Contact Support
+    </a>
+  </div>
+</article>
+
+<!-- ── Near-limit warning ─────────────────────────────────────────────── -->
+{% elif show_warning %}
+<article class="card" style="border-color:#f59e0b66;background:linear-gradient(135deg,#2a1e0d,#1a140d);margin-bottom:16px;padding:16px 22px">
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <span style="font-size:22px">⚠</span>
+    <div>
+      <div style="font-weight:700;color:#fbbf24;margin-bottom:3px">Warning: {{ warning_pct }}% of your limit used</div>
+      <div style="font-size:12px;color:#d4a44c">At 100% all your users will be suspended automatically. Contact support to increase your limit.</div>
+    </div>
+    <a href="https://t.me/{{ support_telegram|cut:'@' }}" target="_blank"
+       style="margin-left:auto;height:34px;padding:0 16px;border-radius:8px;background:rgba(245,158,11,.2);color:#fbbf24;border:1px solid rgba(245,158,11,.4);font-weight:600;text-decoration:none;display:inline-flex;align-items:center;font-size:12px;white-space:nowrap">
+      Contact Support
+    </a>
+  </div>
+</article>
+{% endif %}
+
+<!-- ── Traffic + Users grid ───────────────────────────────────────────── -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+
+  <!-- Traffic card -->
+  <article class="card">
+    <div class="panel-title">Traffic</div>
+    <div class="dist">
+
+      <div class="dist-row" style="grid-template-columns:1fr auto;border-bottom:1px solid #1c294a;padding-bottom:8px;margin-bottom:4px">
+        <span style="color:#8896b9">Admin Limit</span>
+        <b>{{ admin_limit_fmt }}</b>
+      </div>
+
+      <div class="dist-row" style="grid-template-columns:1fr auto">
+        <span style="color:#8896b9">Total Sold</span>
+        <b>{{ total_user_limit_fmt }}</b>
+      </div>
+
+      <div class="dist-row" style="grid-template-columns:1fr auto">
+        <span style="color:#8896b9">Total Used</span>
+        <b>{{ admin_used_fmt }}</b>
+      </div>
+
+      <div class="dist-row" style="grid-template-columns:1fr auto">
+        <span style="color:#8896b9">Remaining</span>
+        <b style="color:#12cf7f">{{ admin_remaining_fmt }}</b>
+      </div>
+
+      {% if deleted_used_bytes %}
+      <div class="dist-row" style="grid-template-columns:1fr auto">
+        <span style="color:#8896b9">From deleted users</span>
+        <b style="color:#ff8d12">+{{ deleted_used_fmt }}</b>
+      </div>
+      {% endif %}
+
+      <div class="dist-row" style="grid-template-columns:1fr auto;border-top:1px solid #1c294a;padding-top:8px;margin-top:4px">
+        <span style="color:#8896b9">Sold Limit</span>
+        <b style="color:{% if sold_limit_value > 0 %}#12cf7f{% elif sold_limit_value < 0 %}#ef4444{% else %}#8896b9{% endif %}">
+          {{ sold_limit_fmt }}
+        </b>
+      </div>
+
+    </div>
+
+    <!-- Usage progress bar -->
+    <div style="margin-top:18px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:#8896b9;margin-bottom:6px">
+        <span>Usage (sold volume)</span>
+        <span style="color:{% if usage_percent >= 100 %}#ef4444{% elif usage_percent >= 80 %}#f59e0b{% else %}#8896b9{% endif %};font-weight:700">{{ usage_percent }}%</span>
+      </div>
+      <div class="mini" style="width:100%">
+        <i style="--w:{% if usage_percent > 100 %}100{% else %}{{ usage_percent }}{% endif %}%;--c:{% if usage_percent >= 100 %}#ef4444{% elif usage_percent >= 80 %}#f59e0b{% else %}#823eff{% endif %}"></i>
+      </div>
+    </div>
+
+    {% if a.last_synced_at %}
+    <div style="margin-top:14px;font-size:11px;color:#6b7a9a">Last synced: {{ a.last_synced_at|date:"Y-m-d H:i" }}</div>
+    {% endif %}
+  </article>
+
+  <!-- Users card -->
+  <article class="card">
+    <div class="panel-title">Users</div>
+    <div class="dist">
+
+      <div class="dist-row" style="grid-template-columns:1fr auto;border-bottom:1px solid #1c294a;padding-bottom:8px;margin-bottom:4px">
+        <span style="color:#8896b9">Total</span>
+        <b>{{ a.users_count }}</b>
+      </div>
+
+      <div class="dist-row" style="grid-template-columns:1fr auto">
+        <span style="color:#8896b9">Active</span>
+        <b style="color:#12cf7f">{{ a.active_users }}</b>
+      </div>
+
+      <div class="dist-row" style="grid-template-columns:1fr auto">
+        <span style="color:#8896b9">On Hold</span>
+        <b style="color:#357dff">{{ a.on_hold_users }}</b>
+      </div>
+
+      <div class="dist-row" style="grid-template-columns:1fr auto">
+        <span style="color:#8896b9">Limited</span>
+        <b style="color:#ff8d12">{{ a.limited_users }}</b>
+      </div>
+
+      <div class="dist-row" style="grid-template-columns:1fr auto">
+        <span style="color:#8896b9">Disabled</span>
+        <b style="color:#ef4444">{{ a.disabled_users }}</b>
+      </div>
+
+      <div class="dist-row" style="grid-template-columns:1fr auto">
+        <span style="color:#8896b9">Expired</span>
+        <b style="color:#6b7a9a">{{ a.expired_users }}</b>
+      </div>
+
+    </div>
+  </article>
+
+</div><!-- end grid -->
+
+{% endif %}
+{% endblock %}
