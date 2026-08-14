@@ -30,8 +30,13 @@
       </div>
       <div class="user-card">
         <span class="avatar"></span>
-        <div><strong>{{ request.user.username }}</strong><small>Super Admin</small></div>
-        <span>⌄</span>
+        <div style="flex:1">
+          <strong>{{ request.user.username }}</strong>
+          <small>Super Admin</small>
+        </div>
+        <a href="{% url 'logout' %}" title="Sign out" style="color:#ff8098;display:flex;align-items:center;padding:6px;border-radius:8px;text-decoration:none" onmouseover="this.style.background='#44161f66'" onmouseout="this.style.background='transparent'">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </a>
       </div>
     </div>
   </aside>
