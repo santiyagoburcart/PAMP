@@ -23,3 +23,19 @@
 @media(max-width:520px){.cards{grid-template-columns:1fr!important}.top-controls{flex-wrap:wrap}}
 /* Fix: margin:auto on .main was vertically centering content in the 100vh grid */
 .main{margin:0 auto!important;align-self:start}
+.main{position:relative}
+.v2-sync-btn{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 16px;border-radius:10px;border:0;background:linear-gradient(90deg,#6c2ddb,#8c38ee);color:#fff;font-weight:650;font-size:13px;cursor:pointer;box-shadow:0 5px 17px #7c3aed55}
+.v2-sync-btn:hover{filter:brightness(1.08)}
+.v2-sync-btn svg{width:15px;height:15px}
+.btn-set,.btn-add,.btn-reduce,.btn-danger,.btn-success{height:36px;padding:0 14px;border-radius:9px;cursor:pointer;font-size:12px;font-weight:600}
+.btn-set{border:1px solid #12cf7f55;background:#0e443a55;color:#4fe0a6}
+.btn-set:hover{background:#0e443a99}
+.btn-add{border:1px solid #357dff55;background:#12294f66;color:#7fb0ff}
+.btn-add:hover{background:#12294fcc}
+.btn-reduce{border:1px solid #ff8d1255;background:#3a2a1066;color:#ffb968}
+.btn-reduce:hover{background:#3a2a10cc}
+.btn-danger{border:1px solid #ff547055;background:#44161f66;color:#ff8098}
+.btn-danger:hover{background:#44161fcc}
+.btn-success{border:1px solid #12cf7f55;background:#0e443a55;color:#4fe0a6}
+.btn-success:hover{background:#0e443a99}
+.act-btn-lg{height:44px;border-radius:10px;cursor:pointer;font-weight:600;font-size:13px}
