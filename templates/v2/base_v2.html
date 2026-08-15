@@ -16,11 +16,11 @@
   <aside class="side">
     <div class="logo"><span class="logo-mark">✧</span>PAMP <span class="brand-chev">⌄</span></div>
     <nav class="nav">
-      <a href="/v2/overview/" class="{% block nav_overview %}{% endblock %}">⌘ <span>Overview</span><b class="pill">New</b></a>
-      <a href="/v2/dashboard/" class="{% block nav_dashboard %}{% endblock %}">⌂ <span>Dashboard</span></a>
-      <a href="/v2/panel/" class="{% block nav_panel %}{% endblock %}">⊕ <span>My Panel</span></a>
-      <a href="/v2/sync-logs/" class="{% block nav_logs %}{% endblock %}">↻ <span>Sync Logs</span></a>
-      <a href="/v2/settings/" class="{% block nav_settings %}{% endblock %}">⚙ <span>Settings</span></a>
+      <a href="{% url 'overview_v2' %}" class="{% block nav_overview %}{% endblock %}">⌘ <span>Overview</span><b class="pill">New</b></a>
+      <a href="{% url 'dashboard' %}" class="{% block nav_dashboard %}{% endblock %}">⌂ <span>Dashboard</span></a>
+      <a href="{% url 'portal' %}" class="{% block nav_panel %}{% endblock %}">⊕ <span>My Panel</span></a>
+      <a href="{% url 'sync_logs' %}" class="{% block nav_logs %}{% endblock %}">↻ <span>Sync Logs</span></a>
+      <a href="{% url 'settings' %}" class="{% block nav_settings %}{% endblock %}">⚙ <span>Settings</span></a>
     </nav>
     <div class="side-bottom">
       <div class="sync-card">
