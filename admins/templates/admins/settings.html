@@ -155,6 +155,44 @@
       </div>
     </div>
 
+    <!-- UI Theme -->
+    <div class="settings-card">
+      <div class="settings-card-header">
+        <div class="icon" style="background:linear-gradient(135deg,rgba(139,92,246,0.3),rgba(109,40,217,0.2));border:1px solid rgba(139,92,246,0.3);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c4b5fd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 0 0 4.93 19.07"/><path d="M4.93 4.93A10 10 0 0 1 19.07 19.07"/></svg>
+        </div>
+        <div>
+          <div class="title">UI Theme</div>
+          <div class="subtitle">Switch between the classic and modern interface</div>
+        </div>
+      </div>
+      <div class="settings-card-body">
+        <div class="result-zone" id="theme-result-v1" style="margin-bottom:14px;font-size:12px;"></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-primary{% if current_theme == 'v2' %} btn-active{% endif %}"
+            hx-post="{% url 'set_ui_theme' %}"
+            hx-vals='{"theme":"v2"}'
+            hx-target="#theme-result-v1"
+            hx-swap="innerHTML"
+            hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+            onclick="setTimeout(function(){location.reload()},900)"
+            style="{% if current_theme == 'v2' %}opacity:1{% else %}opacity:0.7{% endif %}">
+            ✦ Switch to Modern (v2)
+          </button>
+          <button class="btn btn-glass"
+            hx-post="{% url 'set_ui_theme' %}"
+            hx-vals='{"theme":"v1"}'
+            hx-target="#theme-result-v1"
+            hx-swap="innerHTML"
+            hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+            onclick="setTimeout(function(){location.reload()},900)"
+            style="{% if current_theme == 'v1' %}opacity:1{% else %}opacity:0.7{% endif %}">
+            ☰ Stay on Classic (v1)
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- About -->
     <div class="settings-card">
       <div class="settings-card-header">
