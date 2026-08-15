@@ -69,6 +69,10 @@ def _get_version():
         return 'dev'
 
 
+def _tpl(v1, v2):
+    return v2 if UISettings.get_theme() == 'v2' else v1
+
+
 # ── main views ─────────────────────────────────────────────────────────────
 
 @login_required
