@@ -727,3 +727,15 @@ def admin_detail_v2(request, username):
         return redirect('portal')
     context = _enrich(panel_admin)
     return render(request, 'v2/admin_detail_v2.html', context)
+
+
+@login_required
+def set_ui_theme(request):
+    if not request.user.is_superuser:
+        return HttpResponse('<div class="action-result error">✗ Permission denied</div>')
+    if request.method != 'POST':
+        return HttpResponse(status=405)
+    theme = request.POST.get('theme', 'v2')
+    UISettings.set_theme(theme)
+    label = 'Modern (v2)' if theme == 'v2' else 'Classic (v1)'
+    return HttpResponse(f'<div class="action-result success">✓ Theme set to {label}. Reloading…</div>')

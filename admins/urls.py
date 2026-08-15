@@ -16,6 +16,7 @@ urlpatterns = [
     path('settings/', views.settings_page, name='settings'),
     path('settings/sync-interval/', views.update_sync_interval, name='update_sync_interval'),
     path('settings/panel-config/', views.panel_config, name='panel_config'),
+    path('settings/ui-theme/', views.set_ui_theme, name='set_ui_theme'),
     path('backup/database/', views.backup_database, name='backup_database'),
     path('sync-logs/', views.sync_logs_page, name='sync_logs'),
     path('api/server-stats/', views.server_stats, name='server_stats'),
