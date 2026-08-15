@@ -119,6 +119,7 @@ def dashboard(request):
         'total_count': PanelAdmin.objects.count(),
         'active_count': PanelAdmin.objects.filter(status='active').count(),
         'disabled_count': PanelAdmin.objects.filter(status='disabled').count(),
+        'pamp_limited_count': PanelAdmin.objects.filter(pamp_blocked=True).count(),
         'near_limit_count': len(over_limit_list),
         'total_limit_fmt': _fmt_bytes(total_limit),
         'total_used_fmt': _fmt_bytes(total_used),
@@ -133,7 +134,7 @@ def dashboard(request):
         'github_url': 'https://github.com/santiyagoburcart/PAMP',
         'panel_config': PanelConfig.get_config(),
     }
-    return render(request, 'admins/dashboard.html', context)
+    return render(request, _tpl('admins/dashboard.html', 'v2/dashboard_v2.html'), context)
 
 
 @login_required
