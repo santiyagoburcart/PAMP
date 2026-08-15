@@ -267,6 +267,27 @@ class UserTrafficSnapshot(models.Model):
     used_traffic_bytes = models.BigIntegerField(default=0)
     last_seen = models.DateTimeField(auto_now=True)
 
+
+class UISettings(models.Model):
+    """Single-row global UI settings."""
+    theme = models.CharField(max_length=10, default='v2', choices=[('v1', 'Classic'), ('v2', 'Modern')])
+
+    class Meta:
+        verbose_name = 'UI Settings'
+
+    @classmethod
+    def get_theme(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj.theme
+
+    @classmethod
+    def set_theme(cls, value):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        if value in ('v1', 'v2'):
+            obj.theme = value
+            obj.save()
+        return obj.theme
+
     class Meta:
         unique_together = ('panel_admin', 'user_username')
         indexes = [models.Index(fields=['panel_admin', 'user_username'])]
