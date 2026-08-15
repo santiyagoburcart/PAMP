@@ -1,5 +1,42 @@
 # Changelog
 
+## v1.2.0 — New UI (v2) with theme switcher
+
+### New Features
+- **Redesigned modern UI (v2)** — A new navy/purple glassmorphism interface with:
+  - Overview page: live server resources (CPU, Memory, Disk, Bandwidth) with circular gauges, updating every 2 seconds
+  - Redesigned Dashboard, My Panel, Admin Detail, Sync Logs, and Settings pages
+  - Self-hosted Vazirmatn font (no CDN dependency — reliable inside Iran)
+  - Fully responsive with a mobile hamburger drawer menu
+  - Left sidebar, English menu, LTR layout
+- **Theme switcher** — A global UI theme setting (Classic v1 / Modern v2), changeable by the superuser from Settings. Defaults to Modern (v2). Both themes are kept; main routes render whichever is active.
+- **Bandwidth card** — Live upload/download speed on the Overview page
+- **Color-coded action buttons** — On the admin detail page, buttons are semantically colored (Set = green, Add = blue, Reduce = orange, Remove/Disable = red, Enable = green)
+- **Sync + Logout on every page** — The Sync button (top-right) and Logout (sidebar) are available across the new UI
+
+### Notes
+- The classic v1 interface remains fully available and can be re-selected any time from Settings → UI Theme.
+
+---
+
+## نسخه ۱.۲.۰ — رابط کاربری جدید با قابلیت تعویض تم
+
+### امکانات جدید
+- **رابط مدرن بازطراحی‌شده (v2)** — رابط شیشه‌ای navy/purple جدید شامل:
+  - صفحه Overview: منابع زنده سرور (CPU، حافظه، دیسک، پهنای باند) با گیج دایره‌ای، آپدیت هر ۲ ثانیه
+  - بازطراحی صفحات داشبورد، پنل من، جزئیات ادمین، لاگ سینک و تنظیمات
+  - فونت Vazirmatn خودمیزبان (بدون وابستگی به CDN — پایدار در ایران)
+  - کاملاً ریسپانسیو با منوی همبرگری موبایل
+- **تعویض تم** — تنظیم کلی تم (کلاسیک v1 / مدرن v2) که سوپریوزر از تنظیمات عوض می‌کند. پیش‌فرض مدرن (v2). هر دو تم حفظ می‌شوند
+- **کارت پهنای باند** — سرعت لحظه‌ای دانلود/آپلود در صفحه Overview
+- **دکمه‌های رنگی معنادار** — در صفحه جزئیات ادمین (تنظیم=سبز، افزودن=آبی، کاهش=نارنجی، حذف/غیرفعال=قرمز، فعال=سبز)
+- **دکمه Sync و Logout در همه صفحات**
+
+### نکته
+- رابط کلاسیک v1 کاملاً در دسترس می‌ماند و هر زمان از تنظیمات → UI Theme قابل انتخاب است.
+
+---
+
 ## v1.1.0 — Sold Limit Accounting, Deleted-User Traffic Preservation & Mobile Responsiveness
 
 ### Features
