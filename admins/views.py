@@ -379,7 +379,7 @@ def sync_logs_page(request):
         return redirect('dashboard')
     logs = SyncLog.objects.all()[:100]
     total = SyncLog.objects.count()
-    return render(request, 'admins/sync_logs.html', {
+    return render(request, _tpl('admins/sync_logs.html', 'v2/sync_logs_v2.html'), {
         'logs': logs,
         'total_syncs': total,
         'success_count': SyncLog.objects.filter(status='success').count(),
