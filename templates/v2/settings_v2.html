@@ -77,6 +77,32 @@
     </a>
   </article>
 
+  <!-- UI Theme -->
+  <article class="card">
+    <div class="panel-title">UI Theme</div>
+    <div id="theme-result" style="margin-bottom:10px;font-size:12px"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="v2-sync-btn" style="background:{% if current_theme == 'v2' %}linear-gradient(90deg,#6c2ddb,#8c38ee){% else %}#101936{% endif %};box-shadow:none;border:1px solid #26345b"
+        hx-post="{% url 'set_ui_theme' %}"
+        hx-vals='{"theme":"v2"}'
+        hx-target="#theme-result"
+        hx-swap="innerHTML"
+        hx-headers='{"X-CSRFToken":"{{ csrf_token }}"}'
+        onclick="setTimeout(function(){location.reload()},900)">
+        ✦ Modern (v2)
+      </button>
+      <button class="v2-sync-btn" style="background:{% if current_theme == 'v1' %}linear-gradient(90deg,#6c2ddb,#8c38ee){% else %}#101936{% endif %};box-shadow:none;border:1px solid #26345b"
+        hx-post="{% url 'set_ui_theme' %}"
+        hx-vals='{"theme":"v1"}'
+        hx-target="#theme-result"
+        hx-swap="innerHTML"
+        hx-headers='{"X-CSRFToken":"{{ csrf_token }}"}'
+        onclick="setTimeout(function(){location.reload()},900)">
+        ☰ Classic (v1)
+      </button>
+    </div>
+  </article>
+
   <!-- About -->
   <article class="card">
     <div class="panel-title">About PAMP</div>
