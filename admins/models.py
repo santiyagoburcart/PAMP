@@ -268,6 +268,14 @@ class UserTrafficSnapshot(models.Model):
     last_seen = models.DateTimeField(auto_now=True)
 
 
+    class Meta:
+        unique_together = ('panel_admin', 'user_username')
+        indexes = [models.Index(fields=['panel_admin', 'user_username'])]
+
+    def __str__(self):
+        return f"{self.panel_admin.username}/{self.user_username}"
+
+
 class UISettings(models.Model):
     """Single-row global UI settings."""
     theme = models.CharField(max_length=10, default='v2', choices=[('v1', 'Classic'), ('v2', 'Modern')])
@@ -287,10 +295,3 @@ class UISettings(models.Model):
             obj.theme = value
             obj.save()
         return obj.theme
-
-    class Meta:
-        unique_together = ('panel_admin', 'user_username')
-        indexes = [models.Index(fields=['panel_admin', 'user_username'])]
-
-    def __str__(self):
-        return f"{self.panel_admin.username}/{self.user_username}"
