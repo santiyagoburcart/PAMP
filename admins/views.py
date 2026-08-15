@@ -365,9 +365,10 @@ def settings_page(request):
     if not request.user.is_superuser:
         from django.shortcuts import redirect
         return redirect('dashboard')
-    return render(request, 'admins/settings.html', {
+    return render(request, _tpl('admins/settings.html', 'v2/settings_v2.html'), {
         'panel_config': PanelConfig.get_config(),
         'sync_interval': SyncSettings.get_interval(),
+        'current_theme': UISettings.get_theme(),
     })
 
 
