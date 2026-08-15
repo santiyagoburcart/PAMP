@@ -185,7 +185,7 @@ def admin_detail(request, username):
     if not (request.user.is_superuser or request.user.is_staff or request.user.username == username):
         return redirect('portal')
     context = _enrich(panel_admin)
-    return render(request, 'admins/admin_detail.html', context)
+    return render(request, _tpl('admins/admin_detail.html', 'v2/admin_detail_v2.html'), context)
 
 
 @login_required
