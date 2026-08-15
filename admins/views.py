@@ -139,16 +139,26 @@ def dashboard(request):
 
 @login_required
 def portal(request):
+    theme = UISettings.get_theme()
     try:
         panel_admin = PanelAdmin.objects.get(username=request.user.username)
     except PanelAdmin.DoesNotExist:
+        if theme == 'v2':
+            return render(request, 'v2/portal_v2.html', {'not_found': True})
         return render(request, 'admins/portal_not_found.html')
 
-    if panel_admin.status == 'disabled':
+    is_blocked = panel_admin.status == 'disabled' or panel_admin.pamp_blocked
+    block_reason = 'disabled' if panel_admin.status == 'disabled' else ('pamp_limited' if panel_admin.pamp_blocked else None)
+    try:
+        support_telegram = panel_admin.limit_config.support_telegram or '@support'
+    except Exception:
+        support_telegram = '@support'
+
+    if theme == 'v1' and is_blocked:
         return render(request, 'admins/portal_blocked.html', {
             'admin': panel_admin,
-            'support_telegram': '@support',
-            'reason': 'disabled',
+            'support_telegram': support_telegram,
+            'reason': block_reason or 'disabled',
         })
 
     show_warning = False
@@ -158,9 +168,15 @@ def portal(request):
         show_warning = warning_pct >= 80
 
     context = _enrich(panel_admin)
-    context['show_warning'] = show_warning
-    context['warning_pct'] = warning_pct
-    return render(request, 'admins/portal.html', context)
+    context.update({
+        'show_warning': show_warning,
+        'warning_pct': warning_pct,
+        'is_blocked': is_blocked,
+        'block_reason': block_reason,
+        'support_telegram': support_telegram,
+        'a': panel_admin,
+    })
+    return render(request, _tpl('admins/portal.html', 'v2/portal_v2.html'), context)
 
 
 @login_required
