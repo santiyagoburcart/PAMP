@@ -60,7 +60,13 @@ def send_telegram_backup():
             files={'document': (filename, io.BytesIO(sql_bytes), 'application/sql')},
             timeout=60,
         )
-        resp.raise_for_status()
+        if not resp.ok:
+            try:
+                tg_desc = resp.json().get('description', resp.text[:200])
+            except Exception:
+                tg_desc = resp.text[:200]
+            logger.error("Telegram backup: API error %d: %s", resp.status_code, tg_desc)
+            return f"error: {tg_desc}"
         logger.info("Telegram backup sent: %s (%d bytes)", filename, len(sql_bytes))
         return f"ok: {filename}"
     except Exception as exc:
