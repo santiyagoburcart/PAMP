@@ -103,6 +103,49 @@
     </div>
   </article>
 
+  <!-- Telegram Backup -->
+  <article class="card">
+    <div class="panel-title">Telegram Backup</div>
+    <p style="color:#9aa6c8;font-size:13px;margin:0 0 14px">Send automated DB backups to a Telegram chat. Create a bot via @BotFather, add it to a chat, and paste the token + chat ID below.</p>
+    <div id="telegram-config-result" style="margin-bottom:10px;font-size:12px"></div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <input type="text" id="tg-token" name="bot_token" class="v2-input"
+             placeholder="Bot token (blank = keep current)">
+      <input type="text" id="tg-chat" name="chat_id" class="v2-input"
+             placeholder="Chat ID (e.g. -100123456789)" value="{{ telegram_config.chat_id }}">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <span style="color:#9aa6c8;font-size:13px">Interval</span>
+        <input type="number" id="tg-hours" name="backup_interval_hours" class="v2-input"
+               style="width:90px" value="{{ telegram_config.backup_interval_hours }}" min="1" max="168">
+        <span style="color:#9aa6c8;font-size:13px">hours</span>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-left:auto">
+          <input type="checkbox" id="tg-enabled" name="is_enabled"
+                 {% if telegram_config.is_enabled %}checked{% endif %}
+                 style="width:16px;height:16px;cursor:pointer">
+          <span style="font-size:13px;color:#cdd6f0">Enabled</span>
+        </label>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="report" style="width:auto;padding:0 22px;height:40px;margin:0"
+                hx-post="{% url 'telegram_config' %}"
+                hx-include="#tg-token,#tg-chat,#tg-hours"
+                hx-vals='js:{is_enabled: document.getElementById("tg-enabled").checked ? "1" : "0"}'
+                hx-target="#telegram-config-result"
+                hx-swap="innerHTML"
+                hx-headers='{"X-CSRFToken":"{{ csrf_token }}"}'>
+          Save Telegram Settings
+        </button>
+        <button class="v2-sync-btn" style="background:#101936;box-shadow:none;border:1px solid #26345b"
+                hx-post="{% url 'telegram_backup_now' %}"
+                hx-target="#telegram-config-result"
+                hx-swap="innerHTML"
+                hx-headers='{"X-CSRFToken":"{{ csrf_token }}"}'>
+          ▶ Send Backup Now
+        </button>
+      </div>
+    </div>
+  </article>
+
   <!-- About -->
   <article class="card">
     <div class="panel-title">About PAMP</div>
