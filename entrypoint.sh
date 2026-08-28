@@ -21,7 +21,7 @@ done
 echo "==> MySQL is ready."
 
 echo "==> Running migrations..."
-python manage.py migrate --noinput
+python manage.py migrate --noinput || python manage.py migrate --noinput --fake-initial
 
 echo "==> Seeding PanelConfig from env (if not already set)..."
 python manage.py shell -c "
