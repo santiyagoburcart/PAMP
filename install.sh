@@ -283,34 +283,45 @@ do_update() {
 }
 
 do_uninstall() {
-    echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${RED}  WARNING: This will permanently delete PAMP${NC}"
-    echo -e "${RED}  and ALL its data (database, volumes, SSL certs).${NC}"
-    echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo ""
-    read -p "  Type 'yes' to confirm: " CONFIRM
+    # Check if PAMP is actually installed before proceeding
+    if [ ! -f "/opt/pamp/.env" ] && ! docker ps -a --format '{{.Names}}' 2>/dev/null | grep -q "pamp"; then
+        echo "PAMP is not installed on this server."
+        exit 0
+    fi
+
+    read -p "This will DELETE all data including the database. Type 'yes' to confirm: " CONFIRM
     if [ "$CONFIRM" != "yes" ]; then
         echo "Cancelled."
         exit 0
     fi
 
+    echo "Uninstalling PAMP..."
+    detect_compose
+    cd /opt/pamp 2>/dev/null || true
+
+    # Read domain before deleting files
     UNINSTALL_DOMAIN=""
-    if [ -f "$INSTALL_DIR/.env" ]; then
-        UNINSTALL_DOMAIN=$(grep ALLOWED_HOSTS "$INSTALL_DIR/.env" 2>/dev/null | cut -d= -f2 | cut -d, -f1 || true)
+    if [ -f ".env" ]; then
+        UNINSTALL_DOMAIN=$(grep ALLOWED_HOSTS .env 2>/dev/null | cut -d= -f2 | cut -d, -f1 || true)
     fi
 
+    # Stop and remove containers + volumes
     echo -e "${YELLOW}Stopping and removing containers and volumes...${NC}"
-    cd "$INSTALL_DIR" 2>/dev/null || true
-    docker compose down -v 2>/dev/null || docker-compose down -v 2>/dev/null || true
+    $DC down -v 2>/dev/null || docker compose down -v 2>/dev/null || true
 
+    # Remove any leftover named volumes
+    docker volume rm pamp_mysql_data pamp_static_volume pamp_certbot_www 2>/dev/null || true
+
+    # Remove SSL cert if domain found
     if [ -n "$UNINSTALL_DOMAIN" ]; then
         echo -e "${YELLOW}Removing SSL certificate for ${UNINSTALL_DOMAIN}...${NC}"
         certbot delete --cert-name "$UNINSTALL_DOMAIN" --non-interactive 2>/dev/null || true
     fi
 
+    # Remove the directory
     cd /
-    echo -e "${YELLOW}Removing $INSTALL_DIR ...${NC}"
-    rm -rf "$INSTALL_DIR"
+    echo -e "${YELLOW}Removing /opt/pamp ...${NC}"
+    rm -rf /opt/pamp
 
     echo ""
     echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
