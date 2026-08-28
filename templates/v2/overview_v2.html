@@ -52,6 +52,42 @@
   </article>
 </section>
 
+<article class="card" style="margin-top:16px">
+  <div class="panel-title">Server Information</div>
+  <div class="dist">
+    <div class="dist-row" style="grid-template-columns:180px 1fr">
+      <span style="color:#8896b9">Hostname</span>
+      <b style="font-family:monospace">{{ hostname|default:"—" }}</b>
+    </div>
+    <div class="dist-row" style="grid-template-columns:180px 1fr">
+      <span style="color:#8896b9">Public IPv4</span>
+      <b style="font-family:monospace;color:#12cf7f">{{ public_ipv4|default:"—" }}</b>
+    </div>
+    <div class="dist-row" style="grid-template-columns:180px 1fr">
+      <span style="color:#8896b9">Public IPv6</span>
+      <b style="font-family:monospace;color:#357dff">{{ public_ipv6|default:"—" }}</b>
+    </div>
+    <div class="dist-row" style="grid-template-columns:180px 1fr">
+      <span style="color:#8896b9">Kernel</span>
+      <b style="font-family:monospace;color:#a78bff">{{ kernel_version|default:"—" }}</b>
+    </div>
+    <div class="dist-row" style="grid-template-columns:180px 1fr">
+      <span style="color:#8896b9">Processes</span>
+      <b>{{ process_count|default:"—" }}</b>
+    </div>
+    {% if docker_ips %}
+    <div class="dist-row" style="grid-template-columns:180px 1fr;align-items:flex-start">
+      <span style="color:#8896b9">Docker IPs</span>
+      <div>
+        {% for ip in docker_ips %}
+        <div style="font-family:monospace;font-size:12px;color:#9aa6c8">{{ ip }}</div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</article>
+
 <script>
 let lastNet = null, lastNetTime = null;
 
