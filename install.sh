@@ -168,14 +168,17 @@ sleep 20
 echo -e "${YELLOW}Running migrations...${NC}"
 $DC exec -T web python manage.py migrate
 
-echo -e "${YELLOW}Creating superuser...${NC}"
+echo -e "${YELLOW}Creating/updating superuser...${NC}"
 $DC exec -T web python manage.py shell -c "
 from django.contrib.auth.models import User
-if not User.objects.filter(username='admin').exists():
-    User.objects.create_superuser('admin', 'admin@pamp.local', '$ADMIN_PASS')
-    print('Superuser created')
-else:
-    print('Superuser already exists')
+u, created = User.objects.get_or_create(username='admin')
+u.set_password('$ADMIN_PASS')
+u.is_superuser = True
+u.is_staff = True
+u.is_active = True
+u.email = 'admin@pamp.local'
+u.save()
+print('Superuser', 'created' if created else 'password updated', ':', u.username)
 "
 
 echo -e "${YELLOW}Collecting static files...${NC}"
