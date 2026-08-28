@@ -36,12 +36,6 @@ detect_compose() {
 }
 
 do_install() {
-    if [ -f "$INSTALL_DIR/.env" ]; then
-        echo -e "${YELLOW}PAMP appears to be already installed at $INSTALL_DIR.${NC}"
-        read -p "Re-install anyway? This will overwrite .env and nginx.conf [y/N]: " REINSTALL
-        [[ "$REINSTALL" =~ ^[Yy]$ ]] || { echo "Cancelled."; exit 0; }
-    fi
-
     if ! command -v docker &>/dev/null; then
         echo -e "${YELLOW}Installing Docker...${NC}"
         curl -fsSL https://get.docker.com | sh
