@@ -146,6 +146,12 @@ NGINXHTTP
     # Relative URI avoids scheme/domain mismatch on fresh installs
     sed -i "s|PMA_ABSOLUTE_URI:.*|PMA_ABSOLUTE_URI: /phpmyadmin/|" docker-compose.yml
 
+    # Clean up any leftover containers and volumes from a previous install
+    echo -e "${YELLOW}Cleaning up any previous installation data...${NC}"
+    $DC down -v 2>/dev/null || true
+    docker volume rm pamp_mysql_data pamp_static_volume pamp_certbot_www 2>/dev/null || true
+    echo -e "${YELLOW}Cleanup done.${NC}"
+
     echo -e "${YELLOW}Starting services...${NC}"
     $DC up -d --build
 
