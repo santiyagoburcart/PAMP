@@ -590,6 +590,68 @@ def server_stats(request):
         return JsonResponse({'error': str(e)}, status=500)
 
 
+def _get_public_ipv4():
+    try:
+        import urllib.request
+        return urllib.request.urlopen('https://api4.ipify.org', timeout=3).read().decode()
+    except Exception:
+        return '—'
+
+
+def _get_public_ipv6():
+    try:
+        import urllib.request
+        return urllib.request.urlopen('https://api6.ipify.org', timeout=3).read().decode()
+    except Exception:
+        return '—'
+
+
+def _get_docker_ips():
+    try:
+        import socket, psutil
+        addrs = psutil.net_if_addrs()
+        ips = []
+        for iface, addr_list in addrs.items():
+            if iface == 'lo':
+                continue
+            for addr in addr_list:
+                if addr.family == socket.AF_INET:
+                    ips.append(f'{iface}: {addr.address}')
+        return ips
+    except Exception:
+        return []
+
+
+def _get_kernel():
+    import re
+    try:
+        host_proc = _os.environ.get('HOST_PROC', '/proc')
+        with open(f'{host_proc}/version') as f:
+            m = re.search(r'Linux version (\S+)', f.read())
+            return m.group(1) if m else '—'
+    except Exception:
+        import platform
+        return platform.release()
+
+
+def _get_process_count():
+    try:
+        host_proc = _os.environ.get('HOST_PROC', '/proc')
+        return len([d for d in _os.listdir(host_proc) if d.isdigit()])
+    except Exception:
+        return '—'
+
+
+def _get_hostname():
+    try:
+        host_proc = _os.environ.get('HOST_PROC', '/proc')
+        with open(f'{host_proc}/sys/kernel/hostname') as f:
+            return f.read().strip()
+    except Exception:
+        import socket
+        return socket.gethostname()
+
+
 @login_required
 def overview_v2(request):
     if not request.user.is_superuser:
@@ -609,7 +671,16 @@ def overview_v2(request):
     except Exception:
         uptime_display = '—'
 
-    return render(request, 'v2/overview_v2.html', {'uptime_display': uptime_display})
+    ctx = {
+        'uptime_display': uptime_display,
+        'public_ipv4': _get_public_ipv4(),
+        'public_ipv6': _get_public_ipv6(),
+        'docker_ips': _get_docker_ips(),
+        'kernel_version': _get_kernel(),
+        'process_count': _get_process_count(),
+        'hostname': _get_hostname(),
+    }
+    return render(request, 'v2/overview_v2.html', ctx)
 
 
 @login_required
