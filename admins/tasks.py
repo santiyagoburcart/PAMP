@@ -1,9 +1,71 @@
 import logging
+import io
 import time
 from celery import shared_task
 from django.utils import timezone
 
 logger = logging.getLogger('admins')
+
+
+@shared_task(name='admins.tasks.send_telegram_backup')
+def send_telegram_backup():
+    """Dump the MySQL database and send it to a Telegram chat as a document."""
+    import subprocess
+    import requests
+    from django.conf import settings as dj_settings
+    from .models import TelegramConfig
+
+    cfg = TelegramConfig.get_config()
+    if not cfg.is_enabled or not cfg.bot_token or not cfg.chat_id:
+        logger.info("Telegram backup skipped: not configured or disabled")
+        return "skipped"
+
+    db = dj_settings.DATABASES['default']
+    timestamp = timezone.now().strftime('%Y%m%d_%H%M%S')
+    filename = f"pamp_backup_{timestamp}.sql"
+
+    cmd = [
+        'mysqldump',
+        f'--host={db["HOST"]}',
+        f'--port={str(db["PORT"])}',
+        f'--user={db["USER"]}',
+        f'--password={db["PASSWORD"]}',
+        '--protocol=TCP',
+        '--ssl=FALSE',
+        '--single-transaction',
+        '--no-tablespaces',
+        '--skip-lock-tables',
+        db['NAME'],
+    ]
+
+    try:
+        result = subprocess.run(cmd, capture_output=True, timeout=180)
+    except subprocess.TimeoutExpired:
+        logger.error("Telegram backup: mysqldump timed out")
+        return "error: timeout"
+
+    if result.returncode != 0:
+        err = result.stderr.decode(errors='replace')[:500]
+        logger.error("Telegram backup: mysqldump failed: %s", err)
+        return f"error: {err}"
+
+    sql_bytes = result.stdout
+    caption = f"PAMP DB backup — {timestamp}"
+    url = f"https://api.telegram.org/bot{cfg.bot_token}/sendDocument"
+
+    try:
+        resp = requests.post(
+            url,
+            data={'chat_id': cfg.chat_id, 'caption': caption},
+            files={'document': (filename, io.BytesIO(sql_bytes), 'application/sql')},
+            timeout=60,
+        )
+        resp.raise_for_status()
+        logger.info("Telegram backup sent: %s (%d bytes)", filename, len(sql_bytes))
+        return f"ok: {filename}"
+    except Exception as exc:
+        logger.error("Telegram backup: send failed: %s", exc)
+        return f"error: {exc}"
 
 
 def track_deleted_users(panel_admin, current_users):
