@@ -411,8 +411,11 @@ def telegram_backup_now(request):
         return HttpResponse(status=405)
 
     from .tasks import send_telegram_backup
-    send_telegram_backup.delay()
-    return HttpResponse('<div class="action-result success">✓ Backup queued — check Telegram in a moment</div>')
+    result = send_telegram_backup.apply()
+    outcome = result.result or ''
+    if str(outcome).startswith('ok:'):
+        return HttpResponse(f'<div class="action-result success">✓ Backup sent to Telegram</div>')
+    return HttpResponse(f'<div class="action-result error">✗ {outcome}</div>')
 
 
 @login_required
