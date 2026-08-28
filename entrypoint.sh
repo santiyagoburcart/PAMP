@@ -55,20 +55,19 @@ if url:
 echo "==> Collecting static files..."
 python manage.py collectstatic --noinput
 
-echo "==> Creating superuser if not exists..."
-python manage.py shell << 'PYEOF'
-from django.contrib.auth import get_user_model
+echo "==> Creating/updating superuser..."
+python manage.py shell -c "
+from django.contrib.auth.models import User
 import os
-User = get_user_model()
-username = os.environ.get('DJANGO_SUPERUSER_USERNAME', 'admin')
-password = os.environ.get('DJANGO_SUPERUSER_PASSWORD', 'admin')
-email = os.environ.get('DJANGO_SUPERUSER_EMAIL', 'admin@pamp.local')
-if not User.objects.filter(username=username).exists():
-    User.objects.create_superuser(username, email, password)
-    print(f"Superuser '{username}' created.")
-else:
-    print(f"Superuser '{username}' already exists.")
-PYEOF
+u, created = User.objects.get_or_create(username=os.environ.get('DJANGO_SUPERUSER_USERNAME','admin'))
+u.set_password(os.environ.get('DJANGO_SUPERUSER_PASSWORD',''))
+u.is_superuser = True
+u.is_staff = True
+u.is_active = True
+u.email = os.environ.get('DJANGO_SUPERUSER_EMAIL','admin@pamp.local')
+u.save()
+print('Superuser', 'created' if created else 'password updated', ':', u.username)
+" || true
 
 echo "==> Setting up periodic sync task..."
 python manage.py setup_periodic_tasks
