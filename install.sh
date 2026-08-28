@@ -1,6 +1,20 @@
 #!/bin/bash
 set -e
 
+if [[ "$1" == "--uninstall" ]]; then
+  echo "Uninstalling PAMP..."
+  cd /opt/pamp 2>/dev/null || true
+  docker compose down -v 2>/dev/null || docker-compose down -v 2>/dev/null || true
+  if [ -f .env ]; then
+    DOMAIN=$(grep ALLOWED_HOSTS .env | cut -d= -f2 | cut -d, -f1)
+    certbot delete --cert-name "$DOMAIN" --non-interactive 2>/dev/null || true
+  fi
+  cd /
+  rm -rf /opt/pamp
+  echo "PAMP uninstalled successfully."
+  exit 0
+fi
+
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
