@@ -155,12 +155,46 @@ NGINXHTTP
     echo -e "${YELLOW}Starting services...${NC}"
     $DC up -d --build
 
-    echo -e "${YELLOW}Waiting for database...${NC}"
-    sleep 20
+    echo -e "${YELLOW}Waiting for web container to be ready...${NC}"
+    MAX_WAIT=120
+    WAITED=0
+    while [ $WAITED -lt $MAX_WAIT ]; do
+        STATUS=$(docker inspect --format='{{.State.Status}}' pamp-web-1 2>/dev/null || \
+                 docker inspect --format='{{.State.Status}}' pamp_web_1 2>/dev/null || echo "unknown")
+        if [ "$STATUS" = "running" ]; then
+            if $DC logs web --tail=5 2>/dev/null | grep -q "Starting application\|Booting worker\|Listening at"; then
+                echo -e "${GREEN}Web container is ready.${NC}"
+                break
+            fi
+        fi
+        if [ "$STATUS" = "restarting" ]; then
+            echo -e "${RED}Web container is restarting — checking logs...${NC}"
+            $DC logs web --tail=20
+            echo -e "${RED}ERROR: Web container failed to start. Check logs above.${NC}"
+            exit 1
+        fi
+        sleep 3
+        WAITED=$((WAITED + 3))
+        echo "Still waiting... (${WAITED}s)"
+    done
+    if [ $WAITED -ge $MAX_WAIT ]; then
+        echo -e "${RED}ERROR: Web container did not become ready in ${MAX_WAIT}s.${NC}"
+        $DC logs web --tail=30
+        exit 1
+    fi
 
     echo -e "${YELLOW}Running migrations...${NC}"
-    $DC exec -T web python manage.py migrate --noinput || \
-    $DC exec -T web python manage.py migrate --noinput --fake-initial
+    RETRY=0
+    until $DC exec -T web python manage.py migrate --noinput 2>&1; do
+        RETRY=$((RETRY + 1))
+        if [ $RETRY -ge 3 ]; then
+            echo -e "${RED}Migration failed after 3 attempts. Check logs:${NC}"
+            $DC logs web --tail=20
+            exit 1
+        fi
+        echo "Migration attempt $RETRY failed, retrying in 5s..."
+        sleep 5
+    done
 
     echo -e "${YELLOW}Creating/updating superuser...${NC}"
     $DC exec -T web python manage.py shell -c "
