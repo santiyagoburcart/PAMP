@@ -193,6 +193,67 @@
       </div>
     </div>
 
+    <!-- Telegram Backup -->
+    <div class="settings-card">
+      <div class="settings-card-header">
+        <div class="icon" style="background:linear-gradient(135deg,rgba(55,136,255,0.3),rgba(32,99,255,0.2));border:1px solid rgba(55,136,255,0.3);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </div>
+        <div>
+          <div class="title">Telegram Backup</div>
+          <div class="subtitle">Automated database backup to Telegram</div>
+        </div>
+      </div>
+      <div class="settings-card-body">
+        <div id="telegram-config-result-v1" style="margin-bottom:10px;font-size:12px"></div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div>
+            <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px">Bot Token</label>
+            <input type="text" id="tg-token-v1" name="bot_token"
+                   placeholder="Paste new token (blank = keep current)"
+                   style="width:100%;padding:8px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#e2e8f0;font-size:13px;outline:none">
+          </div>
+          <div>
+            <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px">Chat ID</label>
+            <input type="text" id="tg-chat-v1" name="chat_id"
+                   placeholder="e.g. -100123456789"
+                   value="{{ telegram_config.chat_id }}"
+                   style="width:100%;padding:8px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#e2e8f0;font-size:13px;outline:none">
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <label style="font-size:12px;color:var(--muted)">Interval (hours)</label>
+            <input type="number" id="tg-hours-v1" name="backup_interval_hours"
+                   value="{{ telegram_config.backup_interval_hours }}" min="1" max="168"
+                   style="width:80px;padding:6px 10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#e2e8f0;font-size:13px;outline:none">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-left:auto">
+              <input type="checkbox" id="tg-enabled-v1"
+                     {% if telegram_config.is_enabled %}checked{% endif %}
+                     style="width:15px;height:15px;cursor:pointer">
+              <span style="font-size:13px;color:#e2e8f0">Enabled</span>
+            </label>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button hx-post="{% url 'telegram_config' %}"
+                    hx-include="#tg-token-v1,#tg-chat-v1,#tg-hours-v1"
+                    hx-vals='js:{is_enabled: document.getElementById("tg-enabled-v1").checked ? "1" : "0"}'
+                    hx-target="#telegram-config-result-v1"
+                    hx-swap="innerHTML"
+                    hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                    style="padding:8px 20px;background:linear-gradient(90deg,#3563e9,#2563eb);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500">
+              Save Settings
+            </button>
+            <button hx-post="{% url 'telegram_backup_now' %}"
+                    hx-target="#telegram-config-result-v1"
+                    hx-swap="innerHTML"
+                    hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                    style="padding:8px 20px;background:rgba(255,255,255,0.07);color:#e2e8f0;border:1px solid rgba(255,255,255,0.15);border-radius:8px;cursor:pointer;font-size:13px;font-weight:500">
+              ▶ Send Backup Now
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- About -->
     <div class="settings-card">
       <div class="settings-card-header">
