@@ -42,6 +42,22 @@ do_install() {
     fi
     detect_compose
 
+    # Global cleanup — remove any leftover pamp volumes regardless of install state.
+    # Runs before git clone so it works even on a fresh server with no docker-compose.yml.
+    echo -e "${YELLOW}Removing any leftover PAMP volumes...${NC}"
+    if [ -f "/opt/pamp/docker-compose.yml" ]; then
+        cd /opt/pamp
+        docker compose down -v 2>/dev/null || true
+        cd - >/dev/null
+    fi
+    for VOL in pamp_mysql_data pamp_static_volume pamp_certbot_www; do
+        if docker volume inspect "$VOL" >/dev/null 2>&1; then
+            echo "Removing volume: $VOL"
+            docker volume rm "$VOL" 2>/dev/null || true
+        fi
+    done
+    echo -e "${YELLOW}Volume cleanup done.${NC}"
+
     echo ""
     echo -e "${BLUE}━━━━━━━━━━━━━ Configuration ━━━━━━━━━━━━━${NC}"
 
