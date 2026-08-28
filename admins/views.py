@@ -841,9 +841,11 @@ def sync_logs_v2(request):
 def settings_v2(request):
     if not request.user.is_superuser:
         return redirect('portal')
+    from .models import TelegramConfig
     context = {
         'panel_config': PanelConfig.get_config(),
         'sync_interval': SyncSettings.get_interval(),
+        'telegram_config': TelegramConfig.get_config(),
     }
     return render(request, 'v2/settings_v2.html', context)
 
