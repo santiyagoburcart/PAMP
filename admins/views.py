@@ -361,14 +361,71 @@ def reset_deleted_traffic(request, username):
 
 
 @login_required
+def telegram_config(request):
+    if not request.user.is_superuser:
+        return HttpResponse('<div class="action-result error">✗ Permission denied</div>', status=403)
+    if request.method != 'POST':
+        return HttpResponse(status=405)
+
+    from .models import TelegramConfig
+    cfg = TelegramConfig.get_config()
+    new_token = request.POST.get('bot_token', '').strip()
+    if new_token:
+        cfg.bot_token = new_token
+    cfg.chat_id = request.POST.get('chat_id', '').strip()
+    try:
+        cfg.backup_interval_hours = max(1, int(request.POST.get('backup_interval_hours', 24)))
+    except (ValueError, TypeError):
+        cfg.backup_interval_hours = 24
+    cfg.is_enabled = request.POST.get('is_enabled') == '1'
+    cfg.save()
+
+    from django_celery_beat.models import PeriodicTask, IntervalSchedule
+    if cfg.is_enabled and cfg.bot_token and cfg.chat_id:
+        schedule, _ = IntervalSchedule.objects.get_or_create(
+            every=cfg.backup_interval_hours * 60,
+            period=IntervalSchedule.MINUTES,
+        )
+        task, _ = PeriodicTask.objects.get_or_create(
+            name='Telegram DB Backup',
+            defaults={
+                'task': 'admins.tasks.send_telegram_backup',
+                'interval': schedule,
+                'enabled': True,
+            },
+        )
+        task.interval = schedule
+        task.enabled = True
+        task.save()
+    else:
+        PeriodicTask.objects.filter(name='Telegram DB Backup').update(enabled=False)
+
+    return HttpResponse('<div class="action-result success">✓ Telegram backup settings saved</div>')
+
+
+@login_required
+def telegram_backup_now(request):
+    if not request.user.is_superuser:
+        return HttpResponse('<div class="action-result error">✗ Permission denied</div>', status=403)
+    if request.method != 'POST':
+        return HttpResponse(status=405)
+
+    from .tasks import send_telegram_backup
+    send_telegram_backup.delay()
+    return HttpResponse('<div class="action-result success">✓ Backup queued — check Telegram in a moment</div>')
+
+
+@login_required
 def settings_page(request):
     if not request.user.is_superuser:
         from django.shortcuts import redirect
         return redirect('dashboard')
+    from .models import TelegramConfig
     return render(request, _tpl('admins/settings.html', 'v2/settings_v2.html'), {
         'panel_config': PanelConfig.get_config(),
         'sync_interval': SyncSettings.get_interval(),
         'current_theme': UISettings.get_theme(),
+        'telegram_config': TelegramConfig.get_config(),
     })
 
 
