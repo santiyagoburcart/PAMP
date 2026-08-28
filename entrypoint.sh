@@ -23,6 +23,35 @@ echo "==> MySQL is ready."
 echo "==> Running migrations..."
 python manage.py migrate --noinput
 
+echo "==> Seeding PanelConfig from env (if not already set)..."
+python manage.py shell -c "
+import os
+try:
+    from admins.models import PanelConfig
+except ImportError:
+    try:
+        from apps.panel_sync.models import PanelConfig
+    except ImportError:
+        from panel_sync.models import PanelConfig
+
+url = os.environ.get('PANEL_BASE_URL', '').strip()
+user = os.environ.get('PANEL_USERNAME', '').strip()
+pwd = os.environ.get('PANEL_PASSWORD', '').strip()
+
+if url:
+    if not url.startswith('http'):
+        url = 'https://' + url
+    c = PanelConfig.get_config()
+    if not c.base_url:
+        c.base_url = url
+        c.username = user
+        c.password = pwd
+        c.save()
+        print('PanelConfig seeded from env')
+    else:
+        print('PanelConfig already set, skipping')
+" || true
+
 echo "==> Collecting static files..."
 python manage.py collectstatic --noinput
 
