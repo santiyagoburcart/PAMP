@@ -159,7 +159,8 @@ NGINXHTTP
     sleep 20
 
     echo -e "${YELLOW}Running migrations...${NC}"
-    $DC exec -T web python manage.py migrate
+    $DC exec -T web python manage.py migrate --noinput || \
+    $DC exec -T web python manage.py migrate --noinput --fake-initial
 
     echo -e "${YELLOW}Creating/updating superuser...${NC}"
     $DC exec -T web python manage.py shell -c "
