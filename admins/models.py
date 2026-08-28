@@ -295,3 +295,28 @@ class UISettings(models.Model):
             obj.theme = value
             obj.save()
         return obj.theme
+
+
+class TelegramConfig(models.Model):
+    """Single-row Telegram bot settings for automated DB backups."""
+    bot_token = models.CharField(max_length=255, blank=True)
+    chat_id = models.CharField(max_length=100, blank=True)
+    backup_interval_hours = models.PositiveIntegerField(default=24)
+    is_enabled = models.BooleanField(default=False)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Telegram Config'
+
+    def __str__(self):
+        return f"Telegram backup — {'enabled' if self.is_enabled else 'disabled'}"
+
+    @classmethod
+    def get_config(cls):
+        obj, _ = cls.objects.get_or_create(pk=1, defaults={
+            'bot_token': '',
+            'chat_id': '',
+            'backup_interval_hours': 24,
+            'is_enabled': False,
+        })
+        return obj
