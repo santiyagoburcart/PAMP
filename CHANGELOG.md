@@ -1,5 +1,27 @@
 # Changelog
 
+## v1.2.1 — Installer fixes
+
+### Fixes
+- **install.sh now works on any domain** — the chosen domain is written into nginx.conf and docker-compose.yml instead of a hardcoded value (fixes ERR_EMPTY_RESPONSE on fresh installs)
+- **Two-phase SSL setup** — nginx starts HTTP-only first so the app is reachable and Let's Encrypt can validate, then switches to HTTPS automatically
+- **Docker Compose v2 support** — the installer detects and uses `docker compose` (v2) or `docker-compose` (v1)
+- **certbot webroot volume** added automatically; SSL step skips gracefully if DNS isn't ready yet
+- **phpMyAdmin** uses a relative URI to avoid domain/scheme mismatch
+
+---
+
+## نسخه ۱.۲.۱ — رفع مشکلات نصب
+
+### رفع باگ‌ها
+- **install.sh حالا با هر دامنه‌ای کار می‌کند** — دامنه انتخابی در nginx.conf و docker-compose.yml نوشته می‌شود به‌جای مقدار ثابت (رفع خطای ERR_EMPTY_RESPONSE در نصب تازه)
+- **راه‌اندازی SSL دومرحله‌ای** — nginx ابتدا فقط HTTP بالا می‌آید تا سایت در دسترس باشد و Let's Encrypt اعتبارسنجی کند، سپس خودکار به HTTPS سوییچ می‌کند
+- **پشتیبانی از Docker Compose v2** — نصاب `docker compose` یا `docker-compose` را تشخیص می‌دهد
+- **volume مربوط به certbot** خودکار اضافه می‌شود؛ اگر DNS آماده نباشد مرحله SSL به‌آرامی رد می‌شود
+- **phpMyAdmin** از URI نسبی استفاده می‌کند
+
+---
+
 ## v1.2.0 — New UI (v2) with theme switcher
 
 ### New Features
