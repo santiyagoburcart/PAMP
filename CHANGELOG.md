@@ -1,5 +1,22 @@
 # Changelog
 
+## v1.4.1 — UI Improvements
+
+### Improvements
+- **Account Groups** — clickable chip selector for members (no more comma typing), two-column layout, click a group card to pre-fill the edit form, mobile responsive
+- **Database Import** — drag & drop upload zone with file preview, filename and size shown, import button only appears after file selected, dropzone resets after import
+
+---
+
+## نسخه ۱.۴.۱ — بهبود رابط کاربری
+
+### بهبودها
+- **گروه‌بندی اکانت‌ها** — انتخاب کلیکی اعضا (بدون تایپ کردن)، چیدمان دو ستونه، کلیک روی کارت گروه برای ویرایش، ریسپانسیو موبایل
+- **ایمپورت دیتابیس** — ناحیه درگ‌اند‌دراپ با پیش‌نمایش فایل، دکمه ایمپورت فقط بعد از انتخاب فایل ظاهر می‌شود
+
+---
+
+
 ## v1.4.0 — Account Groups, Login UI, API v5.2.1, Telegram Backup, DB Import, Smart Update
 
 ### New Features
