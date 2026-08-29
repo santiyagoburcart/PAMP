@@ -1,5 +1,35 @@
 # Changelog
 
+## v1.3.0 — Server monitoring, Telegram backup, DB import, smart update
+
+### New Features
+- **Overview — Server Information card**: public IPv4/IPv6, kernel version, hostname, process count, Docker internal IPs
+- **Telegram Backup**: automated scheduled database backup sent to a Telegram bot; configurable interval (hours); manual "Send Now" button with immediate result feedback
+- **Database Import**: upload a .sql file from Settings to restore the database (confirmation dialog, 100 MB limit, both v1 and v2 UI)
+- **Smart Update**: the installer's Update option now fetches the latest version from GitHub, shows the relevant changelog section, and only updates if a newer version exists; includes auto-rollback if the web container fails to start after update
+
+### Fixes
+- Telegram chat_id leading-digit bug fixed ("chat not found" error resolved)
+- Backup task runs synchronously in the view so the result is shown immediately in the UI
+- Improved Telegram API error reporting — shows Telegram's actual description, not raw HTTP status
+
+---
+
+## نسخه ۱.۳.۰ — مانیتورینگ سرور، بک‌آپ تلگرام، ایمپورت دیتابیس، آپدیت هوشمند
+
+### امکانات جدید
+- **Overview — کارت اطلاعات سرور**: IPv4/IPv6 عمومی، نسخه کرنل، hostname، تعداد پروسس، IP‌های داخلی Docker
+- **بک‌آپ تلگرام**: ارسال خودکار بک‌آپ دیتابیس به ربات تلگرام با بازه زمانی قابل تنظیم (بر حسب ساعت)؛ دکمه ارسال دستی با نمایش فوری نتیجه
+- **ایمپورت دیتابیس**: آپلود فایل SQL از صفحه تنظیمات برای بازیابی دیتابیس (تأییدیه، محدودیت ۱۰۰ مگابایت، هر دو تم v1 و v2)
+- **آپدیت هوشمند**: گزینه Update در نصاب نسخه GitHub را با نسخه نصب‌شده مقایسه می‌کند، بخش changelog مربوط را نشان می‌دهد، و فقط در صورت وجود نسخه جدید آپدیت می‌کند؛ شامل rollback خودکار در صورت شکست وب‌کانتینر
+
+### رفع باگ
+- رفع باگ Chat ID تلگرام (رقم ۱ ابتدایی جا افتاده بود)
+- اجرای synchronous بک‌آپ در view برای نمایش فوری نتیجه
+- بهبود گزارش خطای Telegram API — نمایش توضیح واقعی به جای کد HTTP خام
+
+---
+
 ## v1.2.1 — Installer fixes
 
 ### Fixes
