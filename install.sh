@@ -386,10 +386,43 @@ do_update() {
         if [ -f "$NGINX_BAK" ]; then
             cp "$NGINX_BAK" nginx.conf
             echo -e "${GREEN}  ✓ nginx.conf restored (server-specific config preserved)${NC}"
-        elif [ -f "nginx.conf.template" ] && [ -f ".env" ]; then
+        elif [ -f ".env" ]; then
             UPDATE_DOMAIN=$(grep "^ALLOWED_HOSTS" .env | cut -d= -f2 | cut -d, -f1)
-            sed "s/PAMP_DOMAIN/${UPDATE_DOMAIN}/g" nginx.conf.template > nginx.conf
-            echo -e "${GREEN}  ✓ nginx.conf regenerated from template for ${UPDATE_DOMAIN}${NC}"
+            # Only use the SSL template if a cert actually exists; otherwise write HTTP-only
+            if [ -f "/etc/letsencrypt/live/${UPDATE_DOMAIN}/fullchain.pem" ] && [ -f "nginx.conf.template" ]; then
+                sed "s/PAMP_DOMAIN/${UPDATE_DOMAIN}/g" nginx.conf.template > nginx.conf
+                echo -e "${GREEN}  ✓ nginx.conf regenerated (SSL) from template for ${UPDATE_DOMAIN}${NC}"
+            else
+                cat > nginx.conf << NGINXHTTP_UPDATE
+server {
+    listen 80;
+    server_name ${UPDATE_DOMAIN};
+    client_max_body_size 20M;
+    location /.well-known/acme-challenge/ { root /var/www/certbot; }
+    location /static/ { alias /app/staticfiles/; expires 30d; }
+    location /phpmyadmin/ {
+        proxy_pass http://phpmyadmin/;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_redirect off;
+    }
+    location / {
+        resolver 127.0.0.11 valid=30s;
+        set \$upstream http://web:8000;
+        proxy_pass \$upstream;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header X-Forwarded-Host \$host;
+        proxy_connect_timeout 60s;
+        proxy_read_timeout 60s;
+        proxy_redirect off;
+    }
+}
+NGINXHTTP_UPDATE
+                echo -e "${GREEN}  ✓ nginx.conf regenerated (HTTP) for ${UPDATE_DOMAIN}${NC}"
+            fi
         else
             echo -e "${RED}  WARNING: nginx.conf missing — please recreate it manually before restarting nginx${NC}"
         fi
