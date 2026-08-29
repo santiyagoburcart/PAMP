@@ -345,8 +345,9 @@ do_update() {
     # Show changelog for the new version
     echo -e "  ${CYAN}What's new in v${LATEST_VERSION}:${NC}"
     echo -e "  ─────────────────────────────────"
+    ESCAPED_VER=$(echo "$LATEST_VERSION" | sed 's/\./\\./g')
     curl -sf https://raw.githubusercontent.com/santiyagoburcart/PAMP/main/CHANGELOG.md 2>/dev/null \
-        | awk "/^## \[?v?${LATEST_VERSION}\]?/,/^---/" \
+        | awk "/^## \\[?v?${ESCAPED_VER}\\]?/,/^---/" \
         | grep -v "^---" \
         | head -25 \
         | sed 's/^/  /'
