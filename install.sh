@@ -458,7 +458,21 @@ do_update() {
     # Restart celery workers and nginx with new code
     echo -e "${YELLOW}  Restarting celery and nginx...${NC}"
     $DC up -d --no-deps celery celery-beat
-    $DC restart nginx
+
+    echo -e "${YELLOW}  Restarting nginx...${NC}"
+    if $DC restart nginx 2>/dev/null; then
+        sleep 3
+        NGINX_STATUS=$(docker inspect --format='{{.State.Status}}' pamp_nginx 2>/dev/null || echo "unknown")
+        if [ "$NGINX_STATUS" = "running" ]; then
+            echo -e "${GREEN}  ✓ nginx restarted successfully${NC}"
+        else
+            echo -e "${YELLOW}  ⚠ nginx may have issues — check: docker compose logs nginx${NC}"
+        fi
+    else
+        echo -e "${RED}  ⚠ nginx restart failed — check: docker compose logs nginx${NC}"
+        echo -e "${YELLOW}  To recover, run:${NC}"
+        echo -e "  sed \"s/PAMP_DOMAIN/\$(grep ALLOWED_HOSTS .env | cut -d= -f2 | cut -d, -f1)/g\" nginx.conf.template > nginx.conf && docker compose restart nginx"
+    fi
 
     NEW_VERSION=$(cat VERSION 2>/dev/null || echo "$LATEST_VERSION")
     echo ""
