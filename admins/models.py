@@ -297,6 +297,40 @@ class UISettings(models.Model):
         return obj.theme
 
 
+class AdminGroup(models.Model):
+    """Groups multiple PanelAdmin accounts under one owner admin.
+    When the owner logs in, they see all member accounts in My Panel."""
+    owner_username = models.CharField(max_length=150, unique=True,
+        help_text="The admin username who logs in and sees all member accounts")
+    member_usernames = models.TextField(blank=True,
+        help_text="Comma-separated list of admin usernames in this group")
+    note = models.CharField(max_length=200, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Account Group'
+
+    def __str__(self):
+        return f"{self.owner_username} (+{len(self.get_members())})"
+
+    def get_members(self):
+        if not self.member_usernames:
+            return []
+        return [u.strip() for u in self.member_usernames.split(',') if u.strip()]
+
+    def get_all_usernames(self):
+        members = self.get_members()
+        result = [self.owner_username]
+        for m in members:
+            if m != self.owner_username:
+                result.append(m)
+        return result
+
+    @classmethod
+    def get_group_for_owner(cls, username):
+        return cls.objects.filter(owner_username=username).first()
+
+
 class TelegramConfig(models.Model):
     """Single-row Telegram bot settings for automated DB backups."""
     bot_token = models.CharField(max_length=255, blank=True)
