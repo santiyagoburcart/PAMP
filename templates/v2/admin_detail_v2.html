@@ -196,6 +196,10 @@
       onclick="confirmAdminAction('{{ a.username }}','action-result-{{ a.pk }}','enable_users','✓','Enable All Users','Enable ALL users of <strong>{{ a.username }}</strong>?','Enable All','linear-gradient(90deg,#0f9d58,#12cf7f)')">
       ✓ Enable All Users
     </button>
+    <button class="act-btn-lg btn-danger" style="grid-column:1/-1"
+      onclick="confirmAdminAction('{{ a.username }}','action-result-{{ a.pk }}','reset_usage_special','↺','Reset Usage','Reset all usage counters for <strong>{{ a.username }}</strong> to zero on the panel?','Reset','linear-gradient(90deg,#b45309,#d97706)')">
+      ↺ Reset Usage on Panel
+    </button>
   </div>
 </article>
 
