@@ -1,99 +1,177 @@
 {% extends "v2/base_v2.html" %}
 {% block title %}PAMP — Account Groups{% endblock %}
-{% block nav_settings %}active{% endblock %}
+{% block nav_groups %}active{% endblock %}
 {% block content %}
 <header class="header">
-  <div>
-    <h1>Account Groups</h1>
-    <p>Group multiple admin accounts under one owner. When the owner logs in, they see all accounts in My Panel.</p>
-  </div>
+  <div><h1>Account Groups</h1><p>Group admin accounts so the owner sees all of them in My Panel.</p></div>
 </header>
 
-<article class="card" style="margin-bottom:16px">
-  <div class="panel-title">Create / Update Group</div>
-  <div id="group-result" style="margin-bottom:12px"></div>
-  <div style="display:flex;flex-direction:column;gap:12px;max-width:600px">
-    <div>
-      <label style="display:block;margin-bottom:6px;color:#8896b9;font-size:12px">Owner Admin (who logs in and sees all accounts)</label>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px" id="groups-layout">
+
+  <!-- LEFT: Create/Edit form -->
+  <article class="card">
+    <div class="panel-title">Create / Update Group</div>
+    <div id="group-result" style="margin-bottom:12px"></div>
+
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-size:11px;color:#8896b9;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Owner (who logs in)</label>
       <input type="text" id="grp-owner" list="admin-list"
-             style="width:100%;height:40px;padding:0 12px;background:#101936;border:1px solid #162449;border-radius:10px;color:#cdd6f0;font-size:13px;outline:none;box-sizing:border-box"
-             placeholder="e.g. pouya">
+        style="width:100%;height:40px;padding:0 12px;background:#101936;border:1px solid #162449;border-radius:10px;color:#cdd6f0;font-size:13px;outline:none;box-sizing:border-box"
+        placeholder="Type or select owner username">
+      <datalist id="admin-list">
+        {% for a in all_admins %}<option value="{{ a }}">{% endfor %}
+      </datalist>
     </div>
-    <div>
-      <label style="display:block;margin-bottom:6px;color:#8896b9;font-size:12px">Member Accounts (comma-separated, owner is automatically included)</label>
-      <input type="text" id="grp-members"
-             style="width:100%;height:40px;padding:0 12px;background:#101936;border:1px solid #162449;border-radius:10px;color:#cdd6f0;font-size:13px;outline:none;box-sizing:border-box"
-             placeholder="e.g. p1, p2, p3">
+
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-size:11px;color:#8896b9;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">
+        Members <span id="member-count" style="color:#a78bff;text-transform:none">(0 selected)</span>
+      </label>
+      <div id="member-chips" style="display:flex;flex-wrap:wrap;gap:6px;max-height:200px;overflow-y:auto;padding:4px;background:#080d1e;border-radius:10px;border:1px solid #162449">
+        {% for a in all_admins %}
+        <button type="button" class="member-chip" data-username="{{ a }}"
+          onclick="toggleMember(this)"
+          style="height:30px;padding:0 12px;border-radius:20px;border:1px solid #263669;background:#101936;color:#9aa6c8;cursor:pointer;font-size:12px;transition:all .15s;white-space:nowrap">
+          {{ a }}
+        </button>
+        {% empty %}
+        <span style="color:#8896b9;font-size:13px;padding:8px">No admins synced yet</span>
+        {% endfor %}
+      </div>
+      <input type="hidden" id="grp-members" value="">
     </div>
-    <div>
-      <label style="display:block;margin-bottom:6px;color:#8896b9;font-size:12px">Note (optional)</label>
+
+    <div style="margin-bottom:16px">
+      <label style="display:block;font-size:11px;color:#8896b9;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Note (optional)</label>
       <input type="text" id="grp-note"
-             style="width:100%;height:40px;padding:0 12px;background:#101936;border:1px solid #162449;border-radius:10px;color:#cdd6f0;font-size:13px;outline:none;box-sizing:border-box"
-             placeholder="e.g. Pouya's reseller accounts">
+        style="width:100%;height:40px;padding:0 12px;background:#101936;border:1px solid #162449;border-radius:10px;color:#cdd6f0;font-size:13px;outline:none;box-sizing:border-box"
+        placeholder="e.g. Pouya reseller accounts">
     </div>
-    <datalist id="admin-list">
-      {% for a in all_admins %}<option value="{{ a }}">{% endfor %}
-    </datalist>
-    <button class="v2-sync-btn" style="align-self:flex-start;padding:0 20px"
-      hx-post="{% url 'save_account_group' %}"
-      hx-target="#group-result"
-      hx-headers='{"X-CSRFToken":"{{ csrf_token }}"}'
-      hx-vals='js:{owner_username:document.getElementById("grp-owner").value,member_usernames:document.getElementById("grp-members").value,note:document.getElementById("grp-note").value}'>
+
+    <button onclick="saveGroup()"
+      style="width:100%;height:42px;border-radius:10px;border:0;background:linear-gradient(90deg,#6c2ddb,#8c38ee);color:#fff;font-weight:650;font-size:14px;cursor:pointer">
       Save Group
     </button>
-  </div>
-</article>
+  </article>
 
-<article class="card" style="overflow-x:auto">
-  <div class="panel-title">Existing Groups ({{ groups|length }})</div>
-  <table class="table" style="width:100%">
-    <thead>
-      <tr>
-        <th>Owner</th>
-        <th>Members</th>
-        <th>Note</th>
-        <th style="width:90px">Action</th>
-      </tr>
-    </thead>
-    <tbody>
+  <!-- RIGHT: Existing groups -->
+  <div>
+    <div class="panel-title" style="margin-bottom:12px">Existing Groups ({{ groups|length }})</div>
+    <div style="display:flex;flex-direction:column;gap:12px">
     {% for g in groups %}
-      <tr>
-        <td><b style="color:#cdd6f0">{{ g.owner_username }}</b></td>
-        <td>
-          {% for m in g.get_members %}
-            <span style="display:inline-block;margin:2px 3px 2px 0;padding:2px 8px;border-radius:5px;font-size:11px;background:#2a1f4d88;color:#a78bfa;border:1px solid #4c2fad44">{{ m }}</span>
-          {% empty %}
-            <span style="color:#8896b9;font-size:12px">—</span>
-          {% endfor %}
-        </td>
-        <td style="color:#8896b9;font-size:13px">{{ g.note|default:"—" }}</td>
-        <td>
-          <button class="btn-danger" style="padding:5px 12px;border-radius:8px;font-size:12px"
-            onclick="if(confirm('Delete group for {{ g.owner_username }}?')){
-              htmx.ajax('POST','{% url 'delete_account_group' g.id %}',{
-                target:'#group-result',
-                values:{csrfmiddlewaretoken:getCsrf()}
-              }).then(function(){setTimeout(function(){location.reload()},900)})
-            }">
+      <article class="card group-card" style="padding:16px;cursor:pointer"
+        data-owner="{{ g.owner_username }}"
+        data-members="{{ g.get_members|join:',' }}"
+        data-note="{{ g.note }}"
+        onclick="fillForm(this)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <b style="font-size:15px;color:#cdd6f0">{{ g.owner_username }}</b>
+            <span style="font-size:11px;padding:2px 9px;border-radius:5px;background:#2a1f4d88;color:#a78bfa;border:1px solid #4c2fad44">Owner</span>
+          </div>
+          <button onclick="event.stopPropagation();deleteGroup({{ g.id }}, '{{ g.owner_username }}')"
+            style="height:30px;padding:0 12px;border-radius:8px;border:1px solid #ff547044;background:#44161f66;color:#ff8098;cursor:pointer;font-size:12px">
             Delete
           </button>
-        </td>
-      </tr>
+        </div>
+        {% if g.note %}
+        <div style="font-size:12px;color:#8896b9;margin-bottom:8px">{{ g.note }}</div>
+        {% endif %}
+        <div style="display:flex;flex-wrap:wrap;gap:5px">
+          {% for m in g.get_members %}
+          <span style="height:26px;padding:0 10px;border-radius:20px;border:1px solid #263669;background:#101936;color:#9aa6c8;font-size:11px;display:inline-flex;align-items:center">{{ m }}</span>
+          {% empty %}
+          <span style="color:#8896b9;font-size:12px">No members</span>
+          {% endfor %}
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:#8896b9;opacity:.6">Click to edit ↑</div>
+      </article>
     {% empty %}
-      <tr>
-        <td colspan="4" style="text-align:center;color:#8b98ba;padding:30px">No groups yet — create one above</td>
-      </tr>
+      <div class="card" style="text-align:center;color:#8896b9;padding:30px">
+        No groups yet. Create one on the left.
+      </div>
     {% endfor %}
-    </tbody>
-  </table>
-</article>
+    </div>
+  </div>
+
+</div>
+
+<style>
+.member-chip.selected{background:linear-gradient(135deg,#4a1fa8,#6d2fd5)!important;border-color:#7435e8!important;color:#e0d4ff!important}
+.group-card:hover{border-color:#3a4d80!important}
+@media(max-width:768px){#groups-layout{grid-template-columns:1fr!important}}
+</style>
 
 <script>
-document.body.addEventListener('htmx:afterRequest', function(e) {
-  var t = e.detail.xhr && e.detail.xhr.responseText || '';
-  if (t.indexOf('action-result success') > -1) {
-    setTimeout(function() { location.reload(); }, 900);
+const selectedMembers = new Set();
+
+function toggleMember(btn) {
+  const u = btn.dataset.username;
+  if (selectedMembers.has(u)) {
+    selectedMembers.delete(u);
+    btn.classList.remove('selected');
+  } else {
+    selectedMembers.add(u);
+    btn.classList.add('selected');
   }
-});
+  document.getElementById('grp-members').value = [...selectedMembers].join(', ');
+  document.getElementById('member-count').textContent = '(' + selectedMembers.size + ' selected)';
+}
+
+function saveGroup() {
+  const owner = document.getElementById('grp-owner').value.trim();
+  if (!owner) { alert('Enter an owner username'); return; }
+  const members = document.getElementById('grp-members').value;
+  const note = document.getElementById('grp-note').value;
+  const csrf = getCsrf();
+  const body = new URLSearchParams({
+    owner_username: owner,
+    member_usernames: members,
+    note: note,
+    csrfmiddlewaretoken: csrf
+  });
+  fetch('{% url "save_account_group" %}', {
+    method: 'POST',
+    body: body,
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+  })
+    .then(r => r.text())
+    .then(html => {
+      document.getElementById('group-result').innerHTML = html;
+      if (html.includes('success')) setTimeout(() => location.reload(), 800);
+    });
+}
+
+function deleteGroup(id, owner) {
+  if (!confirm('Delete group for ' + owner + '?')) return;
+  fetch('/account-groups/' + id + '/delete/', {
+    method: 'POST',
+    headers: {'X-CSRFToken': getCsrf(), 'Content-Type': 'application/json'}
+  }).then(() => location.reload());
+}
+
+function fillForm(card) {
+  // Fill the left form from a group card click
+  document.getElementById('grp-owner').value = card.dataset.owner;
+  document.getElementById('grp-note').value = card.dataset.note || '';
+
+  // Clear and re-select chips
+  selectedMembers.clear();
+  document.querySelectorAll('.member-chip').forEach(c => c.classList.remove('selected'));
+
+  const members = card.dataset.members ? card.dataset.members.split(',') : [];
+  members.forEach(m => {
+    m = m.trim();
+    if (!m) return;
+    selectedMembers.add(m);
+    document.querySelectorAll('.member-chip').forEach(c => {
+      if (c.dataset.username === m) c.classList.add('selected');
+    });
+  });
+
+  document.getElementById('grp-members').value = [...selectedMembers].join(', ');
+  document.getElementById('member-count').textContent = '(' + selectedMembers.size + ' selected)';
+  document.getElementById('grp-owner').scrollIntoView({behavior: 'smooth', block: 'start'});
+}
 </script>
 {% endblock %}
