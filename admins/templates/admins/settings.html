@@ -155,6 +155,50 @@
       </div>
     </div>
 
+    <!-- Database Import -->
+    <div class="settings-card">
+      <div class="settings-card-header">
+        <div class="icon" style="background:linear-gradient(135deg,rgba(220,38,38,0.3),rgba(185,28,28,0.2));border:1px solid rgba(220,38,38,0.3);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fca5a5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </div>
+        <div>
+          <div class="title">Database Import</div>
+          <div class="subtitle">⚠ Overwrites the current database</div>
+        </div>
+      </div>
+      <div class="settings-card-body">
+        <div id="import-result-v1" style="margin-bottom:12px;font-size:12px"></div>
+        <p style="color:#fca5a5;font-size:13px;line-height:1.6;margin-bottom:16px;">
+          Upload a .sql file to restore the database. This will <b>overwrite</b> all existing data. Download a backup first.
+        </p>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <input type="file" id="sql-file-v1" accept=".sql"
+                 style="font-size:13px;color:var(--muted);flex:1;min-width:180px">
+          <button onclick="submitImportV1(event)"
+                  style="padding:8px 20px;background:linear-gradient(90deg,#991b1b,#dc2626);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;white-space:nowrap">
+            ⬆ Import &amp; Restore
+          </button>
+        </div>
+      </div>
+    </div>
+    <script>
+    function submitImportV1(e) {
+      e.preventDefault();
+      var fi = document.getElementById('sql-file-v1');
+      if (!fi.files.length) { alert('Select a .sql file first'); return; }
+      if (!confirm('⚠ This will OVERWRITE the current database. Are you sure?')) return;
+      var res = document.getElementById('import-result-v1');
+      res.innerHTML = '<div style="color:var(--muted);font-size:12px">Uploading and restoring…</div>';
+      var form = new FormData();
+      form.append('sql_file', fi.files[0]);
+      form.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+      fetch('{% url "import_database" %}', {method:'POST', body:form})
+        .then(function(r){ return r.text(); })
+        .then(function(html){ res.innerHTML = html; })
+        .catch(function(err){ res.innerHTML = '<div class="action-result error">✗ ' + err + '</div>'; });
+    }
+    </script>
+
     <!-- UI Theme -->
     <div class="settings-card">
       <div class="settings-card-header">
