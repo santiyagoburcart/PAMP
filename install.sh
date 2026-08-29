@@ -492,7 +492,8 @@ NGINXHTTP_UPDATE
     # Collect static files
     echo -e "${YELLOW}  Collecting static files...${NC}"
     $DC exec -T web python manage.py collectstatic --noinput -v 0 \
-        && echo -e "${GREEN}  ✓ Static files updated${NC}"
+        && echo -e "${GREEN}  ✓ Static files updated${NC}" \
+        || echo -e "${YELLOW}  ⚠ collectstatic had warnings (check logs)${NC}"
 
     # Restart celery workers and nginx with new code
     echo -e "${YELLOW}  Restarting celery and nginx...${NC}"
