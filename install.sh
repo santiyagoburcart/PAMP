@@ -390,6 +390,15 @@ do_update() {
     fi
     rm -f "$NGINX_BAK"
 
+    # Backfill CSRF_TRUSTED_ORIGINS if missing (older installs)
+    if ! grep -q "CSRF_TRUSTED_ORIGINS" .env 2>/dev/null; then
+        UPDATE_CSRF_DOMAIN=$(grep "^ALLOWED_HOSTS" .env | cut -d= -f2 | cut -d, -f1)
+        if [ -n "$UPDATE_CSRF_DOMAIN" ]; then
+            echo "CSRF_TRUSTED_ORIGINS=https://${UPDATE_CSRF_DOMAIN},http://${UPDATE_CSRF_DOMAIN}" >> .env
+            echo -e "${GREEN}  ✓ Added CSRF_TRUSTED_ORIGINS to .env for ${UPDATE_CSRF_DOMAIN}${NC}"
+        fi
+    fi
+
     echo -e "${GREEN}  ✓ Code updated${NC}"
 
     # Rebuild only the web image
