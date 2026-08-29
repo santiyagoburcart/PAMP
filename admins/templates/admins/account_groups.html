@@ -1,0 +1,97 @@
+{% extends "admins/base.html" %}
+{% load static %}
+{% block title %}PAMP — Account Groups{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="row mb-4">
+    <div class="col">
+      <h4 class="fw-bold mb-1">Account Groups</h4>
+      <p class="text-secondary small">Group multiple admin accounts under one owner. The owner sees all accounts in My Panel.</p>
+    </div>
+  </div>
+
+  <div id="group-result" class="mb-3"></div>
+
+  <!-- Create/Update form -->
+  <div class="card mb-4">
+    <div class="card-header py-2 px-3"><small class="text-secondary fw-semibold">CREATE / UPDATE GROUP</small></div>
+    <div class="card-body">
+      <form id="group-form" class="row g-3" onsubmit="saveGroup(event)">
+        {% csrf_token %}
+        <div class="col-md-3">
+          <label class="form-label small text-secondary">Owner Admin (who logs in)</label>
+          <input type="text" name="owner_username" list="admin-list" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="e.g. pouya" required>
+        </div>
+        <div class="col-md-5">
+          <label class="form-label small text-secondary">Member Accounts (comma-separated)</label>
+          <input type="text" name="member_usernames" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="e.g. p1, p2, p3">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small text-secondary">Note (optional)</label>
+          <input type="text" name="note" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="e.g. Pouya's reseller accounts">
+        </div>
+        <div class="col-md-1 d-flex align-items-end">
+          <button type="submit" class="btn btn-sm btn-primary w-100">Save</button>
+        </div>
+        <datalist id="admin-list">
+          {% for a in all_admins %}<option value="{{ a }}">{% endfor %}
+        </datalist>
+      </form>
+    </div>
+  </div>
+
+  <!-- Groups table -->
+  <div class="card">
+    <div class="card-header py-2 px-3"><small class="text-secondary fw-semibold">EXISTING GROUPS ({{ groups|length }})</small></div>
+    <div class="card-body p-0">
+      <table class="table table-dark table-hover mb-0">
+        <thead class="table-dark">
+          <tr>
+            <th class="ps-3">Owner</th>
+            <th>Members</th>
+            <th>Note</th>
+            <th style="width:90px"></th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for g in groups %}
+          <tr>
+            <td class="ps-3 fw-bold">{{ g.owner_username }}</td>
+            <td>
+              {% for m in g.get_members %}
+                <span class="badge" style="background:#2a1f4d;color:#a78bfa;margin:1px">{{ m }}</span>
+              {% empty %}
+                <span class="text-secondary">—</span>
+              {% endfor %}
+            </td>
+            <td class="text-secondary small">{{ g.note|default:"—" }}</td>
+            <td>
+              <form method="post" action="{% url 'delete_account_group' g.id %}" onsubmit="return confirm('Delete group for {{ g.owner_username }}?')">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+              </form>
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="4" class="text-center text-secondary py-4">No groups yet — create one above</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+function saveGroup(e) {
+  e.preventDefault();
+  var form = e.target;
+  var data = new FormData(form);
+  fetch("{% url 'save_account_group' %}", {method:'POST', body:data})
+    .then(r => r.text())
+    .then(function(html) {
+      document.getElementById('group-result').innerHTML = html;
+      if (html.indexOf('success') > -1) setTimeout(function(){ location.reload(); }, 900);
+    });
+}
+</script>
+{% endblock %}
