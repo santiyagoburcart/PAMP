@@ -550,6 +550,60 @@ def backup_database(request):
         return HttpResponse(f'Backup error: {e}', status=500)
 
 
+@login_required
+def import_database(request):
+    """Restore database from uploaded SQL file. Superuser only."""
+    if not request.user.is_superuser:
+        return HttpResponse('<div class="action-result error">✗ Permission denied</div>', status=403)
+    if request.method != 'POST':
+        return HttpResponse(status=405)
+
+    sql_file = request.FILES.get('sql_file')
+    if not sql_file:
+        return HttpResponse('<div class="action-result error">✗ No file uploaded</div>')
+    if not sql_file.name.lower().endswith('.sql'):
+        return HttpResponse('<div class="action-result error">✗ Only .sql files are allowed</div>')
+    if sql_file.size > 100 * 1024 * 1024:
+        return HttpResponse('<div class="action-result error">✗ File too large (max 100 MB)</div>')
+
+    import tempfile, os as _tmpos
+    db = dj_settings.DATABASES['default']
+
+    with tempfile.NamedTemporaryFile(suffix='.sql', delete=False, mode='wb') as tmp:
+        for chunk in sql_file.chunks():
+            tmp.write(chunk)
+        tmp_path = tmp.name
+
+    try:
+        cmd = [
+            'mysql',
+            f'--host={db["HOST"]}',
+            f'--port={str(db.get("PORT", 3306))}',
+            f'--user={db["USER"]}',
+            f'--password={db["PASSWORD"]}',
+            '--protocol=TCP',
+            '--ssl=FALSE',
+            db['NAME'],
+        ]
+        with open(tmp_path, 'rb') as f:
+            result = subprocess.run(cmd, stdin=f, stderr=subprocess.PIPE, timeout=300)
+
+        if result.returncode != 0:
+            err = result.stderr.decode(errors='replace')[:400]
+            return HttpResponse(f'<div class="action-result error">✗ Import failed: {err}</div>')
+
+        size_kb = sql_file.size / 1024
+        return HttpResponse(
+            f'<div class="action-result success">✓ Restored from {sql_file.name} ({size_kb:.1f} KB). Reload the page.</div>'
+        )
+    except subprocess.TimeoutExpired:
+        return HttpResponse('<div class="action-result error">✗ Import timed out (>300s)</div>')
+    except Exception as e:
+        return HttpResponse(f'<div class="action-result error">✗ Error: {str(e)[:200]}</div>')
+    finally:
+        _tmpos.unlink(tmp_path)
+
+
 import os as _os
 
 
