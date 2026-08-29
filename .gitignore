@@ -1,3 +1,8 @@
+# nginx — server-specific, generated at install/update time
+nginx.conf
+nginx.conf.ssl
+nginx.conf.bak
+
 # Environment — NEVER commit
 .env
 *.env
