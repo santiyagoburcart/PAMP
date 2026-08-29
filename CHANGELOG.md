@@ -1,5 +1,49 @@
 # Changelog
 
+## v1.4.0 — Account Groups, Login UI, API v5.2.1, Telegram Backup, DB Import, Smart Update
+
+### New Features
+- **Account Groups** — Superuser can group multiple Pasargad admin accounts under one owner. When the owner logs in, My Panel shows all their accounts (owner + members) separately with full traffic and user stats
+- **Telegram Backup** — Automated scheduled database backup sent to a Telegram bot; configurable interval; manual send button; last backup status in Settings
+- **Database Import** — Upload a .sql file from Settings to restore the database (confirmation dialog, 100 MB limit, utf8mb4 charset)
+- **Smart Update** — Installer compares installed version with GitHub, shows changelog, auto-rollback on failure
+- **New Login Page** — Clean minimal glassmorphism design
+- **API Client v5.2.1** — get_admins_simple, get_admin_usage, reset_admin_usage, bulk disable/enable admins and users, get_system_resources, get_nodes
+- **Reset Usage button** — Superuser can reset an admin's usage counter from the detail page
+- **Overview server info** — Public IPv4/IPv6, kernel version, hostname, process count, Docker IPs
+
+### Fixes
+- CSRF_TRUSTED_ORIGINS written to .env on fresh install (fixes 403 on first login)
+- nginx.conf always written as file before Docker starts (fixes mount error)
+- Two-phase SSL: HTTP-only on first boot, SSL after certbot
+- Telegram chat_id leading-digit bug fixed
+- Database import charset (utf8mb4) and max_allowed_packet fixed
+- nginx.conf preserved across git reset during update
+
+---
+
+## نسخه ۱.۴.۰ — گروه‌بندی اکانت‌ها، رابط لاگین، API، بک‌آپ تلگرام، ایمپورت دیتابیس، آپدیت هوشمند
+
+### امکانات جدید
+- **گروه‌بندی اکانت‌ها** — سوپریوزر می‌تواند چند اکانت ادمین پاسارگاد را زیرمجموعه یک مالک تعریف کند. هنگام لاگین مالک، همه اکانت‌ها در My Panel جداگانه نمایش داده می‌شوند
+- **بک‌آپ تلگرام** — ارسال خودکار بک‌آپ دیتابیس به ربات تلگرام با بازه زمانی قابل تنظیم
+- **ایمپورت دیتابیس** — آپلود فایل SQL از صفحه تنظیمات برای بازیابی دیتابیس
+- **آپدیت هوشمند** — نصاب نسخه GitHub را مقایسه می‌کند، changelog نشون می‌دهد، rollback خودکار
+- **صفحه لاگین جدید** — طراحی مینیمال glassmorphism
+- **API Client نسخه ۵.۲.۱** — endpoint های جدید پاسارگاد
+- **کارت اطلاعات سرور** در Overview — IPv4/IPv6، کرنل، hostname، پروسس‌ها، IP های Docker
+
+### رفع باگ
+- رفع CSRF 403 در نصب جدید
+- رفع خطای mount nginx.conf
+- SSL دومرحله‌ای پایدار
+- رفع باگ Chat ID تلگرام
+- رفع charset ایمپورت دیتابیس
+- حفظ nginx.conf در آپدیت
+
+---
+
+
 ## v1.3.2 — Installer Reliability
 
 ### Fixes
