@@ -1,0 +1,62 @@
+{% extends "admins/base.html" %}
+{% block title %}PAMP — My Panel{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="row mb-3">
+    <div class="col">
+      <h4 class="fw-bold mb-1">My Panel</h4>
+      <p class="text-secondary small">{{ accounts|length }} account{{ accounts|length|pluralize }} in your group — read-only view.</p>
+    </div>
+  </div>
+
+  {% for acc in accounts %}
+  <div class="card mb-3">
+    <div class="card-header py-2 px-3 d-flex align-items-center gap-2">
+      <strong>{{ acc.obj.username }}</strong>
+      <span class="badge" style="background:{{ acc.obj.status_color }}22;color:{{ acc.obj.status_color }};border:1px solid {{ acc.obj.status_color }}44">{{ acc.obj.status_label }}</span>
+      {% if forloop.first %}
+        <span class="badge" style="background:#2a1f4d;color:#a78bfa">Owner</span>
+      {% endif %}
+      {% if acc.obj.is_sudo %}
+        <span class="badge bg-secondary">sudo</span>
+      {% endif %}
+      <span class="ms-auto text-secondary small">{{ acc.obj.users_count }} users</span>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <!-- Traffic -->
+        <div class="col-md-6">
+          <p class="text-secondary small text-uppercase fw-semibold mb-2">Traffic</p>
+          <table class="table table-dark table-sm mb-2">
+            <tr><td class="text-secondary">Admin Limit</td><td class="text-end fw-bold">{{ acc.admin_limit_fmt }}</td></tr>
+            <tr><td class="text-secondary">Total Sold</td><td class="text-end fw-bold">{{ acc.total_user_limit_fmt }}</td></tr>
+            <tr><td class="text-secondary">Total Used</td><td class="text-end fw-bold">{{ acc.admin_used_fmt }}</td></tr>
+            <tr><td class="text-secondary">Remaining</td><td class="text-end fw-bold text-success">{{ acc.admin_remaining_fmt }}</td></tr>
+            <tr><td class="text-secondary">Sold Limit</td>
+                <td class="text-end fw-bold" style="color:{% if acc.sold_limit_value > 0 %}#12cf7f{% elif acc.sold_limit_value < 0 %}#ef4444{% else %}#8896b9{% endif %}">{{ acc.sold_limit_fmt }}</td></tr>
+          </table>
+          <div class="d-flex justify-content-between small text-secondary mb-1"><span>Usage</span><span>{{ acc.usage_percent }}%</span></div>
+          <div class="progress" style="height:6px;background:#162449">
+            <div class="progress-bar" style="width:{% if acc.usage_percent > 100 %}100{% else %}{{ acc.usage_percent }}{% endif %}%;background:{% if acc.usage_percent >= 100 %}#ef4444{% elif acc.usage_percent >= 80 %}#f59e0b{% else %}#7c3aed{% endif %}"></div>
+          </div>
+        </div>
+        <!-- Users -->
+        <div class="col-md-6">
+          <p class="text-secondary small text-uppercase fw-semibold mb-2">Users</p>
+          <table class="table table-dark table-sm">
+            <tr><td class="text-secondary">Total</td><td class="text-end fw-bold">{{ acc.obj.users_count }}</td></tr>
+            <tr><td class="text-secondary">Active</td><td class="text-end fw-bold text-success">{{ acc.obj.active_users }}</td></tr>
+            <tr><td class="text-secondary">On Hold</td><td class="text-end fw-bold text-primary">{{ acc.obj.on_hold_users }}</td></tr>
+            <tr><td class="text-secondary">Limited</td><td class="text-end fw-bold text-warning">{{ acc.obj.limited_users }}</td></tr>
+            <tr><td class="text-secondary">Disabled</td><td class="text-end fw-bold text-danger">{{ acc.obj.disabled_users }}</td></tr>
+            <tr><td class="text-secondary">Expired</td><td class="text-end fw-bold text-secondary">{{ acc.obj.expired_users }}</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="card"><div class="card-body text-center text-secondary py-5">No accounts found in your group.</div></div>
+  {% endfor %}
+</div>
+{% endblock %}
