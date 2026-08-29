@@ -6,6 +6,7 @@ from datetime import datetime
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.views import LoginView as _DjangoLoginView
 from django.db.models import Sum
 from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
