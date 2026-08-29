@@ -130,6 +130,7 @@ function confirmAdminAction(username,targetId,action,icon,title,body,confirmLabe
     var url,postAction;
     if(action==='remove_limit_special'){url='/panel/'+encodeURIComponent(username)+'/remove-limit/';postAction='remove';}
     else if(action==='reset_deleted_special'){url='/panel/'+encodeURIComponent(username)+'/reset-deleted-traffic/';postAction='reset';}
+    else if(action==='reset_usage_special'){url='/panel/'+encodeURIComponent(username)+'/reset-usage/';postAction='reset';}
     else{url='/panel/'+encodeURIComponent(username)+'/action/';postAction=action;}
     htmx.ajax('POST',url,{target:'#'+targetId,swap:'innerHTML',values:{action:postAction,csrfmiddlewaretoken:getCsrf()}});
   });
