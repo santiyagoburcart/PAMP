@@ -12,7 +12,7 @@ from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
 from django.conf import settings as dj_settings
 
-from .models import PanelAdmin, SyncLog, SyncSettings, PanelConfig, UISettings, _fmt_bytes
+from .models import PanelAdmin, SyncLog, SyncSettings, PanelConfig, UISettings, AdminGroup, _fmt_bytes
 from .tasks import sync_panel_admins
 
 logger = logging.getLogger('admins')
