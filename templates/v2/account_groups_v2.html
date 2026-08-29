@@ -186,8 +186,7 @@ function deleteGroup(id, owner) {
 }
 
 function fillForm(card) {
-  // Fill the left form from a group card click
-  document.getElementById('grp-owner').value = card.dataset.owner;
+  selectOwner(card.dataset.owner);
   document.getElementById('grp-note').value = card.dataset.note || '';
 
   // Clear and re-select chips
