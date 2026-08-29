@@ -584,14 +584,18 @@ def import_database(request):
             f'--password={db["PASSWORD"]}',
             '--protocol=TCP',
             '--ssl=FALSE',
+            '--default-character-set=utf8mb4',
+            '--max_allowed_packet=256M',
             db['NAME'],
         ]
         with open(tmp_path, 'rb') as f:
             result = subprocess.run(cmd, stdin=f, stderr=subprocess.PIPE, timeout=300)
 
         if result.returncode != 0:
-            err = result.stderr.decode(errors='replace')[:400]
-            return HttpResponse(f'<div class="action-result error">✗ Import failed: {err}</div>')
+            stderr_out = result.stderr.decode('utf-8', errors='replace')
+            error_lines = [l for l in stderr_out.split('\n') if 'ERROR' in l or l.lower().startswith('error')]
+            error_msg = '\n'.join(error_lines[:3]) if error_lines else stderr_out[:300]
+            return HttpResponse(f'<div class="action-result error">✗ Import failed: {error_msg}</div>')
 
         size_kb = sql_file.size / 1024
         return HttpResponse(
