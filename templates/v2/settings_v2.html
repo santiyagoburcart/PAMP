@@ -77,6 +77,39 @@
     </a>
   </article>
 
+  <!-- Database Import -->
+  <article class="card">
+    <div class="panel-title">Database Import</div>
+    <p style="color:#f87171;font-size:13px;margin:0 0 14px">⚠ This will <b>overwrite</b> the current database. Download a backup first.</p>
+    <div id="import-result" style="margin-bottom:10px;font-size:12px"></div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <input type="file" id="sql-file" name="sql_file" accept=".sql"
+             style="color:#9aa6c8;font-size:13px;flex:1;min-width:200px">
+      <button class="v2-sync-btn"
+              style="background:linear-gradient(90deg,#991b1b,#dc2626);box-shadow:0 5px 17px #dc262644;border:none"
+              onclick="submitImport(event)">
+        ⬆ Import &amp; Restore
+      </button>
+    </div>
+  </article>
+  <script>
+  function submitImport(e) {
+    e.preventDefault();
+    var fi = document.getElementById('sql-file');
+    if (!fi.files.length) { alert('Select a .sql file first'); return; }
+    if (!confirm('⚠ This will OVERWRITE the current database. Are you sure?')) return;
+    var res = document.getElementById('import-result');
+    res.innerHTML = '<div style="color:#9aa6c8;font-size:12px">Uploading and restoring…</div>';
+    var form = new FormData();
+    form.append('sql_file', fi.files[0]);
+    form.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+    fetch('{% url "import_database" %}', {method:'POST', body:form})
+      .then(function(r){ return r.text(); })
+      .then(function(html){ res.innerHTML = html; })
+      .catch(function(err){ res.innerHTML = '<div class="action-result error">✗ ' + err + '</div>'; });
+  }
+  </script>
+
   <!-- UI Theme -->
   <article class="card">
     <div class="panel-title">UI Theme</div>
