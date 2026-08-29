@@ -20,6 +20,7 @@ urlpatterns = [
     path('settings/telegram/', views.telegram_config, name='telegram_config'),
     path('settings/telegram/backup-now/', views.telegram_backup_now, name='telegram_backup_now'),
     path('backup/database/', views.backup_database, name='backup_database'),
+    path('backup/import/', views.import_database, name='import_database'),
     path('sync-logs/', views.sync_logs_page, name='sync_logs'),
     path('api/server-stats/', views.server_stats, name='server_stats'),
     path('login/', auth_views.LoginView.as_view(template_name='admins/login.html'), name='login'),
