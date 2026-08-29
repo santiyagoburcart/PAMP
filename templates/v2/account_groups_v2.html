@@ -1,0 +1,99 @@
+{% extends "v2/base_v2.html" %}
+{% block title %}PAMP — Account Groups{% endblock %}
+{% block nav_settings %}active{% endblock %}
+{% block content %}
+<header class="header">
+  <div>
+    <h1>Account Groups</h1>
+    <p>Group multiple admin accounts under one owner. When the owner logs in, they see all accounts in My Panel.</p>
+  </div>
+</header>
+
+<article class="card" style="margin-bottom:16px">
+  <div class="panel-title">Create / Update Group</div>
+  <div id="group-result" style="margin-bottom:12px"></div>
+  <div style="display:flex;flex-direction:column;gap:12px;max-width:600px">
+    <div>
+      <label style="display:block;margin-bottom:6px;color:#8896b9;font-size:12px">Owner Admin (who logs in and sees all accounts)</label>
+      <input type="text" id="grp-owner" list="admin-list"
+             style="width:100%;height:40px;padding:0 12px;background:#101936;border:1px solid #162449;border-radius:10px;color:#cdd6f0;font-size:13px;outline:none;box-sizing:border-box"
+             placeholder="e.g. pouya">
+    </div>
+    <div>
+      <label style="display:block;margin-bottom:6px;color:#8896b9;font-size:12px">Member Accounts (comma-separated, owner is automatically included)</label>
+      <input type="text" id="grp-members"
+             style="width:100%;height:40px;padding:0 12px;background:#101936;border:1px solid #162449;border-radius:10px;color:#cdd6f0;font-size:13px;outline:none;box-sizing:border-box"
+             placeholder="e.g. p1, p2, p3">
+    </div>
+    <div>
+      <label style="display:block;margin-bottom:6px;color:#8896b9;font-size:12px">Note (optional)</label>
+      <input type="text" id="grp-note"
+             style="width:100%;height:40px;padding:0 12px;background:#101936;border:1px solid #162449;border-radius:10px;color:#cdd6f0;font-size:13px;outline:none;box-sizing:border-box"
+             placeholder="e.g. Pouya's reseller accounts">
+    </div>
+    <datalist id="admin-list">
+      {% for a in all_admins %}<option value="{{ a }}">{% endfor %}
+    </datalist>
+    <button class="v2-sync-btn" style="align-self:flex-start;padding:0 20px"
+      hx-post="{% url 'save_account_group' %}"
+      hx-target="#group-result"
+      hx-headers='{"X-CSRFToken":"{{ csrf_token }}"}'
+      hx-vals='js:{owner_username:document.getElementById("grp-owner").value,member_usernames:document.getElementById("grp-members").value,note:document.getElementById("grp-note").value}'>
+      Save Group
+    </button>
+  </div>
+</article>
+
+<article class="card" style="overflow-x:auto">
+  <div class="panel-title">Existing Groups ({{ groups|length }})</div>
+  <table class="table" style="width:100%">
+    <thead>
+      <tr>
+        <th>Owner</th>
+        <th>Members</th>
+        <th>Note</th>
+        <th style="width:90px">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for g in groups %}
+      <tr>
+        <td><b style="color:#cdd6f0">{{ g.owner_username }}</b></td>
+        <td>
+          {% for m in g.get_members %}
+            <span style="display:inline-block;margin:2px 3px 2px 0;padding:2px 8px;border-radius:5px;font-size:11px;background:#2a1f4d88;color:#a78bfa;border:1px solid #4c2fad44">{{ m }}</span>
+          {% empty %}
+            <span style="color:#8896b9;font-size:12px">—</span>
+          {% endfor %}
+        </td>
+        <td style="color:#8896b9;font-size:13px">{{ g.note|default:"—" }}</td>
+        <td>
+          <button class="btn-danger" style="padding:5px 12px;border-radius:8px;font-size:12px"
+            onclick="if(confirm('Delete group for {{ g.owner_username }}?')){
+              htmx.ajax('POST','{% url 'delete_account_group' g.id %}',{
+                target:'#group-result',
+                values:{csrfmiddlewaretoken:getCsrf()}
+              }).then(function(){setTimeout(function(){location.reload()},900)})
+            }">
+            Delete
+          </button>
+        </td>
+      </tr>
+    {% empty %}
+      <tr>
+        <td colspan="4" style="text-align:center;color:#8b98ba;padding:30px">No groups yet — create one above</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</article>
+
+<script>
+document.body.addEventListener('htmx:afterRequest', function(e) {
+  var t = e.detail.xhr && e.detail.xhr.responseText || '';
+  if (t.indexOf('action-result success') > -1) {
+    setTimeout(function() { location.reload(); }, 900);
+  }
+});
+</script>
+{% endblock %}
