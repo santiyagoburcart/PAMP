@@ -1,5 +1,35 @@
 # Changelog
 
+## v1.3.1 — Login UI, API updates, installer fixes
+
+### New Features
+- **New login page** — Clean minimal design, glassmorphism theme matching v2 UI
+- **API Client v5.2.1** — New endpoints: get_admins_simple, get_admin_usage, reset_admin_usage, bulk disable/enable admins and their users, get_system_resources, get_nodes
+- **Reset Usage button** — Superuser can reset an admin's usage counter directly from the admin detail page
+
+### Fixes
+- **CSRF fix in installer** — fresh installs now write CSRF_TRUSTED_ORIGINS to .env automatically (prevents 403 on first login)
+- **Update flow** — adds CSRF_TRUSTED_ORIGINS to .env of older installs automatically
+- **Database import** — added utf8mb4 charset and max_allowed_packet=256M to fix truncated INSERT errors
+- **nginx.conf** — untracked from git; nginx.conf.template with PAMP_DOMAIN placeholder committed instead; update preserves server-specific config
+
+---
+
+## نسخه ۱.۳.۱ — UI لاگین، آپدیت API، رفع باگ نصاب
+
+### امکانات جدید
+- **صفحه لاگین جدید** — طراحی مینیمال و تمیز با تم glassmorphism نسخه v2
+- **API Client نسخه ۵.۲.۱** — endpoint های جدید: لیست ساده ادمین‌ها، مصرف مستقیم، ریست مصرف، عملیات دسته‌جمعی، منابع سیستم، نودها
+- **دکمه ریست مصرف** — سوپریوزر می‌تواند شمارنده مصرف هر ادمین را از صفحه جزئیات ریست کند
+
+### رفع باگ
+- **رفع CSRF در نصاب** — نصب‌های تازه CSRF_TRUSTED_ORIGINS را به .env می‌نویسند (جلوگیری از خطای 403)
+- **آپدیت** — CSRF_TRUSTED_ORIGINS را به .env نصب‌های قدیمی‌تر اضافه می‌کند
+- **ایمپورت دیتابیس** — اضافه شدن utf8mb4 و max_allowed_packet=256M برای رفع خطای INSERT
+- **nginx.conf** — از git حذف شد؛ nginx.conf.template با placeholder ثبت شد؛ آپدیت config مخصوص سرور را حفظ می‌کند
+
+---
+
 ## v1.3.0 — Server monitoring, Telegram backup, DB import, smart update
 
 ### New Features
