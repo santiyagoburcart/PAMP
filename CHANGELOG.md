@@ -1,5 +1,33 @@
 # Changelog
 
+## v1.3.2 — Installer Reliability
+
+### Fixes
+- nginx.conf is always written as a file (HTTP-only) before `docker compose up` — fixes "is a directory" mount error on fresh installs
+- Two-phase SSL: HTTP-only config on first boot, SSL config applied only after certbot successfully issues the cert
+- Update flow backs up nginx.conf before `git reset --hard` and restores it after; regenerates from template if backup is missing (HTTP-only if no cert, SSL if cert exists)
+- Certbot failure no longer aborts the entire install — site stays running on HTTP, SSL can be added later
+- Volume cleanup before `docker compose up` prevents "Table already exists" errors on re-installs
+- `git pull` on existing installs replaced with `git fetch + reset --hard` to avoid failures on local changes
+- Non-git directory at `/opt/pamp` is removed and recloned instead of aborting
+- nginx container name detection fixed: tries `pamp-nginx-1` then `pamp_nginx_1`
+- `collectstatic` failure in update no longer aborts the update process
+
+---
+
+## نسخه ۱.۳.۲ — پایداری نصاب
+
+### رفع باگ
+- `nginx.conf` همیشه قبل از `docker compose up` به‌صورت فایل HTTP نوشته می‌شود — رفع خطای mount روی سرورهای جدید
+- SSL دومرحله‌ای: ابتدا HTTP راه‌اندازی می‌شود، پس از صدور گواهی توسط certbot به SSL سوییچ می‌کند
+- جریان آپدیت: nginx.conf را قبل از `git reset` بکاپ می‌گیرد و بعد بازیابی می‌کند؛ در صورت از دست رفتن، از template بازسازی می‌شود
+- شکست certbot دیگر کل نصب را متوقف نمی‌کند — سایت روی HTTP ادامه می‌دهد
+- پاکسازی volume قبل از نصب برای جلوگیری از خطای "Table already exists"
+- تشخیص نام کانتینر nginx اصلاح شد
+
+---
+
+
 ## v1.3.1 — Login UI, API updates, installer fixes
 
 ### New Features
