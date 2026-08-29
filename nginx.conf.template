@@ -1,0 +1,47 @@
+server {
+    listen 80;
+    server_name PAMP_DOMAIN;
+    location /.well-known/acme-challenge/ { root /var/www/certbot; }
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name PAMP_DOMAIN;
+    client_max_body_size 20M;
+
+    ssl_certificate /etc/letsencrypt/live/PAMP_DOMAIN/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/PAMP_DOMAIN/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    ssl_session_cache shared:SSL:10m;
+
+    # Docker's embedded DNS — re-resolve service hostnames at runtime
+    resolver 127.0.0.11 valid=10s;
+
+    location /static/ {
+        alias /app/staticfiles/;
+        expires 30d;
+    }
+
+    location /phpmyadmin/ {
+        proxy_pass http://phpmyadmin/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_redirect off;
+    }
+
+    location / {
+        set $web_upstream http://web:8000;
+        proxy_pass $web_upstream;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_cookie_path / "/; SameSite=Lax";
+        proxy_connect_timeout 60s;
+        proxy_read_timeout 60s;
+        proxy_redirect off;
+    }
+}
