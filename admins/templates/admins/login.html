@@ -6,14 +6,6 @@
   <title>Sign In — PAMP</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --accent: #7c3aed; --accent2: #9154fb;
-      --bg: #080c1a;
-      --card: #0d1530;
-      --border: #1e3060;
-      --text: #cdd6f0; --muted: #6b7fa8;
-      --radius: 16px; --radius-sm: 10px;
-    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Inter', sans-serif;
@@ -24,11 +16,9 @@
         radial-gradient(ellipse at 15% 15%, rgba(109,40,217,0.3) 0%, transparent 55%),
         radial-gradient(ellipse at 85% 85%, rgba(139,92,246,0.2) 0%, transparent 50%),
         linear-gradient(160deg, #080c1a 0%, #090e20 100%);
-      color: var(--text);
+      color: #cdd6f0;
     }
-    .wrap { width: 100%; max-width: 420px; }
-
-    /* Logo */
+    .wrap { width: 100%; max-width: 400px; }
     .logo { text-align: center; margin-bottom: 28px; }
     .logo-mark {
       width: 54px; height: 54px; border-radius: 15px;
@@ -38,97 +28,46 @@
       font-size: 26px; margin: 0 auto 14px;
     }
     .logo h1 { font-size: 26px; font-weight: 800; letter-spacing: -1px; color: #e2e8f0; }
-    .logo p { color: var(--muted); font-size: 13px; margin-top: 5px; }
-
-    /* Card */
+    .logo p { color: #6b7fa8; font-size: 13px; margin-top: 5px; }
     .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
+      background: #0d1530;
+      border: 1px solid #1e3060;
+      border-radius: 16px;
       padding: 28px;
       box-shadow: 0 24px 64px rgba(0,0,0,0.5);
     }
-
-    /* Error */
     .error-msg {
       background: rgba(239,68,68,0.12);
       border: 1px solid rgba(239,68,68,0.3);
-      border-radius: var(--radius-sm);
+      border-radius: 10px;
       color: #fca5a5; font-size: 13px;
       padding: 11px 14px; margin-bottom: 20px;
     }
-
-    /* Form */
     .field { margin-bottom: 18px; }
-    label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; display: block; margin-bottom: 7px; font-weight: 600; }
+    label { font-size: 11px; color: #6b7fa8; text-transform: uppercase; letter-spacing: .6px; display: block; margin-bottom: 7px; font-weight: 600; }
     input[type=text], input[type=password] {
       width: 100%; height: 44px;
-      background: #0a1020; border: 1px solid var(--border);
-      border-radius: var(--radius-sm); color: var(--text);
+      background: #0a1020; border: 1px solid #1e3060;
+      border-radius: 10px; color: #cdd6f0;
       padding: 0 14px; font-size: 14px; font-family: inherit;
       outline: none; transition: border-color .2s, box-shadow .2s;
     }
-    input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124,58,237,0.2); }
+    input:focus { border-color: #7c3aed; box-shadow: 0 0 0 3px rgba(124,58,237,0.2); }
     input::placeholder { color: #3d4f72; }
-
     .btn {
       width: 100%; height: 46px; border: none;
-      border-radius: var(--radius-sm);
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 10px;
+      background: linear-gradient(90deg, #6c2ddb, #8c38ee);
       color: #fff; font-size: 15px; font-weight: 700;
       cursor: pointer; font-family: inherit;
       box-shadow: 0 6px 22px rgba(124,58,237,0.45);
-      transition: filter .15s, box-shadow .15s;
+      transition: filter .15s;
       margin-top: 4px;
     }
-    .btn:hover { filter: brightness(1.1); box-shadow: 0 8px 28px rgba(124,58,237,0.6); }
+    .btn:hover { filter: brightness(1.1); }
     .btn:active { filter: brightness(.95); }
-
-    /* Forgot password */
-    details { margin-top: 14px; }
-    summary {
-      cursor: pointer; font-size: 12px; color: var(--muted);
-      list-style: none; user-select: none;
-      display: flex; align-items: center; gap: 6px;
-    }
-    summary::-webkit-details-marker { display: none; }
-    summary:hover { color: var(--text); }
-    .forgot-body {
-      margin-top: 12px; background: #060b18;
-      border-radius: 9px; padding: 14px;
-      font-size: 12px; color: var(--muted); line-height: 1.8;
-    }
-    .forgot-body code {
-      display: block; margin-top: 10px;
-      background: #030610; color: #a78bff;
-      padding: 10px 12px; border-radius: 7px;
-      font-size: 11px; word-break: break-all;
-    }
-
-    /* Info boxes */
-    .info-section { margin-top: 22px; }
-    .info-section-title {
-      font-size: 11px; color: var(--muted); text-transform: uppercase;
-      letter-spacing: .6px; font-weight: 600; margin-bottom: 10px;
-    }
-    .info-box { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-    .info-tab { padding: 14px 16px; }
-    .info-tab + .info-tab { border-top: 1px solid var(--border); }
-    .info-tab-title {
-      font-size: 12px; font-weight: 700; color: #a78bff;
-      text-transform: uppercase; letter-spacing: .5px;
-      display: flex; align-items: center; gap: 7px; margin-bottom: 7px;
-    }
-    .info-tab-body { font-size: 12.5px; color: var(--muted); line-height: 1.7; }
-    .info-tab-body b { color: var(--text); font-weight: 600; }
-    .info-tab-body .warn { color: #f59e0b; font-size: 12px; }
-
-    /* Footer */
-    .footer {
-      text-align: center; color: var(--muted);
-      font-size: 12px; margin-top: 20px;
-    }
-    .footer a { color: var(--accent2); text-decoration: none; }
+    .footer { text-align: center; color: #6b7fa8; font-size: 12px; margin-top: 20px; }
+    .footer a { color: #9154fb; text-decoration: none; }
     .footer a:hover { text-decoration: underline; }
   </style>
 </head>
@@ -151,52 +90,16 @@
       <div class="field">
         <label for="id_username">Username</label>
         <input type="text" name="username" id="id_username"
-               autofocus autocomplete="username" placeholder="Enter your username">
+               autofocus autocomplete="username" placeholder="Username">
       </div>
       <div class="field">
         <label for="id_password">Password</label>
         <input type="password" name="password" id="id_password"
-               autocomplete="current-password" placeholder="Enter your password">
+               autocomplete="current-password" placeholder="Password">
       </div>
       <input type="hidden" name="next" value="{{ next }}">
       <button type="submit" class="btn">Sign In →</button>
     </form>
-
-    <details>
-      <summary>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        Forgot super admin password?
-      </summary>
-      <div class="forgot-body">
-        Run this on your server terminal:
-        <code>docker compose exec web python manage.py changepassword admin</code>
-      </div>
-    </details>
-
-    <div class="info-section">
-      <div class="info-section-title">Who can sign in?</div>
-      <div class="info-box">
-        <div class="info-tab">
-          <div class="info-tab-title">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            Panel Admins
-          </div>
-          <div class="info-tab-body">
-            Use your <b>Pasargad panel username and password</b> — the same credentials you use to log in to your VPN panel.
-          </div>
-        </div>
-        <div class="info-tab">
-          <div class="info-tab-title">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            Super Admin
-          </div>
-          <div class="info-tab-body">
-            Username: <b>admin</b> · Password: shown during installation.<br>
-            <span class="warn">⚠ If you forgot it, use the "Forgot password?" link above.</span>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 
   <p class="footer">
