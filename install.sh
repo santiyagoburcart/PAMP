@@ -86,9 +86,15 @@ do_install() {
     echo ""
     echo -e "${YELLOW}Cloning PAMP to $INSTALL_DIR ...${NC}"
     if [ -d "$INSTALL_DIR/.git" ]; then
-        echo -e "${YELLOW}Directory exists — updating...${NC}"
-        git -C "$INSTALL_DIR" pull
+        echo -e "${YELLOW}Directory exists — fetching latest code...${NC}"
+        git -C "$INSTALL_DIR" fetch origin main
+        git -C "$INSTALL_DIR" reset --hard origin/main
     else
+        # Remove any leftover non-git directory so clone succeeds
+        if [ -d "$INSTALL_DIR" ]; then
+            echo -e "${YELLOW}Removing old directory for clean install...${NC}"
+            rm -rf "$INSTALL_DIR"
+        fi
         git clone https://github.com/santiyagoburcart/PAMP.git "$INSTALL_DIR"
     fi
     cd "$INSTALL_DIR"
