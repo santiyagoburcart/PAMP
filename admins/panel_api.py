@@ -336,3 +336,150 @@ class PanelAPIClient:
 
         logger.info("Fetched stats for %d admins.", len(results))
         return results
+
+    # ── v5.2.1 endpoints ───────────────────────────────────────────────────
+
+    def get_admins_simple(self):
+        """GET /api/admins/simple — lightweight admin list, faster than full sync."""
+        try:
+            data = self._get('/api/admins/simple')
+            if isinstance(data, list):
+                return data
+            if isinstance(data, dict):
+                return data.get('admins', data.get('items', []))
+            return []
+        except PanelAPIError as e:
+            logger.warning("get_admins_simple failed: %s", e)
+            return []
+
+    def get_admin_usage(self, username: str) -> tuple:
+        """GET /api/admin/{username}/usage — fetch admin usage directly."""
+        enc = quote(username, safe='')
+        try:
+            data = self._get(f'/api/admin/{enc}/usage')
+            return True, data
+        except PanelAPIError as e:
+            logger.warning("get_admin_usage %s failed: %s", username, e)
+            return False, str(e)
+
+    def reset_admin_usage(self, username: str) -> tuple:
+        """POST /api/admin/{username}/reset — reset admin usage counter to zero."""
+        if not self._token:
+            self.authenticate()
+        enc = quote(username, safe='')
+        try:
+            resp = self._session.post(
+                f"{self.base_url}/api/admin/{enc}/reset",
+                headers=self._get_headers(),
+                timeout=15,
+            )
+            if resp.status_code == 401:
+                self._token = None
+                resp = self._session.post(
+                    f"{self.base_url}/api/admin/{enc}/reset",
+                    headers=self._get_headers(),
+                    timeout=15,
+                )
+            if resp.status_code in (200, 204):
+                return True, 'Usage reset successfully'
+            msg = f"HTTP {resp.status_code}: {resp.text[:120]}"
+            logger.error("reset_admin_usage %s: %s", username, msg)
+            return False, msg
+        except Exception as e:
+            logger.error("reset_admin_usage %s failed: %s", username, e)
+            return False, f"Error: {str(e)[:120]}"
+
+    def bulk_disable_admins(self, usernames: list) -> tuple:
+        """POST /api/admins/bulk/disable — disable multiple admins at once."""
+        if not self._token:
+            self.authenticate()
+        try:
+            resp = self._session.post(
+                f"{self.base_url}/api/admins/bulk/disable",
+                headers=self._get_headers(),
+                json={'usernames': usernames},
+                timeout=30,
+            )
+            if resp.status_code in (200, 204):
+                return True, f'Disabled {len(usernames)} admins'
+            return False, f"HTTP {resp.status_code}: {resp.text[:120]}"
+        except Exception as e:
+            return False, f"Error: {str(e)[:120]}"
+
+    def bulk_enable_admins(self, usernames: list) -> tuple:
+        """POST /api/admins/bulk/enable — enable multiple admins at once."""
+        if not self._token:
+            self.authenticate()
+        try:
+            resp = self._session.post(
+                f"{self.base_url}/api/admins/bulk/enable",
+                headers=self._get_headers(),
+                json={'usernames': usernames},
+                timeout=30,
+            )
+            if resp.status_code in (200, 204):
+                return True, f'Enabled {len(usernames)} admins'
+            return False, f"HTTP {resp.status_code}: {resp.text[:120]}"
+        except Exception as e:
+            return False, f"Error: {str(e)[:120]}"
+
+    def bulk_disable_admin_users(self, usernames: list) -> tuple:
+        """POST /api/admins/bulk/users/disable — disable all users of multiple admins."""
+        if not self._token:
+            self.authenticate()
+        try:
+            resp = self._session.post(
+                f"{self.base_url}/api/admins/bulk/users/disable",
+                headers=self._get_headers(),
+                json={'usernames': usernames},
+                timeout=30,
+            )
+            if resp.status_code in (200, 204):
+                return True, f'Disabled users for {len(usernames)} admins'
+            return False, f"HTTP {resp.status_code}: {resp.text[:120]}"
+        except Exception as e:
+            return False, f"Error: {str(e)[:120]}"
+
+    def bulk_activate_admin_users(self, usernames: list) -> tuple:
+        """POST /api/admins/bulk/users/activate — activate all users of multiple admins."""
+        if not self._token:
+            self.authenticate()
+        try:
+            resp = self._session.post(
+                f"{self.base_url}/api/admins/bulk/users/activate",
+                headers=self._get_headers(),
+                json={'usernames': usernames},
+                timeout=30,
+            )
+            if resp.status_code in (200, 204):
+                return True, f'Activated users for {len(usernames)} admins'
+            return False, f"HTTP {resp.status_code}: {resp.text[:120]}"
+        except Exception as e:
+            return False, f"Error: {str(e)[:120]}"
+
+    def get_system_resources(self) -> tuple:
+        """GET /api/system/resources — panel server CPU/RAM/disk stats."""
+        try:
+            data = self._get('/api/system/resources')
+            return True, data
+        except PanelAPIError as e:
+            logger.warning("get_system_resources failed: %s", e)
+            return False, str(e)
+
+    def get_nodes(self) -> tuple:
+        """GET /api/nodes — list nodes with real-time stats."""
+        try:
+            data = self._get('/api/nodes')
+            if isinstance(data, list):
+                return True, data
+            if isinstance(data, dict):
+                return True, data.get('nodes', data.get('items', []))
+            return True, []
+        except PanelAPIError as e:
+            logger.warning("get_nodes failed: %s", e)
+            return False, str(e)
+
+
+def get_client() -> PanelAPIClient:
+    """Convenience factory — returns an authenticated PanelAPIClient."""
+    return PanelAPIClient()
