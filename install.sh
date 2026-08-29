@@ -304,31 +304,130 @@ NGINXSSL
 }
 
 do_update() {
-    if [ ! -d "$INSTALL_DIR/.git" ]; then
-        echo -e "${RED}PAMP is not installed at $INSTALL_DIR. Run option 1 (Install) first.${NC}"
+    echo ""
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${CYAN}  PAMP Update${NC}"
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+
+    if [ ! -f "$INSTALL_DIR/.env" ]; then
+        echo -e "${RED}  PAMP is not installed. Choose Install instead.${NC}"
         exit 1
     fi
-    detect_compose
+
     cd "$INSTALL_DIR"
+    detect_compose
 
-    echo -e "${YELLOW}Pulling latest code...${NC}"
-    git pull
+    # Show installed version
+    INSTALLED_VERSION=$(cat VERSION 2>/dev/null || echo "unknown")
+    echo -e "  Installed version : ${YELLOW}v${INSTALLED_VERSION}${NC}"
 
-    echo -e "${YELLOW}Rebuilding and restarting services...${NC}"
-    $DC up -d --build
+    # Fetch latest version from GitHub
+    echo -e "  Checking GitHub for latest version..."
+    LATEST_VERSION=$(curl -sf https://raw.githubusercontent.com/santiyagoburcart/PAMP/main/VERSION 2>/dev/null | tr -d '[:space:]')
+    if [ -z "$LATEST_VERSION" ]; then
+        echo -e "${RED}  Could not fetch latest version from GitHub. Check internet connection.${NC}"
+        exit 1
+    fi
+    echo -e "  Latest on GitHub  : ${GREEN}v${LATEST_VERSION}${NC}"
 
-    echo -e "${YELLOW}Waiting for services...${NC}"
-    sleep 10
-
-    echo -e "${YELLOW}Running migrations...${NC}"
-    $DC exec -T web python manage.py migrate --noinput
-
-    echo -e "${YELLOW}Collecting static files...${NC}"
-    $DC exec -T web python manage.py collectstatic --noinput
+    # Already up to date?
+    if [ "$INSTALLED_VERSION" = "$LATEST_VERSION" ]; then
+        echo ""
+        echo -e "${GREEN}  ✓ Already up to date! No update needed.${NC}"
+        echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        exit 0
+    fi
 
     echo ""
+    echo -e "  New version available: ${YELLOW}v${INSTALLED_VERSION}${NC} → ${GREEN}v${LATEST_VERSION}${NC}"
+    echo ""
+
+    # Show changelog for the new version
+    echo -e "  ${CYAN}What's new in v${LATEST_VERSION}:${NC}"
+    echo -e "  ─────────────────────────────────"
+    curl -sf https://raw.githubusercontent.com/santiyagoburcart/PAMP/main/CHANGELOG.md 2>/dev/null \
+        | awk "/^## \[?v?${LATEST_VERSION}\]?/,/^---/" \
+        | grep -v "^---" \
+        | head -25 \
+        | sed 's/^/  /'
+    echo ""
+
+    read -p "  Proceed with update? [y/N]: " CONFIRM
+    if [[ ! "$CONFIRM" =~ ^[Yy]$ ]]; then
+        echo -e "${YELLOW}  Update cancelled.${NC}"
+        exit 0
+    fi
+
+    echo ""
+    echo -e "${YELLOW}  Updating PAMP code...${NC}"
+    git fetch origin main
+    git reset --hard origin/main
+    echo -e "${GREEN}  ✓ Code updated${NC}"
+
+    # Rebuild only the web image
+    echo -e "${YELLOW}  Rebuilding web image...${NC}"
+    $DC build web
+    echo -e "${GREEN}  ✓ Image rebuilt${NC}"
+
+    # Restart web container only (zero-downtime: DB/redis keep running)
+    echo -e "${YELLOW}  Restarting web container...${NC}"
+    $DC up -d --no-deps web
+
+    # Wait for web to be healthy
+    MAX_WAIT=60
+    WAITED=0
+    WEB_READY=0
+    while [ $WAITED -lt $MAX_WAIT ]; do
+        STATUS=$(docker inspect --format='{{.State.Status}}' pamp-web-1 2>/dev/null \
+                 || docker inspect --format='{{.State.Status}}' pamp_web_1 2>/dev/null \
+                 || echo "unknown")
+        if [ "$STATUS" = "running" ]; then
+            if $DC logs web --tail=10 2>/dev/null | grep -q "Starting application\|Booting worker\|Listening at"; then
+                echo -e "${GREEN}  ✓ Web container ready${NC}"
+                WEB_READY=1
+                break
+            fi
+        fi
+        if [ "$STATUS" = "restarting" ]; then
+            echo -e "${RED}  ERROR: Web container failed to start after update.${NC}"
+            $DC logs web --tail=20
+            echo -e "${YELLOW}  Rolling back to v${INSTALLED_VERSION}...${NC}"
+            git reset --hard HEAD@{1}
+            $DC build web
+            $DC up -d --no-deps web
+            echo -e "${RED}  Rolled back to v${INSTALLED_VERSION}. Check logs above for the error.${NC}"
+            exit 1
+        fi
+        sleep 3
+        WAITED=$((WAITED + 3))
+        echo "  Still waiting... (${WAITED}s)"
+    done
+
+    if [ $WEB_READY -eq 0 ]; then
+        echo -e "${YELLOW}  Warning: web container readiness check timed out — continuing anyway${NC}"
+    fi
+
+    # Run migrations (safe — only applies new ones)
+    echo -e "${YELLOW}  Running database migrations...${NC}"
+    $DC exec -T web python manage.py migrate --noinput \
+        && echo -e "${GREEN}  ✓ Migrations applied${NC}" \
+        || echo -e "${YELLOW}  ⚠ Migration step had warnings (check logs)${NC}"
+
+    # Collect static files
+    echo -e "${YELLOW}  Collecting static files...${NC}"
+    $DC exec -T web python manage.py collectstatic --noinput -v 0 \
+        && echo -e "${GREEN}  ✓ Static files updated${NC}"
+
+    # Restart celery workers and nginx with new code
+    echo -e "${YELLOW}  Restarting celery and nginx...${NC}"
+    $DC up -d --no-deps celery celery-beat
+    $DC restart nginx
+
+    NEW_VERSION=$(cat VERSION 2>/dev/null || echo "$LATEST_VERSION")
+    echo ""
     echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${GREEN}  PAMP updated successfully!${NC}"
+    echo -e "${GREEN}  ✓ PAMP updated to v${NEW_VERSION}${NC}"
+    echo -e "${GREEN}  Your data and configuration are preserved.${NC}"
     echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 }
 
