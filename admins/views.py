@@ -900,6 +900,14 @@ def dashboard_v2(request):
 
 @login_required
 def portal_v2(request):
+    group = AdminGroup.get_group_for_owner(request.user.username)
+    if group:
+        accounts = [_enrich(pa) for pa in (
+            PanelAdmin.objects.filter(username=uname).first()
+            for uname in group.get_all_usernames()
+        ) if pa]
+        return render(request, 'v2/portal_grouped_v2.html', {'accounts': accounts, 'group': group})
+
     try:
         panel_admin = PanelAdmin.objects.get(username=request.user.username)
     except PanelAdmin.DoesNotExist:
