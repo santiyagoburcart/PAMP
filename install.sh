@@ -78,6 +78,9 @@ do_install() {
     ALLOWED_HOSTS="localhost,127.0.0.1"
     if [ -n "$DOMAIN" ]; then
         ALLOWED_HOSTS="$DOMAIN,$ALLOWED_HOSTS"
+        CSRF_ORIGINS="https://$DOMAIN,http://$DOMAIN"
+    else
+        CSRF_ORIGINS="http://localhost,http://127.0.0.1"
     fi
 
     echo ""
