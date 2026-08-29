@@ -150,8 +150,22 @@ def dashboard(request):
 @login_required
 def portal(request):
     theme = UISettings.get_theme()
+    username = request.user.username
+
+    # Group owner: show all accounts (owner + members) read-only
+    group = AdminGroup.get_group_for_owner(username)
+    if group:
+        accounts = []
+        for uname in group.get_all_usernames():
+            pa = PanelAdmin.objects.filter(username=uname).first()
+            if pa:
+                accounts.append(_enrich(pa))
+        tpl = _tpl('admins/portal_grouped.html', 'v2/portal_grouped_v2.html')
+        return render(request, tpl, {'accounts': accounts, 'group': group})
+
+    # Normal single-admin flow
     try:
-        panel_admin = PanelAdmin.objects.get(username=request.user.username)
+        panel_admin = PanelAdmin.objects.get(username=username)
     except PanelAdmin.DoesNotExist:
         if theme == 'v2':
             return render(request, 'v2/portal_v2.html', {'not_found': True})
