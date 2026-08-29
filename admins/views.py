@@ -74,6 +74,15 @@ def _tpl(v1, v2):
     return v2 if UISettings.get_theme() == 'v2' else v1
 
 
+class PAMPLoginView(_DjangoLoginView):
+    template_name = 'admins/login.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['pamp_version'] = _get_version()
+        return ctx
+
+
 # ── main views ─────────────────────────────────────────────────────────────
 
 @login_required
