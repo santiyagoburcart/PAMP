@@ -361,8 +361,31 @@ do_update() {
 
     echo ""
     echo -e "${YELLOW}  Updating PAMP code...${NC}"
+
+    # Back up nginx.conf — git reset --hard will delete it (it's untracked in new versions)
+    NGINX_BAK="/tmp/pamp_nginx_$$.conf"
+    if [ -f "nginx.conf" ]; then
+        cp nginx.conf "$NGINX_BAK"
+    fi
+
     git fetch origin main
     git reset --hard origin/main
+
+    # Restore nginx.conf if git reset removed it
+    if [ ! -f "nginx.conf" ]; then
+        if [ -f "$NGINX_BAK" ]; then
+            cp "$NGINX_BAK" nginx.conf
+            echo -e "${GREEN}  ✓ nginx.conf restored (server-specific config preserved)${NC}"
+        elif [ -f "nginx.conf.template" ] && [ -f ".env" ]; then
+            UPDATE_DOMAIN=$(grep "^ALLOWED_HOSTS" .env | cut -d= -f2 | cut -d, -f1)
+            sed "s/PAMP_DOMAIN/${UPDATE_DOMAIN}/g" nginx.conf.template > nginx.conf
+            echo -e "${GREEN}  ✓ nginx.conf regenerated from template for ${UPDATE_DOMAIN}${NC}"
+        else
+            echo -e "${RED}  WARNING: nginx.conf missing — please recreate it manually before restarting nginx${NC}"
+        fi
+    fi
+    rm -f "$NGINX_BAK"
+
     echo -e "${GREEN}  ✓ Code updated${NC}"
 
     # Rebuild only the web image
