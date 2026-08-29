@@ -80,33 +80,80 @@
   <!-- Database Import -->
   <article class="card">
     <div class="panel-title">Database Import</div>
-    <p style="color:#f87171;font-size:13px;margin:0 0 14px">⚠ This will <b>overwrite</b> the current database. Download a backup first.</p>
-    <div id="import-result" style="margin-bottom:10px;font-size:12px"></div>
-    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-      <input type="file" id="sql-file" name="sql_file" accept=".sql"
-             style="color:#9aa6c8;font-size:13px;flex:1;min-width:200px">
-      <button class="v2-sync-btn"
-              style="background:linear-gradient(90deg,#991b1b,#dc2626);box-shadow:0 5px 17px #dc262644;border:none"
-              onclick="submitImport(event)">
-        ⬆ Import &amp; Restore
-      </button>
+    <p style="color:#f87171;font-size:13px;margin:0 0 16px">⚠ This will <b>overwrite</b> the current database. Download a backup first.</p>
+
+    <div id="import-dropzone"
+      style="border:2px dashed #263669;border-radius:12px;padding:28px;text-align:center;cursor:pointer;transition:all .2s"
+      ondragover="event.preventDefault();this.style.borderColor='#7435e8';this.style.background='#1a0f3a22'"
+      ondragleave="this.style.borderColor='#263669';this.style.background=''"
+      ondrop="handleImportDrop(event)"
+      onclick="document.getElementById('sql-file').click()">
+      <input type="file" id="sql-file" accept=".sql" style="display:none" onchange="importFileSelected(this)">
+      <div id="drop-icon" style="font-size:36px;margin-bottom:8px">🗄</div>
+      <div id="drop-text" style="color:#8896b9;font-size:14px">
+        Drag &amp; drop a <b style="color:#cdd6f0">.sql</b> file here<br>
+        <span style="font-size:12px">or click to browse</span>
+      </div>
+      <div id="file-info" style="margin-top:10px;font-size:13px;color:#a78bff;display:none"></div>
     </div>
+
+    <div id="import-result" style="margin-top:10px;font-size:12px"></div>
+    <button id="import-btn" onclick="doImport()"
+      style="display:none;margin-top:10px;width:100%;height:42px;border-radius:10px;border:0;background:linear-gradient(90deg,#991b1b,#dc2626);box-shadow:0 5px 17px #dc262655;color:#fff;font-weight:650;font-size:14px;cursor:pointer">
+      ⬆ Import &amp; Restore Database
+    </button>
   </article>
   <script>
-  function submitImport(e) {
+  function handleImportDrop(e) {
     e.preventDefault();
-    var fi = document.getElementById('sql-file');
-    if (!fi.files.length) { alert('Select a .sql file first'); return; }
+    var dz = document.getElementById('import-dropzone');
+    dz.style.borderColor = '#263669';
+    dz.style.background = '';
+    var file = e.dataTransfer.files[0];
+    if (!file) return;
+    var dt = new DataTransfer();
+    dt.items.add(file);
+    document.getElementById('sql-file').files = dt.files;
+    importShowFile(file);
+  }
+  function importFileSelected(input) {
+    if (input.files[0]) importShowFile(input.files[0]);
+  }
+  function importShowFile(file) {
+    if (!file.name.endsWith('.sql')) { alert('Only .sql files are allowed'); return; }
+    var size = (file.size / 1024).toFixed(1);
+    document.getElementById('drop-icon').textContent = '✓';
+    document.getElementById('drop-text').innerHTML = '<b style="color:#cdd6f0">' + file.name + '</b>';
+    var fi = document.getElementById('file-info');
+    fi.style.display = 'block';
+    fi.textContent = size + ' KB ready to import';
+    document.getElementById('import-btn').style.display = 'block';
+    document.getElementById('import-dropzone').style.borderColor = '#12cf7f';
+  }
+  function doImport() {
+    var fileInput = document.getElementById('sql-file');
+    if (!fileInput.files.length) { alert('Select a .sql file first'); return; }
     if (!confirm('⚠ This will OVERWRITE the current database. Are you sure?')) return;
-    var res = document.getElementById('import-result');
-    res.innerHTML = '<div style="color:#9aa6c8;font-size:12px">Uploading and restoring…</div>';
+    showLoading('Importing database…');
     var form = new FormData();
-    form.append('sql_file', fi.files[0]);
-    form.append('csrfmiddlewaretoken', '{{ csrf_token }}');
-    fetch('{% url "import_database" %}', {method:'POST', body:form})
-      .then(function(r){ return r.text(); })
-      .then(function(html){ res.innerHTML = html; })
-      .catch(function(err){ res.innerHTML = '<div class="action-result error">✗ ' + err + '</div>'; });
+    form.append('sql_file', fileInput.files[0]);
+    form.append('csrfmiddlewaretoken', getCsrf());
+    fetch('{% url "import_database" %}', {method: 'POST', body: form})
+      .then(function(r) { return r.text(); })
+      .then(function(html) {
+        hideLoading();
+        document.getElementById('import-result').innerHTML = html;
+        document.getElementById('drop-icon').textContent = '🗄';
+        document.getElementById('drop-text').innerHTML = 'Drag &amp; drop a <b style="color:#cdd6f0">.sql</b> file here<br><span style="font-size:12px">or click to browse</span>';
+        document.getElementById('file-info').style.display = 'none';
+        document.getElementById('import-btn').style.display = 'none';
+        document.getElementById('import-dropzone').style.borderColor = '#263669';
+        document.getElementById('sql-file').value = '';
+      })
+      .catch(function(err) {
+        hideLoading();
+        document.getElementById('import-result').innerHTML = '<div class="action-result error">✗ Request failed: ' + err + '</div>';
+      });
   }
   </script>
 
