@@ -371,6 +371,24 @@ def reset_deleted_traffic(request, username):
 
 
 @login_required
+def reset_admin_usage(request, username):
+    """Reset admin usage counter on the panel via API. Superuser only."""
+    if not request.user.is_superuser:
+        return HttpResponse('<div class="action-result error">✗ Permission denied</div>', status=403)
+    if request.method != 'POST':
+        return HttpResponse(status=405)
+    get_object_or_404(PanelAdmin, username=username)
+    from .panel_api import PanelAPIClient
+    client = PanelAPIClient()
+    if not client.login():
+        return HttpResponse('<div class="action-result error">✗ Could not connect to panel</div>')
+    success, msg = client.reset_admin_usage(username)
+    if success:
+        return HttpResponse(f'<div class="action-result success">✓ {msg}</div>')
+    return HttpResponse(f'<div class="action-result error">✗ {msg}</div>')
+
+
+@login_required
 def telegram_config(request):
     if not request.user.is_superuser:
         return HttpResponse('<div class="action-result error">✗ Permission denied</div>', status=403)
