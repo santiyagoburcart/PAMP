@@ -529,6 +529,7 @@ def backup_database(request):
             f'--password={db["PASSWORD"]}',
             '--protocol=TCP',
             '--ssl=FALSE',
+            '--default-character-set=utf8mb4',
             '--single-transaction',
             '--no-tablespaces',
             '--skip-lock-tables',
