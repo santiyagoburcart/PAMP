@@ -981,3 +981,42 @@ def set_ui_theme(request):
     UISettings.set_theme(theme)
     label = 'Modern (v2)' if theme == 'v2' else 'Classic (v1)'
     return HttpResponse(f'<div class="action-result success">✓ Theme set to {label}. Reloading…</div>')
+
+
+@login_required
+def account_groups(request):
+    if not request.user.is_superuser:
+        return redirect('portal')
+    groups = AdminGroup.objects.all().order_by('owner_username')
+    all_admins = list(PanelAdmin.objects.values_list('username', flat=True).order_by('username'))
+    return render(request, _tpl('admins/account_groups.html', 'v2/account_groups_v2.html'),
+                  {'groups': groups, 'all_admins': all_admins})
+
+
+@login_required
+def save_account_group(request):
+    if not request.user.is_superuser:
+        return HttpResponse('<div class="action-result error">✗ Permission denied</div>')
+    if request.method != 'POST':
+        return HttpResponse(status=405)
+    owner = request.POST.get('owner_username', '').strip()
+    members = request.POST.get('member_usernames', '').strip()
+    note = request.POST.get('note', '').strip()
+    if not owner:
+        return HttpResponse('<div class="action-result error">✗ Owner username is required</div>')
+    _, created = AdminGroup.objects.update_or_create(
+        owner_username=owner,
+        defaults={'member_usernames': members, 'note': note},
+    )
+    action = 'created' if created else 'updated'
+    return HttpResponse(f'<div class="action-result success">✓ Group {action} for {owner}</div>')
+
+
+@login_required
+def delete_account_group(request, group_id):
+    if not request.user.is_superuser:
+        return HttpResponse('<div class="action-result error">✗ Permission denied</div>')
+    if request.method != 'POST':
+        return HttpResponse(status=405)
+    AdminGroup.objects.filter(id=group_id).delete()
+    return HttpResponse('<div class="action-result success">✓ Group deleted</div>')
