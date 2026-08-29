@@ -1,3 +1,21 @@
+## v1.4.2 — UI Polish
+
+### Fixes & Improvements
+- **Account Groups**: custom dark-themed searchable dropdown for Owner field (replaces native browser datalist)
+- **Account Groups**: generic placeholder text (no personal names)
+- **Database Import**: dropzone hidden by default behind "Import Database" button; Cancel button collapses it; auto-resets after successful import
+
+---
+
+## نسخه ۱.۴.۲ — بهبود رابط کاربری
+
+### رفع و بهبود
+- **گروه‌بندی**: dropdown سفارشی تیره و قابل جستجو برای فیلد Owner
+- **گروه‌بندی**: متن placeholder عمومی شد
+- **ایمپورت دیتابیس**: ناحیه آپلود پشت دکمه مخفی است؛ دکمه Cancel اضافه شد
+
+---
+
 # Changelog
 
 ## v1.4.1 — UI Improvements
