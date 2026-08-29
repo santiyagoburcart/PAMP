@@ -188,7 +188,7 @@ NGINXHTTP
         STATUS=$(docker inspect --format='{{.State.Status}}' pamp-web-1 2>/dev/null || \
                  docker inspect --format='{{.State.Status}}' pamp_web_1 2>/dev/null || echo "unknown")
         if [ "$STATUS" = "running" ]; then
-            if $DC logs web --tail=5 2>/dev/null | grep -q "Starting application\|Booting worker\|Listening at"; then
+            if $DC logs web --tail=20 2>/dev/null | grep -q "Starting application\|Booting worker\|Listening at"; then
                 echo -e "${GREEN}Web container is ready.${NC}"
                 break
             fi
