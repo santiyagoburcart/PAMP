@@ -247,7 +247,7 @@ print('Superuser', 'created' if created else 'password updated', ':', u.username
                 -v /etc/letsencrypt:/etc/letsencrypt \
                 -v pamp_certbot_www:/var/www/certbot \
                 certbot/certbot certonly --webroot -w /var/www/certbot \
-                -d "${DOMAIN}" --email "admin@${DOMAIN}" --agree-tos --no-eff-email --non-interactive
+                -d "${DOMAIN}" --email "admin@${DOMAIN}" --agree-tos --no-eff-email --non-interactive || true
 
             if [ -f "/etc/letsencrypt/live/${DOMAIN}/fullchain.pem" ]; then
                 cat > nginx.conf << NGINXSSL
