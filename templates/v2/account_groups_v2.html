@@ -120,6 +120,24 @@
 </style>
 
 <script>
+function showOwnerList(){document.getElementById('owner-list').style.display='block';}
+function hideOwnerList(){document.getElementById('owner-list').style.display='none';}
+function filterOwnerList(q){
+  q=q.toLowerCase();
+  document.querySelectorAll('.owner-option').forEach(o=>{
+    o.style.display=o.dataset.value.toLowerCase().includes(q)?'block':'none';
+  });
+  document.getElementById('owner-list').style.display='block';
+}
+function selectOwner(val){
+  document.getElementById('grp-owner').value=val;
+  document.getElementById('grp-owner-search').value=val;
+  document.querySelectorAll('.owner-option').forEach(o=>{
+    o.classList.toggle('selected-opt',o.dataset.value===val);
+  });
+  hideOwnerList();
+}
+
 const selectedMembers = new Set();
 
 function toggleMember(btn) {
