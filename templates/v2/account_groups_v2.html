@@ -15,12 +15,25 @@
 
     <div style="margin-bottom:14px">
       <label style="display:block;font-size:11px;color:#8896b9;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Owner (who logs in)</label>
-      <input type="text" id="grp-owner" list="admin-list"
-        style="width:100%;height:40px;padding:0 12px;background:#101936;border:1px solid #162449;border-radius:10px;color:#cdd6f0;font-size:13px;outline:none;box-sizing:border-box"
-        placeholder="Type or select owner username">
-      <datalist id="admin-list">
-        {% for a in all_admins %}<option value="{{ a }}">{% endfor %}
-      </datalist>
+      <div style="position:relative" id="owner-dropdown-wrap">
+        <input type="text" id="grp-owner-search" autocomplete="off"
+          style="width:100%;height:40px;padding:0 12px;background:#101936;border:1px solid #162449;border-radius:10px;color:#cdd6f0;font-size:13px;outline:none;box-sizing:border-box;cursor:pointer"
+          placeholder="Search or select owner username..."
+          oninput="filterOwnerList(this.value)"
+          onfocus="showOwnerList()"
+          onblur="setTimeout(hideOwnerList, 200)">
+        <input type="hidden" id="grp-owner" value="">
+        <div id="owner-list"
+          style="display:none;position:absolute;top:44px;left:0;right:0;z-index:999;background:#0d1530;border:1px solid #263669;border-radius:12px;max-height:220px;overflow-y:auto;box-shadow:0 8px 32px #000a">
+          {% for a in all_admins %}
+          <div class="owner-option" data-value="{{ a }}"
+            onclick="selectOwner('{{ a }}')"
+            style="padding:10px 14px;cursor:pointer;font-size:13px;color:#c2cbe3;border-bottom:1px solid #1c294a;transition:background .15s">
+            {{ a }}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
     </div>
 
     <div style="margin-bottom:14px">
