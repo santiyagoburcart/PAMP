@@ -468,7 +468,9 @@ do_update() {
     echo -e "${YELLOW}  Restarting nginx...${NC}"
     if $DC restart nginx 2>/dev/null; then
         sleep 3
-        NGINX_STATUS=$(docker inspect --format='{{.State.Status}}' pamp_nginx 2>/dev/null || echo "unknown")
+        NGINX_STATUS=$(docker inspect --format='{{.State.Status}}' pamp-nginx-1 2>/dev/null \
+                       || docker inspect --format='{{.State.Status}}' pamp_nginx_1 2>/dev/null \
+                       || echo "unknown")
         if [ "$NGINX_STATUS" = "running" ]; then
             echo -e "${GREEN}  ✓ nginx restarted successfully${NC}"
         else
