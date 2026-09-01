@@ -2,210 +2,288 @@
 {% block title %}PAMP — Account Groups{% endblock %}
 {% block nav_groups %}active{% endblock %}
 {% block content %}
+{% csrf_token %}
+
 <header class="header">
-  <div><h1>Account Groups</h1><p>Group admin accounts so the owner sees all of them in My Panel.</p></div>
+  <div>
+    <h1>Account Groups</h1>
+    <p>Group admin accounts so the owner sees all of them in My Panel.</p>
+  </div>
 </header>
 
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px" id="groups-layout">
+<div class="ag-layout">
 
-  <!-- LEFT: Create/Edit form -->
-  <article class="card">
+  <!-- LEFT: Form -->
+  <article class="card ag-form-card">
     <div class="panel-title">Create / Update Group</div>
     <div id="group-result" style="margin-bottom:12px"></div>
 
-    <div style="margin-bottom:14px">
-      <label style="display:block;font-size:11px;color:#8896b9;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Owner (who logs in)</label>
-      <div style="position:relative" id="owner-dropdown-wrap">
-        <input type="text" id="grp-owner-search" autocomplete="off"
-          style="width:100%;height:40px;padding:0 12px;background:#101936;border:1px solid #162449;border-radius:10px;color:#cdd6f0;font-size:13px;outline:none;box-sizing:border-box;cursor:pointer"
-          placeholder="Search or select owner username..."
-          oninput="filterOwnerList(this.value)"
-          onfocus="showOwnerList()"
-          onblur="setTimeout(hideOwnerList, 200)">
-        <input type="hidden" id="grp-owner" value="">
-        <div id="owner-list"
-          style="display:none;position:absolute;top:44px;left:0;right:0;z-index:999;background:#0d1530;border:1px solid #263669;border-radius:12px;max-height:220px;overflow-y:auto;box-shadow:0 8px 32px #000a">
+    <!-- Owner field -->
+    <div style="margin-bottom:16px">
+      <label class="ag-label">Owner (who logs in)</label>
+      <div style="position:relative">
+        <input type="text" id="owner-search" autocomplete="off"
+          class="search" style="width:100%;height:42px;box-sizing:border-box"
+          placeholder="Search admin username..."
+          oninput="filterOwner(this.value)"
+          onfocus="openOwnerDrop()"
+          onblur="setTimeout(closeOwnerDrop,200)">
+        <input type="hidden" id="grp-owner">
+        <div id="owner-drop"
+          style="display:none;position:absolute;top:46px;left:0;right:0;z-index:999;
+          background:#0d1530;border:1px solid #7435e8;border-radius:12px;
+          max-height:200px;overflow-y:auto;box-shadow:0 8px 32px #000c">
           {% for a in all_admins %}
-          <div class="owner-option" data-value="{{ a }}"
-            onclick="selectOwner('{{ a }}')"
-            style="padding:10px 14px;cursor:pointer;font-size:13px;color:#c2cbe3;border-bottom:1px solid #1c294a;transition:background .15s">
-            {{ a }}
-          </div>
+          <div class="ow-opt" data-val="{{ a }}" onmousedown="pickOwner('{{ a }}')"
+            style="padding:10px 14px;cursor:pointer;font-size:13px;color:#c2cbe3;
+            border-bottom:1px solid #1c294a66">{{ a }}</div>
           {% endfor %}
         </div>
       </div>
     </div>
 
-    <div style="margin-bottom:14px">
-      <label style="display:block;font-size:11px;color:#8896b9;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">
-        Members <span id="member-count" style="color:#a78bff;text-transform:none">(0 selected)</span>
+    <!-- Member filter + chips -->
+    <div style="margin-bottom:8px">
+      <label class="ag-label">
+        Members
+        <span id="member-count" style="color:#a78bff;font-weight:600;text-transform:none">(0 selected)</span>
       </label>
-      <div id="member-chips" style="display:flex;flex-wrap:wrap;gap:6px;max-height:200px;overflow-y:auto;padding:4px;background:#080d1e;border-radius:10px;border:1px solid #162449">
-        {% for a in all_admins %}
-        <button type="button" class="member-chip" data-username="{{ a }}"
-          onclick="toggleMember(this)"
-          style="height:30px;padding:0 12px;border-radius:20px;border:1px solid #263669;background:#101936;color:#9aa6c8;cursor:pointer;font-size:12px;transition:all .15s;white-space:nowrap">
-          {{ a }}
-        </button>
-        {% empty %}
-        <span style="color:#8896b9;font-size:13px;padding:8px">No admins synced yet</span>
-        {% endfor %}
-      </div>
-      <input type="hidden" id="grp-members" value="">
+      <input type="text" id="member-filter" autocomplete="off"
+        class="search" style="width:100%;height:36px;box-sizing:border-box;margin-bottom:8px"
+        placeholder="Filter members..."
+        oninput="filterMembers(this.value)">
+      <input type="hidden" id="grp-members">
     </div>
 
+    <div id="member-chips"
+      style="display:flex;flex-wrap:wrap;gap:6px;max-height:280px;
+      overflow-y:auto;padding:4px 2px;margin-bottom:16px">
+      {% for a in all_admins %}
+      <button type="button" class="m-chip" data-u="{{ a }}"
+        onmousedown="toggleMember(event,this)">{{ a }}</button>
+      {% empty %}
+      <span style="color:#8896b9;font-size:13px;padding:6px">No admins synced yet</span>
+      {% endfor %}
+    </div>
+
+    <!-- Note -->
     <div style="margin-bottom:16px">
-      <label style="display:block;font-size:11px;color:#8896b9;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Note (optional)</label>
-      <input type="text" id="grp-note"
-        style="width:100%;height:40px;padding:0 12px;background:#101936;border:1px solid #162449;border-radius:10px;color:#cdd6f0;font-size:13px;outline:none;box-sizing:border-box"
+      <label class="ag-label">Note (optional)</label>
+      <input type="text" id="grp-note" class="search"
+        style="width:100%;height:40px;box-sizing:border-box"
         placeholder="e.g. Reseller group note">
     </div>
 
-    <button onclick="saveGroup()"
-      style="width:100%;height:42px;border-radius:10px;border:0;background:linear-gradient(90deg,#6c2ddb,#8c38ee);color:#fff;font-weight:650;font-size:14px;cursor:pointer">
+    <button class="v2-sync-btn" onclick="saveGroup()" style="width:100%;height:44px">
       Save Group
     </button>
   </article>
 
-  <!-- RIGHT: Existing groups -->
-  <div>
-    <div class="panel-title" style="margin-bottom:12px">Existing Groups ({{ groups|length }})</div>
-    <div style="display:flex;flex-direction:column;gap:12px">
+  <!-- RIGHT: Groups list -->
+  <div class="ag-list-col">
+    <div class="panel-title" style="padding-bottom:12px">
+      Existing Groups
+      <span style="color:#a78bff;font-weight:400">({{ groups|length }})</span>
+    </div>
+
+    {% if not groups %}
+    <div class="card" style="text-align:center;color:#8896b9;padding:32px">
+      No groups yet.<br>Create one using the form.
+    </div>
+    {% endif %}
+
     {% for g in groups %}
-      <article class="card group-card" style="padding:16px;cursor:pointer"
-        data-owner="{{ g.owner_username }}"
-        data-members="{{ g.get_members|join:',' }}"
-        data-note="{{ g.note }}"
-        onclick="fillForm(this)">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <div style="display:flex;align-items:center;gap:8px">
-            <b style="font-size:15px;color:#cdd6f0">{{ g.owner_username }}</b>
-            <span style="font-size:11px;padding:2px 9px;border-radius:5px;background:#2a1f4d88;color:#a78bfa;border:1px solid #4c2fad44">Owner</span>
-          </div>
-          <button onclick="event.stopPropagation();deleteGroup({{ g.id }}, '{{ g.owner_username }}')"
-            style="height:30px;padding:0 12px;border-radius:8px;border:1px solid #ff547044;background:#44161f66;color:#ff8098;cursor:pointer;font-size:12px">
+    <article class="card ag-group-card"
+      data-owner="{{ g.owner_username }}"
+      data-members="{{ g.member_usernames }}"
+      data-note="{{ g.note }}"
+      onclick="loadGroup(this)"
+      style="margin-bottom:12px;cursor:pointer;transition:border-color .2s">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px">
+        <div>
+          <div style="font-size:15px;font-weight:700">{{ g.owner_username }}</div>
+          {% if g.note %}
+          <div style="font-size:12px;color:#8896b9;margin-top:3px">{{ g.note }}</div>
+          {% endif %}
+        </div>
+        <div style="display:flex;gap:8px;flex-shrink:0">
+          <span style="font-size:11px;color:#a78bff;background:#2a1f4d88;
+            padding:3px 8px;border-radius:10px;white-space:nowrap">Owner</span>
+          <button class="btn-danger"
+            onmousedown="event.stopPropagation()"
+            onclick="event.stopPropagation();deleteGroup({{ g.id }},'{{ g.owner_username }}')"
+            style="height:28px;padding:0 10px;border-radius:8px;border:1px solid #ff547044;
+            background:#44161f66;color:#ff8098;cursor:pointer;font-size:11px;white-space:nowrap">
             Delete
           </button>
         </div>
-        {% if g.note %}
-        <div style="font-size:12px;color:#8896b9;margin-bottom:8px">{{ g.note }}</div>
-        {% endif %}
-        <div style="display:flex;flex-wrap:wrap;gap:5px">
-          {% for m in g.get_members %}
-          <span style="height:26px;padding:0 10px;border-radius:20px;border:1px solid #263669;background:#101936;color:#9aa6c8;font-size:11px;display:inline-flex;align-items:center">{{ m }}</span>
-          {% empty %}
-          <span style="color:#8896b9;font-size:12px">No members</span>
-          {% endfor %}
-        </div>
-        <div style="margin-top:8px;font-size:11px;color:#8896b9;opacity:.6">Click to edit ↑</div>
-      </article>
-    {% empty %}
-      <div class="card" style="text-align:center;color:#8896b9;padding:30px">
-        No groups yet. Create one on the left.
       </div>
+      {% with members=g.get_members %}
+      {% if members %}
+      <div style="display:flex;flex-wrap:wrap;gap:5px">
+        {% for m in members %}
+        <span style="height:24px;padding:0 9px;border-radius:20px;border:1px solid #263669;
+          background:#101936;color:#9aa6c8;font-size:11px;display:inline-flex;align-items:center">
+          {{ m }}
+        </span>
+        {% endfor %}
+      </div>
+      {% else %}
+      <span style="font-size:12px;color:#8896b9">No members</span>
+      {% endif %}
+      {% endwith %}
+      <div style="font-size:11px;color:#5a6890;margin-top:8px">Click to edit ↑</div>
+    </article>
     {% endfor %}
-    </div>
   </div>
 
 </div>
 
 <style>
-.member-chip.selected{background:linear-gradient(135deg,#4a1fa8,#6d2fd5)!important;border-color:#7435e8!important;color:#e0d4ff!important}
-.group-card:hover{border-color:#3a4d80!important}
-.owner-option:hover{background:#182449!important;color:#fff!important}
-.owner-option.selected-opt{background:#2a1f4d!important;color:#a78bff!important}
-#owner-list::-webkit-scrollbar{width:4px}
-#owner-list::-webkit-scrollbar-thumb{background:#263669;border-radius:4px}
-@media(max-width:768px){#groups-layout{grid-template-columns:1fr!important}}
+.ag-layout{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+@media(max-width:900px){.ag-layout{grid-template-columns:1fr}}
+.ag-form-card{position:sticky;top:20px}
+.ag-label{display:block;font-size:11px;color:#8896b9;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+
+.ow-opt:hover{background:#182449!important;color:#fff!important}
+.ow-opt.sel{background:#2a1f4d!important;color:#a78bff!important;font-weight:600}
+#owner-drop::-webkit-scrollbar{width:4px}
+#owner-drop::-webkit-scrollbar-thumb{background:#263669;border-radius:4px}
+
+.m-chip{padding:6px 12px;border-radius:20px;border:1px solid #263669;background:#101936;
+  color:#9aa6c8;cursor:pointer;font-size:12px;transition:all .15s;white-space:nowrap;line-height:1}
+.m-chip:hover{border-color:#7435e8;color:#d0c6ff}
+.m-chip.sel{background:linear-gradient(135deg,#4a1fa8,#6d2fd5)!important;
+  border-color:#7435e8!important;color:#e0d4ff!important}
+.m-chip.hidden{display:none!important}
+#member-chips::-webkit-scrollbar{width:4px}
+#member-chips::-webkit-scrollbar-thumb{background:#263669;border-radius:4px}
+
+.ag-group-card:hover{border-color:#7435e8!important}
 </style>
 
 <script>
-function showOwnerList(){document.getElementById('owner-list').style.display='block';}
-function hideOwnerList(){document.getElementById('owner-list').style.display='none';}
-function filterOwnerList(q){
-  q=q.toLowerCase();
-  document.querySelectorAll('.owner-option').forEach(o=>{
-    o.style.display=o.dataset.value.toLowerCase().includes(q)?'block':'none';
+const sel = new Set();
+let currentOwner = '';
+
+function _csrf() {
+  return document.querySelector('[name=csrfmiddlewaretoken]').value;
+}
+
+/* ---- Owner dropdown ---- */
+function openOwnerDrop() { document.getElementById('owner-drop').style.display = 'block'; }
+function closeOwnerDrop() { document.getElementById('owner-drop').style.display = 'none'; }
+function filterOwner(q) {
+  q = q.toLowerCase();
+  document.querySelectorAll('.ow-opt').forEach(o => {
+    o.style.display = o.dataset.val.toLowerCase().includes(q) ? 'block' : 'none';
   });
-  document.getElementById('owner-list').style.display='block';
+  openOwnerDrop();
 }
-function selectOwner(val){
-  document.getElementById('grp-owner').value=val;
-  document.getElementById('grp-owner-search').value=val;
-  document.querySelectorAll('.owner-option').forEach(o=>{
-    o.classList.toggle('selected-opt',o.dataset.value===val);
+function pickOwner(val) {
+  currentOwner = val;
+  document.getElementById('grp-owner').value = val;
+  document.getElementById('owner-search').value = val;
+  document.querySelectorAll('.ow-opt').forEach(o => o.classList.toggle('sel', o.dataset.val === val));
+  closeOwnerDrop();
+  // Hide owner chip from member list (owner can't be a member of themselves)
+  document.querySelectorAll('.m-chip').forEach(c => {
+    if (c.dataset.u === val) {
+      c.classList.add('hidden');
+      c.classList.remove('sel');
+      sel.delete(val);
+    } else {
+      c.classList.remove('hidden');
+    }
   });
-  hideOwnerList();
+  updateMemberInput();
 }
 
-const selectedMembers = new Set();
-
-function toggleMember(btn) {
-  const u = btn.dataset.username;
-  if (selectedMembers.has(u)) {
-    selectedMembers.delete(u);
-    btn.classList.remove('selected');
-  } else {
-    selectedMembers.add(u);
-    btn.classList.add('selected');
-  }
-  document.getElementById('grp-members').value = [...selectedMembers].join(', ');
-  document.getElementById('member-count').textContent = '(' + selectedMembers.size + ' selected)';
+/* ---- Member chips ---- */
+function toggleMember(e, btn) {
+  e.preventDefault();
+  if (btn.classList.contains('hidden')) return;
+  const u = btn.dataset.u;
+  if (sel.has(u)) { sel.delete(u); btn.classList.remove('sel'); }
+  else { sel.add(u); btn.classList.add('sel'); }
+  updateMemberInput();
+}
+function updateMemberInput() {
+  document.getElementById('grp-members').value = [...sel].join(',');
+  document.getElementById('member-count').textContent = '(' + sel.size + ' selected)';
+}
+function filterMembers(q) {
+  q = q.toLowerCase();
+  document.querySelectorAll('.m-chip').forEach(c => {
+    if (c.classList.contains('hidden')) return;
+    c.style.display = c.dataset.u.toLowerCase().includes(q) ? '' : 'none';
+  });
 }
 
+/* ---- Save ---- */
 function saveGroup() {
   const owner = document.getElementById('grp-owner').value.trim();
-  if (!owner) { alert('Enter an owner username'); return; }
+  if (!owner) { alert('Select an owner first'); return; }
   const members = document.getElementById('grp-members').value;
   const note = document.getElementById('grp-note').value;
-  const csrf = getCsrf();
   const body = new URLSearchParams({
     owner_username: owner,
     member_usernames: members,
     note: note,
-    csrfmiddlewaretoken: csrf
+    csrfmiddlewaretoken: _csrf()
   });
   fetch('{% url "save_account_group" %}', {
     method: 'POST',
-    body: body,
-    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: body
   })
     .then(r => r.text())
     .then(html => {
       document.getElementById('group-result').innerHTML = html;
-      if (html.includes('success')) setTimeout(() => location.reload(), 800);
+      if (html.includes('action-result success')) setTimeout(() => location.reload(), 700);
+    })
+    .catch(err => {
+      document.getElementById('group-result').innerHTML = '<div class="action-result error">✗ Request failed</div>';
     });
 }
 
+/* ---- Delete ---- */
 function deleteGroup(id, owner) {
   if (!confirm('Delete group for ' + owner + '?')) return;
   fetch('/account-groups/' + id + '/delete/', {
     method: 'POST',
-    headers: {'X-CSRFToken': getCsrf(), 'Content-Type': 'application/json'}
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ csrfmiddlewaretoken: _csrf() })
   }).then(() => location.reload());
 }
 
-function fillForm(card) {
-  selectOwner(card.dataset.owner);
-  document.getElementById('grp-note').value = card.dataset.note || '';
+/* ---- Load group into form ---- */
+function loadGroup(card) {
+  const owner = card.dataset.owner;
+  const members = card.dataset.members || '';
+  const note = card.dataset.note || '';
 
-  // Clear and re-select chips
-  selectedMembers.clear();
-  document.querySelectorAll('.member-chip').forEach(c => c.classList.remove('selected'));
+  pickOwner(owner);
 
-  const members = card.dataset.members ? card.dataset.members.split(',') : [];
-  members.forEach(m => {
-    m = m.trim();
-    if (!m) return;
-    selectedMembers.add(m);
-    document.querySelectorAll('.member-chip').forEach(c => {
-      if (c.dataset.username === m) c.classList.add('selected');
-    });
+  sel.clear();
+  document.querySelectorAll('.m-chip').forEach(c => c.classList.remove('sel'));
+
+  members.split(',').map(s => s.trim()).filter(Boolean).forEach(u => {
+    if (u === owner) return;
+    sel.add(u);
+    const chip = document.querySelector('.m-chip[data-u="' + u + '"]');
+    if (chip) chip.classList.add('sel');
   });
 
-  document.getElementById('grp-members').value = [...selectedMembers].join(', ');
-  document.getElementById('member-count').textContent = '(' + selectedMembers.size + ' selected)';
-  document.getElementById('grp-owner').scrollIntoView({behavior: 'smooth', block: 'start'});
+  document.getElementById('grp-note').value = note;
+  document.getElementById('member-filter').value = '';
+  // Reset chip visibility after filter clear
+  document.querySelectorAll('.m-chip').forEach(c => {
+    if (!c.classList.contains('hidden')) c.style.display = '';
+  });
+  updateMemberInput();
+  document.getElementById('group-result').innerHTML = '';
+  document.querySelector('.ag-form-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 </script>
 {% endblock %}
