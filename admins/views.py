@@ -993,8 +993,9 @@ def account_groups(request):
                   {'groups': groups, 'all_admins': all_admins})
 
 
-@login_required
 def save_account_group(request):
+    if not request.user.is_authenticated:
+        return HttpResponse('<div class="action-result error">✗ Session expired — please refresh</div>', status=401)
     if not request.user.is_superuser:
         return HttpResponse('<div class="action-result error">✗ Permission denied</div>')
     if request.method != 'POST':
@@ -1012,8 +1013,9 @@ def save_account_group(request):
     return HttpResponse(f'<div class="action-result success">✓ Group {action} for {owner}</div>')
 
 
-@login_required
 def delete_account_group(request, group_id):
+    if not request.user.is_authenticated:
+        return HttpResponse('<div class="action-result error">✗ Session expired — please refresh</div>', status=401)
     if not request.user.is_superuser:
         return HttpResponse('<div class="action-result error">✗ Permission denied</div>')
     if request.method != 'POST':
