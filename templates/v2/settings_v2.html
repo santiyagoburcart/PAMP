@@ -172,7 +172,7 @@
       .then(function(r) {
         if (r.status === 401 || r.redirected) {
           hideLoading();
-          document.getElementById('import-result').innerHTML = '<div class="action-result error">✗ Session expired — please refresh.</div>';
+          window.location.href = '/login/?next=' + encodeURIComponent(window.location.pathname);
           return null;
         }
         return r.text();
