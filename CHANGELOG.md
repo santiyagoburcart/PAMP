@@ -1,3 +1,26 @@
+## v1.4.4 — Session expiry fix across all AJAX views
+
+### Fixes
+- **Login page appearing in popups** — all AJAX/htmx views now return a 401 error fragment on expired session instead of redirecting to /login/ (which caused full login page HTML to inject into result popups and target divs)
+- **New `ajax_login_required` decorator** — replaces `@login_required` on 14 AJAX views: `trigger_sync`, `set_limit`, `remove_limit`, `update_sync_interval`, `panel_config`, `reset_deleted_traffic`, `reset_admin_usage`, `telegram_config`, `telegram_backup_now`, `admin_action`, `sync_status`, `import_database`, `server_stats`, `set_ui_theme`
+- **htmx afterRequest hook** — detects full HTML page responses (`<!doctype`, `<html`) and shows a friendly "Session Expired" popup instead of parsing login page text
+- **fetch()-based calls** — `saveGroup`, `deleteGroup`, and `doImport` now check `r.status === 401 || r.redirected` before processing response HTML
+
+### How it works
+Full-page views (`dashboard`, `portal`, `settings`, etc.) keep `@login_required` so unauthenticated browser navigation still redirects to login. AJAX views use the new decorator to return `HTTP 401` with an error fragment, which the UI surfaces as a clear "Session expired — please refresh" message.
+
+---
+
+## نسخه ۱.۴.۴ — رفع باگ session expiry در تمام ویوهای AJAX
+
+### رفع باگ
+- **ظاهر شدن فرم لاگین در پاپ‌آپ** — همه ویوهای AJAX حالا روی session منقضی، fragment خطا با status 401 برمی‌گردانند
+- **دکوراتور `ajax_login_required`** — جایگزین `@login_required` روی ۱۴ ویوی AJAX
+- **htmx afterRequest hook** — پاسخ‌های HTML کامل را تشخیص می‌دهد و پیام "Session Expired" نمایش می‌دهد
+- **fetch()-based calls** — بررسی `r.status === 401 || r.redirected` قبل از استفاده از HTML پاسخ
+
+---
+
 ## v1.4.3 — Account Groups bug fixes & UI redesign
 
 ### Fixes
