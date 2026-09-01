@@ -220,17 +220,23 @@ function filterMembers(q) {
   });
 }
 
+function _loginRedirect() {
+  window.location.href = '/login/?next=' + encodeURIComponent(window.location.pathname);
+}
+
 /* ---- Save ---- */
 function saveGroup() {
   const owner = document.getElementById('grp-owner').value.trim();
   if (!owner) { alert('Select an owner first'); return; }
+  const csrfEl = document.querySelector('[name=csrfmiddlewaretoken]');
+  if (!csrfEl) { _loginRedirect(); return; }
   const members = document.getElementById('grp-members').value;
   const note = document.getElementById('grp-note').value;
   const body = new URLSearchParams({
     owner_username: owner,
     member_usernames: members,
     note: note,
-    csrfmiddlewaretoken: _csrf()
+    csrfmiddlewaretoken: csrfEl.value
   });
   fetch('{% url "save_account_group" %}', {
     method: 'POST',
@@ -238,10 +244,7 @@ function saveGroup() {
     body: body
   })
     .then(r => {
-      if (r.status === 401 || r.redirected) {
-        document.getElementById('group-result').innerHTML = '<div class="action-result error">✗ Session expired — please refresh.</div>';
-        return null;
-      }
+      if (r.status === 401 || r.redirected) { _loginRedirect(); return null; }
       return r.text();
     })
     .then(html => {
@@ -249,23 +252,22 @@ function saveGroup() {
       document.getElementById('group-result').innerHTML = html;
       if (html.includes('action-result success')) setTimeout(() => location.reload(), 700);
     })
-    .catch(err => {
-      document.getElementById('group-result').innerHTML = '<div class="action-result error">✗ Request failed</div>';
+    .catch(() => {
+      document.getElementById('group-result').innerHTML = '<div class="action-result error">✗ Network error — please try again.</div>';
     });
 }
 
 /* ---- Delete ---- */
 function deleteGroup(id, owner) {
   if (!confirm('Delete group for ' + owner + '?')) return;
+  const csrfEl = document.querySelector('[name=csrfmiddlewaretoken]');
+  if (!csrfEl) { _loginRedirect(); return; }
   fetch('/account-groups/' + id + '/delete/', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ csrfmiddlewaretoken: _csrf() })
+    body: new URLSearchParams({ csrfmiddlewaretoken: csrfEl.value })
   }).then(r => {
-    if (r.status === 401 || r.redirected) {
-      document.getElementById('group-result').innerHTML = '<div class="action-result error">✗ Session expired — please refresh.</div>';
-      return;
-    }
+    if (r.status === 401 || r.redirected) { _loginRedirect(); return; }
     location.reload();
   });
 }
