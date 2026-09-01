@@ -153,8 +153,15 @@ function doCustomLimit(username,action,targetId){
 }
 function getCsrf(){var el=document.querySelector('[name=csrfmiddlewaretoken]');return el?el.value:'';}
 document.body.addEventListener('htmx:afterRequest',function(e){
+  var status=e.detail.xhr&&e.detail.xhr.status;
   var t=(e.detail.xhr&&e.detail.xhr.responseText)||'';
-  if(t.indexOf('<!doctype')>-1||t.indexOf('<html')>-1){hideLoading();showResultPopup(false,'Session Expired','Your session has expired. Please refresh the page and log in again.');return;}
+  if(status===401||t.indexOf('<!doctype')>-1||t.indexOf('<html')>-1||(t.indexOf('Sign In')>-1&&t.length>500)){
+    hideLoading();
+    if(confirm('Your session has expired. Click OK to log in again.')){
+      window.location.href='/login/?next='+encodeURIComponent(window.location.pathname);
+    }
+    return;
+  }
   var clean=t.replace(/<[^>]+>/g,'').replace(/[✓✕✗]/g,'').trim();
   if(t.indexOf('action-result success')>-1)showResultPopup(true,'Success',clean);
   else if(t.indexOf('action-result error')>-1)showResultPopup(false,'Error',clean);
