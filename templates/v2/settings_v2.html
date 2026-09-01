@@ -169,8 +169,16 @@
     form.append('sql_file', fileInput.files[0]);
     form.append('csrfmiddlewaretoken', getCsrf());
     fetch('{% url "import_database" %}', {method: 'POST', body: form})
-      .then(function(r) { return r.text(); })
+      .then(function(r) {
+        if (r.status === 401 || r.redirected) {
+          hideLoading();
+          document.getElementById('import-result').innerHTML = '<div class="action-result error">✗ Session expired — please refresh.</div>';
+          return null;
+        }
+        return r.text();
+      })
       .then(function(html) {
+        if (!html) return;
         hideLoading();
         document.getElementById('import-result').innerHTML = html;
         if (html.includes('success')) { setTimeout(cancelImport, 2000); }
