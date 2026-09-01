@@ -237,8 +237,15 @@ function saveGroup() {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: body
   })
-    .then(r => r.text())
+    .then(r => {
+      if (r.status === 401 || r.redirected) {
+        document.getElementById('group-result').innerHTML = '<div class="action-result error">✗ Session expired — please refresh.</div>';
+        return null;
+      }
+      return r.text();
+    })
     .then(html => {
+      if (!html) return;
       document.getElementById('group-result').innerHTML = html;
       if (html.includes('action-result success')) setTimeout(() => location.reload(), 700);
     })
