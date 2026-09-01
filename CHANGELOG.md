@@ -1,3 +1,27 @@
+## v1.4.3 — Account Groups bug fixes & UI redesign
+
+### Fixes
+- **Login form appearing inside page** — AJAX views now return 401 fragment on expired session instead of redirecting to /login/ (which caused the login HTML to inject into the page)
+- **Logout on Save** — fetch() now uses explicit csrfmiddlewaretoken from DOM, no redirect side effects
+- **Owner excluded from members** — selected owner is hidden from the member chip list automatically
+
+### Improvements
+- **Account Groups redesign** — mobile-first responsive (single column ≤900px, sticky form on desktop), member filter input to search chips, onmousedown dropdown to avoid blur conflicts, group cards clickable to load into edit form
+
+---
+
+## نسخه ۱.۴.۳ — رفع باگ و بازطراحی گروه‌بندی
+
+### رفع باگ
+- **فرم لاگین داخل صفحه** — views های AJAX حالا روی session منقضی، fragment خطا برمی‌گردانند (نه redirect)
+- **logout هنگام Save** — fetch از csrfmiddlewaretoken مستقیم DOM استفاده می‌کند
+- **Owner از لیست members حذف** — owner انتخاب‌شده از chip های members مخفی می‌شود
+
+### بهبودها
+- **بازطراحی گروه‌بندی** — mobile-first ریسپانسیو، فیلتر جستجو برای chip ها، کلیک روی کارت گروه برای ویرایش
+
+---
+
 ## v1.4.2 — UI Polish
 
 ### Fixes & Improvements
