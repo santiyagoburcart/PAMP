@@ -1,3 +1,26 @@
+## v1.4.5 — Session timeout & expiry handling
+
+### Fixes
+- **Session duration extended to 10 days** — `SESSION_COOKIE_AGE = 864000` (was Django default 2 weeks but closed-browser behavior varied)
+- **Session persists across browser close** — `SESSION_EXPIRE_AT_BROWSER_CLOSE = False`
+- **Session refreshed on every request** — `SESSION_SAVE_EVERY_REQUEST = True` keeps the 10-day window rolling
+- **On session expiry during htmx action** — confirm dialog → redirect to `/login/?next=<current page>` so user returns to same page after re-login
+- **On session expiry during fetch action** — `saveGroup`, `deleteGroup`, `doImport` redirect to login with return URL (instead of showing inline error)
+- **CSRF-missing guard** — if CSRF token is absent from DOM, immediately redirects to login rather than sending a broken request
+
+---
+
+## نسخه ۱.۴.۵ — مدیریت session و انقضا
+
+### رفع
+- **مدت session به ۱۰ روز افزایش یافت** — هر ۱۰ روز یک بار نیاز به لاگین مجدد
+- **session بعد از بستن مرورگر منقضی نمی‌شود**
+- **session در هر درخواست تمدید می‌شود** — ۱۰ روز از آخرین فعالیت
+- **انقضای session حین action** — پیام تأیید + redirect به لاگین با بازگشت به همان صفحه
+- **محافظت از CSRF غایب** — اگر توکن نباشد مستقیم به لاگین می‌رود
+
+---
+
 ## v1.4.4 — Session expiry fix across all AJAX views
 
 ### Fixes
