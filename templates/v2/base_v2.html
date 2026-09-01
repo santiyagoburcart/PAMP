@@ -154,6 +154,7 @@ function doCustomLimit(username,action,targetId){
 function getCsrf(){var el=document.querySelector('[name=csrfmiddlewaretoken]');return el?el.value:'';}
 document.body.addEventListener('htmx:afterRequest',function(e){
   var t=(e.detail.xhr&&e.detail.xhr.responseText)||'';
+  if(t.indexOf('<!doctype')>-1||t.indexOf('<html')>-1){hideLoading();showResultPopup(false,'Session Expired','Your session has expired. Please refresh the page and log in again.');return;}
   var clean=t.replace(/<[^>]+>/g,'').replace(/[✓✕✗]/g,'').trim();
   if(t.indexOf('action-result success')>-1)showResultPopup(true,'Success',clean);
   else if(t.indexOf('action-result error')>-1)showResultPopup(false,'Error',clean);
