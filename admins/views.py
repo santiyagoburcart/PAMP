@@ -17,6 +17,18 @@ from .tasks import sync_panel_admins
 
 logger = logging.getLogger('admins')
 
+def ajax_login_required(view_func):
+    """Return a 401 error fragment on unauthenticated AJAX/htmx requests instead of redirecting."""
+    from functools import wraps
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return HttpResponse(
+                '<div class="action-result error">✗ Session expired — please refresh the page.</div>',
+                status=401
+            )
+        return view_func(request, *args, **kwargs)
+    return wrapper
 
 # ── helpers ────────────────────────────────────────────────────────────────
 
@@ -221,7 +233,7 @@ def login_redirect(request):
 
 # ── actions ────────────────────────────────────────────────────────────────
 
-@login_required
+@ajax_login_required
 def trigger_sync(request):
     if request.method == 'POST':
         # Run synchronously so the page reload after the popup reflects fresh data.
@@ -234,7 +246,7 @@ def trigger_sync(request):
     return redirect('dashboard')
 
 
-@login_required
+@ajax_login_required
 def set_limit(request, username):
     if request.method != 'POST':
         return HttpResponse(status=405)
@@ -281,7 +293,7 @@ def set_limit(request, username):
     return HttpResponse(f'<div class="action-result success">✓ Limit set to {label} — {message}</div>')
 
 
-@login_required
+@ajax_login_required
 def remove_limit(request, username):
     """Remove admin limit — sets unlimited on Pasargad. Superuser only."""
     if not request.user.is_superuser:
@@ -307,7 +319,7 @@ def remove_limit(request, username):
     return HttpResponse(f'<div class="action-result success">✓ {message} — admin is now unlimited</div>')
 
 
-@login_required
+@ajax_login_required
 def update_sync_interval(request):
     if not request.user.is_superuser:
         return HttpResponse('<div class="action-result error">✗ Permission denied</div>', status=403)
@@ -349,7 +361,7 @@ def update_sync_interval(request):
     )
 
 
-@login_required
+@ajax_login_required
 def panel_config(request):
     if not request.user.is_superuser:
         return HttpResponse('<div class="action-result error">✗ Permission denied</div>', status=403)
@@ -371,7 +383,7 @@ def panel_config(request):
     return HttpResponse('<div class="action-result error">✗ Saved, but connection test failed — check credentials</div>')
 
 
-@login_required
+@ajax_login_required
 def reset_deleted_traffic(request, username):
     if not request.user.is_superuser:
         return HttpResponse('<div class="action-result error">✗ Permission denied</div>', status=403)
@@ -384,7 +396,7 @@ def reset_deleted_traffic(request, username):
     return HttpResponse('<div class="action-result success">✓ Deleted-users counter reset to 0</div>')
 
 
-@login_required
+@ajax_login_required
 def reset_admin_usage(request, username):
     """Reset admin usage counter on the panel via API. Superuser only."""
     if not request.user.is_superuser:
@@ -402,7 +414,7 @@ def reset_admin_usage(request, username):
     return HttpResponse(f'<div class="action-result error">✗ {msg}</div>')
 
 
-@login_required
+@ajax_login_required
 def telegram_config(request):
     if not request.user.is_superuser:
         return HttpResponse('<div class="action-result error">✗ Permission denied</div>', status=403)
@@ -445,7 +457,7 @@ def telegram_config(request):
     return HttpResponse('<div class="action-result success">✓ Telegram backup settings saved</div>')
 
 
-@login_required
+@ajax_login_required
 def telegram_backup_now(request):
     if not request.user.is_superuser:
         return HttpResponse('<div class="action-result error">✗ Permission denied</div>', status=403)
@@ -489,7 +501,7 @@ def sync_logs_page(request):
     })
 
 
-@login_required
+@ajax_login_required
 def admin_action(request, username):
     """Handle disable/enable admin and their users. Superuser only."""
     if not request.user.is_superuser:
@@ -540,7 +552,7 @@ def admin_action(request, username):
     return HttpResponse('<div class="action-result error">✗ Unknown action</div>')
 
 
-@login_required
+@ajax_login_required
 def sync_status(request):
     last = SyncLog.objects.first()
     if last:
@@ -593,7 +605,7 @@ def backup_database(request):
         return HttpResponse(f'Backup error: {e}', status=500)
 
 
-@login_required
+@ajax_login_required
 def import_database(request):
     """Restore database from uploaded SQL file. Superuser only."""
     if not request.user.is_superuser:
@@ -693,7 +705,7 @@ def _read_host_netdev():
     return recv, sent
 
 
-@login_required
+@ajax_login_required
 def server_stats(request):
     """Return real-time server resource stats as JSON. Superuser only."""
     if not request.user.is_superuser:
@@ -971,7 +983,7 @@ def admin_detail_v2(request, username):
     return render(request, 'v2/admin_detail_v2.html', context)
 
 
-@login_required
+@ajax_login_required
 def set_ui_theme(request):
     if not request.user.is_superuser:
         return HttpResponse('<div class="action-result error">✗ Permission denied</div>')
