@@ -261,7 +261,13 @@ function deleteGroup(id, owner) {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ csrfmiddlewaretoken: _csrf() })
-  }).then(() => location.reload());
+  }).then(r => {
+    if (r.status === 401 || r.redirected) {
+      document.getElementById('group-result').innerHTML = '<div class="action-result error">✗ Session expired — please refresh.</div>';
+      return;
+    }
+    location.reload();
+  });
 }
 
 /* ---- Load group into form ---- */
