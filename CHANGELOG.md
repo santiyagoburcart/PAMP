@@ -1,3 +1,42 @@
+## v1.4.7 — Auto-sync fix (Redis replica), session hardening, Sync button
+
+### Critical fix: Auto-sync was silently broken
+- **Root cause**: Redis was running as a replica of an unreachable external master
+  (`144.202.28.215:21000`). Replicas are read-only, so celery-beat could not enqueue
+  tasks and the celery worker could not store results. Every scheduled sync failed with
+  `You can't write against a read only replica` before any task even started.
+- **Why manual Sync worked**: The Sync button called `sync_panel_admins.apply()` which
+  runs synchronously in the web process, never touching Redis at all.
+- **Fix**: `SLAVEOF NO ONE` promotes Redis to standalone master; docker-compose.yml now
+  starts Redis with `--save "" --appendonly no` so any future restart always starts clean
+  as a standalone master (no replica config can survive a container restart).
+- **Verified**: `sync_panel_admins.delay()` through the full broker path returns
+  "Synced 58 admins." — auto-sync pipeline now fully operational.
+
+### Session hardening
+- `SESSION_COOKIE_SAMESITE = 'Lax'` — prevents session cookie from being dropped
+  on cross-site navigations that aren't top-level GET requests
+- `CSRF_COOKIE_SAMESITE = 'Lax'` — consistent with session cookie behavior
+
+### Sync button
+- Replaced htmx `hx-post` Sync button with `fetch()`-based `doSync()` function
+- Handles 401/redirected responses with confirm → redirect to login
+- Disables button during sync to prevent double-clicks
+- Shows result popup on success/failure (same as other actions)
+
+---
+
+## نسخه ۱.۴.۷ — رفع باگ auto-sync (Redis replica)، بهبود session، دکمه Sync
+
+### رفع حیاتی: auto-sync خاموش بود
+- **ریشه مشکل**: Redis به عنوان replica یک master خارجی غیرقابل دسترس تنظیم شده بود.
+  Replica ها read-only هستند، بنابراین celery-beat نمی‌توانست task ارسال کند.
+- **دلیل کارکرد Sync دستی**: دکمه Sync از `apply()` استفاده می‌کند که مستقیماً در
+  پروسه web اجرا می‌شود، بدون نیاز به Redis.
+- **رفع**: `SLAVEOF NO ONE` + تنظیم docker-compose.yml برای جلوگیری از تکرار.
+
+---
+
 ## v1.4.6 — Fix usage_percent and hidden_traffic calculations
 
 ### Bug
