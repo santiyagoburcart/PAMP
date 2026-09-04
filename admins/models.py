@@ -133,7 +133,9 @@ class PanelAdmin(models.Model):
 
     @property
     def hidden_traffic(self):
-        return self.total_user_limit - self.total_user_used - self.admin_remaining
+        # Clamped to 0: goes negative when admins have many unlimited users whose traffic
+        # isn't captured in total_user_limit (which only sums limited users' data caps).
+        return max(0, self.total_user_limit - self.total_user_used - self.admin_remaining)
 
     @property
     def hidden_traffic_bytes(self):
@@ -141,9 +143,12 @@ class PanelAdmin(models.Model):
 
     @property
     def usage_percent(self):
-        if self.total_user_limit == 0:
+        # Use admin_limit_bytes (the admin's actual quota from Pasargad) as denominator.
+        # total_user_limit is the sum of per-user data caps and excludes unlimited users,
+        # so it can be smaller than total_user_used → would give >100% incorrectly.
+        if not self.has_data_limit or not self.admin_limit_bytes:
             return 0
-        return round((self.total_user_used / self.total_user_limit) * 100, 1)
+        return round((self.total_user_used / self.admin_limit_bytes) * 100, 1)
 
     # ── formatted display strings ──────────────────────────────────────────
     @property
