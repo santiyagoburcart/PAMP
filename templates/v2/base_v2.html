@@ -147,6 +147,35 @@ function doCustomLimit(username,action,targetId){
   confirmSetLimit(username,action,Number(v),targetId);
 }
 function getCsrf(){var el=document.querySelector('[name=csrfmiddlewaretoken]');return el?el.value:'';}
+function doSync(btn){
+  showLoading('Syncing with panel…');
+  btn.disabled=true;
+  fetch('{% url "trigger_sync" %}',{
+    method:'POST',
+    headers:{'Content-Type':'application/x-www-form-urlencoded','X-Requested-With':'XMLHttpRequest'},
+    body:new URLSearchParams({csrfmiddlewaretoken:getCsrf()})
+  }).then(function(r){
+    btn.disabled=false;
+    if(r.status===401||r.redirected){
+      hideLoading();
+      if(confirm('Session expired. Log in again?'))
+        window.location.href='/login/?next='+encodeURIComponent(window.location.pathname);
+      return null;
+    }
+    return r.text();
+  }).then(function(html){
+    if(!html)return;
+    hideLoading();
+    var clean=html.replace(/<[^>]+>/g,'').trim();
+    if(html.indexOf('action-result success')>-1)showResultPopup(true,'Sync Complete',clean);
+    else if(html.indexOf('action-result error')>-1)showResultPopup(false,'Sync Failed',clean);
+    else showResultPopup(true,'Done',clean);
+  }).catch(function(){
+    btn.disabled=false;
+    hideLoading();
+    showResultPopup(false,'Error','Network error during sync');
+  });
+}
 document.body.addEventListener('htmx:afterRequest',function(e){
   var status=e.detail.xhr&&e.detail.xhr.status;
   var t=(e.detail.xhr&&e.detail.xhr.responseText)||'';
