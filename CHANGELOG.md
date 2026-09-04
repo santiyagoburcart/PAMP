@@ -1,3 +1,36 @@
+## v1.4.6 — Fix usage_percent and hidden_traffic calculations
+
+### Bug
+When an admin has unlimited users, `total_user_limit` (sum of per-user data caps, which
+excludes unlimited users) is smaller than `total_user_used` (admin-level total traffic
+including unlimited users). This caused:
+- `usage_percent = total_user_used / total_user_limit` to exceed 100% (e.g. 144.9%)
+- Progress bar always showing "full" even with 998 GB remaining
+- `hidden_traffic = total_user_limit - total_user_used - admin_remaining` to go negative (e.g. -11.11 TB)
+- Negative value displayed raw in admin detail views
+
+### Fix
+- `usage_percent` now uses `admin_limit_bytes` (the admin's actual Pasargad quota) as the
+  denominator instead of `total_user_limit`. Example: Ramanforutan2 now shows 97.1% not 144.9%.
+- `hidden_traffic` clamped to `max(0, ...)` so it never shows as a negative byte count.
+
+---
+
+## نسخه ۱.۴.۶ — رفع باگ محاسبه usage_percent و hidden_traffic
+
+### باگ
+وقتی ادمین دارای کاربران unlimited است، `total_user_limit` (مجموع محدودیت‌های کاربران
+محدود) از `total_user_used` (ترافیک کل مصرف‌شده شامل کاربران unlimited) کمتر است. این باعث:
+- نمایش usage_percent بیش از ۱۰۰٪ (مثلاً ۱۴۴.۹٪)
+- نوار پیشرفت همیشه "پر" نشان داده می‌شد حتی با ۹۹۸ گیگابایت باقیمانده
+- hidden_traffic منفی (مثلاً ۱۱.۱۱- ترابایت) در UI نمایش داده می‌شد
+
+### رفع
+- `usage_percent` حالا از `admin_limit_bytes` (سهمیه واقعی ادمین در Pasargad) به عنوان مخرج استفاده می‌کند
+- `hidden_traffic` با `max(0, ...)` محدود شد تا هرگز منفی نشود
+
+---
+
 ## v1.4.5 — Session timeout & expiry handling
 
 ### Fixes
