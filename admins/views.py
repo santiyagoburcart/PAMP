@@ -1034,3 +1034,26 @@ def delete_account_group(request, group_id):
         return HttpResponse(status=405)
     AdminGroup.objects.filter(id=group_id).delete()
     return HttpResponse('<div class="action-result success">✓ Group deleted</div>')
+
+
+@login_required
+def upload_avatar(request):
+    if request.method != 'POST':
+        return HttpResponse(status=405)
+    import os as _os2
+    avatar_file = request.FILES.get('avatar')
+    if not avatar_file:
+        return HttpResponse('<div class="action-result error">✗ No file uploaded</div>')
+    ext = _os2.path.splitext(avatar_file.name)[1].lower()
+    if ext not in ('.jpg', '.jpeg', '.png', '.gif', '.webp'):
+        return HttpResponse('<div class="action-result error">✗ Only image files allowed (jpg, png, webp, gif)</div>')
+    if avatar_file.size > 2 * 1024 * 1024:
+        return HttpResponse('<div class="action-result error">✗ File too large (max 2 MB)</div>')
+    avatar_dir = _os2.path.join(dj_settings.BASE_DIR, 'static', 'avatars')
+    _os2.makedirs(avatar_dir, exist_ok=True)
+    filename = f'{request.user.username}{ext}'
+    with open(_os2.path.join(avatar_dir, filename), 'wb') as fh:
+        for chunk in avatar_file.chunks():
+            fh.write(chunk)
+    request.session['avatar_url'] = f'/static/avatars/{filename}'
+    return HttpResponse('<div class="action-result success">✓ Avatar updated — <a href="javascript:location.reload()" style="color:#a78bff">reload to see it</a></div>')
