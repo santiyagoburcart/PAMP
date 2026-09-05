@@ -1050,7 +1050,7 @@ def upload_avatar(request):
         return HttpResponse('<div class="action-result error">✗ Only image files allowed (jpg, png, webp, gif)</div>')
     if avatar_file.size > 2 * 1024 * 1024:
         return HttpResponse('<div class="action-result error">✗ File too large (max 2 MB)</div>')
-    avatar_dir = _os2.path.join(dj_settings.BASE_DIR, 'static', 'avatars')
+    avatar_dir = _os2.path.join(dj_settings.STATIC_ROOT, 'avatars')
     _os2.makedirs(avatar_dir, exist_ok=True)
     filename = f'{request.user.username}{ext}'
     with open(_os2.path.join(avatar_dir, filename), 'wb') as fh:
