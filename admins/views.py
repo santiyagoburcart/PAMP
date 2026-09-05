@@ -904,8 +904,9 @@ def dashboard_v2(request):
         'total_remaining_fmt': _fmt_bytes(total_remaining),
         'total_users': totals['total_users'] or 0,
         'total_active': totals['total_active'] or 0,
-        'last_sync': SyncLog.objects.first(),
+        'last_sync': SyncLog.objects.order_by('-id').first(),
         'over_limit_admins': over_limit_list,
+        'sync_interval': SyncSettings.get_interval(),
     }
     return render(request, 'v2/dashboard_v2.html', context)
 
