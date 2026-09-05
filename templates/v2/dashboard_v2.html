@@ -183,4 +183,20 @@
 </article>
 {% endif %}
 
+<script>
+function filterAdmins(q){
+  q=(q||'').toLowerCase().trim();
+  document.querySelectorAll('#admins-table tbody tr').forEach(function(row){
+    var name=(row.querySelector('td:first-child')||{}).textContent||'';
+    row.style.display=(!q||name.toLowerCase().indexOf(q)>-1)?'':'none';
+  });
+}
+document.addEventListener('keydown',function(e){
+  if((e.metaKey||e.ctrlKey)&&e.key==='k'){
+    e.preventDefault();
+    var inp=document.getElementById('admin-search');
+    if(inp)inp.focus();
+  }
+});
+</script>
 {% endblock %}
