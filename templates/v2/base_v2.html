@@ -186,6 +186,23 @@ function doCustomLimit(username,action,targetId){
   confirmSetLimit(username,action,Number(v),targetId);
 }
 function getCsrf(){var el=document.querySelector('[name=csrfmiddlewaretoken]');return el?el.value:'';}
+function toggleSidebar(){
+  var side=document.querySelector('.side');
+  var shell=document.querySelector('.shell');
+  var chev=document.getElementById('sidebar-chev');
+  var collapsed=side.classList.toggle('collapsed');
+  shell.classList.toggle('sidebar-collapsed',collapsed);
+  if(chev)chev.style.transform=collapsed?'rotate(-90deg)':'';
+  localStorage.setItem('sidebar_collapsed',collapsed?'1':'0');
+}
+document.addEventListener('DOMContentLoaded',function(){
+  if(localStorage.getItem('sidebar_collapsed')==='1'){
+    document.querySelector('.side').classList.add('collapsed');
+    document.querySelector('.shell').classList.add('sidebar-collapsed');
+    var chev=document.getElementById('sidebar-chev');
+    if(chev)chev.style.transform='rotate(-90deg)';
+  }
+});
 function doSync(btn){
   showLoading('Syncing with panel…');
   btn.disabled=true;
