@@ -259,6 +259,67 @@
     </div>
   </article>
 
+  <!-- Avatar -->
+  <article class="card">
+    <div class="panel-title">Profile Avatar</div>
+    <p style="color:#9aa6c8;font-size:13px;margin:0 0 14px">Upload a profile picture (jpg, png, webp, gif — max 2 MB).</p>
+    <div id="avatar-result" style="margin-bottom:10px;font-size:12px"></div>
+    <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap">
+      <div id="avatar-preview" style="width:64px;height:64px;border-radius:50%;background:#1a2545 {% if avatar_url %}url('{{ avatar_url }}') center/cover{% endif %};border:2px solid #263669;flex-shrink:0"></div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <input type="file" id="avatar-file" accept="image/*" style="display:none" onchange="previewAvatar(this)">
+        <button class="v2-sync-btn" style="background:#101936;box-shadow:none;border:1px solid #26345b"
+                onclick="document.getElementById('avatar-file').click()">
+          Choose Image
+        </button>
+        <button id="avatar-upload-btn" class="report"
+                style="width:auto;padding:0 22px;height:40px;margin:0;display:none"
+                onclick="uploadAvatar()">
+          Upload Avatar
+        </button>
+      </div>
+    </div>
+    <script>
+    function previewAvatar(input) {
+      if (!input.files[0]) return;
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        var p = document.getElementById('avatar-preview');
+        p.style.backgroundImage = "url('" + e.target.result + "')";
+        p.style.backgroundSize = 'cover';
+        p.style.backgroundPosition = 'center';
+        document.getElementById('avatar-upload-btn').style.display = 'inline-flex';
+      };
+      reader.readAsDataURL(input.files[0]);
+    }
+    function uploadAvatar() {
+      var fileInput = document.getElementById('avatar-file');
+      if (!fileInput.files.length) return;
+      showLoading('Uploading avatar…');
+      var form = new FormData();
+      form.append('avatar', fileInput.files[0]);
+      form.append('csrfmiddlewaretoken', getCsrf());
+      fetch('{% url "upload_avatar" %}', {method: 'POST', body: form})
+        .then(function(r) {
+          hideLoading();
+          if (r.status === 401 || r.redirected) {
+            window.location.href = '/login/?next=' + encodeURIComponent(window.location.pathname);
+            return null;
+          }
+          return r.text();
+        })
+        .then(function(html) {
+          if (!html) return;
+          document.getElementById('avatar-result').innerHTML = html;
+        })
+        .catch(function(err) {
+          hideLoading();
+          document.getElementById('avatar-result').innerHTML = '<div class="action-result error">✗ Upload failed</div>';
+        });
+    }
+    </script>
+  </article>
+
   <!-- About -->
   <article class="card">
     <div class="panel-title">About PAMP</div>
