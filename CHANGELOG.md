@@ -1,3 +1,42 @@
+## v1.5.0 — UI Overhaul: collapsible sidebar, nav SVGs, dashboard search & metrics, avatar upload
+
+### Sidebar
+- Collapsible sidebar: click the logo to toggle. State persists across page loads via `localStorage`.
+- Nav items renamed and given SVG icons: Overview (Monitor), Dashboard → Admins, My Panel, Sync Logs, Groups, Settings.
+- Per-role nav visibility: Admins / Sync Logs / Groups shown only to superuser/staff; My Panel only to non-superuser.
+- User role chip: shows "Super Admin" vs "Admin" based on `is_superuser`.
+
+### Dashboard
+- Search box with real `oninput` filtering (⌘K / Ctrl+K shortcut to focus).
+- Traffic Totals row: 4 metric cards — Total Used, Sold Limit, Remaining, Last Sync with auto-sync interval.
+- Fixed `SyncLog.objects.first()` → `.order_by('-id').first()` so Last Sync shows the most recent, not oldest.
+
+### Settings
+- Avatar upload card: choose image (jpg, png, webp, gif ≤ 2 MB), preview before upload, stored in `staticfiles/avatars/`.
+- Avatar shown in sidebar header; persisted in session.
+
+### Context processor
+- `last_sync_fmt` (HH:MM string) and `avatar_url` injected globally via `pamp_globals`.
+- Sidebar sync card uses `last_sync_fmt` from context processor (no view-level conflict).
+
+---
+
+## نسخه ۱.۵.۰ — بازطراحی UI: سایدبار جمع‌شونده، آیکون‌های SVG، جستجو در داشبورد، آپلود آواتار
+
+### سایدبار
+- سایدبار جمع‌شونده با کلیک روی لوگو. وضعیت در `localStorage` ذخیره می‌شه.
+- آیتم‌های ناوبری با آیکون SVG: Overview، Admins، My Panel، Sync Logs، Groups، Settings.
+- نمایش آیتم‌ها بر اساس نقش: Admins / Sync Logs / Groups فقط برای superuser/staff.
+
+### داشبورد
+- جستجوی واقعی با فیلتر `oninput` (میانبر ⌘K / Ctrl+K).
+- ۴ کارت متریک برای ترافیک: مصرف‌شده، فروخته‌شده، باقی‌مانده، آخرین sync.
+
+### تنظیمات
+- کارت آپلود آواتار: انتخاب تصویر، پیش‌نمایش، ذخیره در `staticfiles/avatars/`.
+
+---
+
 ## v1.4.7 — Auto-sync fix (Redis replica), session hardening, Sync button
 
 ### Critical fix: Auto-sync was silently broken
