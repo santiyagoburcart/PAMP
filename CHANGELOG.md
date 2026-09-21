@@ -1,3 +1,21 @@
+## v1.5.2 — Telegram backup interval in minutes
+
+### Changes
+- Backup interval changed from hours to minutes (more flexible, min 5 min, max 1440 min)
+- Settings UI shows "minutes" label
+- telegram_config view uses send_telegram_backup.name directly (prevents task name drift)
+- Confirmed auto-backup working end-to-end via celery beat → Redis → worker → Telegram
+
+---
+
+## نسخه ۱.۵.۲ — بازه بک‌آپ تلگرام به دقیقه
+
+### تغییرات
+- بازه بک‌آپ از ساعت به دقیقه تغییر کرد (حداقل ۵، حداکثر ۱۴۴۰ دقیقه)
+- تأیید کار کردن auto-backup از طریق celery beat → Redis → worker → Telegram
+
+---
+
 ## v1.5.1 — SSL renewal & installer improvements
 
 ### New Features
