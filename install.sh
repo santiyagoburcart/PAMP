@@ -586,13 +586,15 @@ echo ""
 echo -e "  ${CYAN}1)${NC} Install PAMP"
 echo -e "  ${CYAN}2)${NC} Update PAMP  ${YELLOW}(pull latest + rebuild + migrate)${NC}"
 echo -e "  ${CYAN}3)${NC} Uninstall PAMP  ${RED}(removes everything)${NC}"
+echo "  4) Renew SSL Certificate"
 echo ""
-read -p "  Enter choice [1-3]: " MENU_CHOICE
+read -p "  Enter choice [1-4]: " MENU_CHOICE
 echo ""
 
 case "$MENU_CHOICE" in
     1) do_install ;;
     2) do_update ;;
     3) do_uninstall ;;
-    *) echo -e "${RED}Invalid choice. Run the script again and enter 1, 2, or 3.${NC}"; exit 1 ;;
+    4) do_renew_ssl ;;
+    *) echo -e "${RED}Invalid choice. Run the script again and enter 1, 2, 3, or 4.${NC}"; exit 1 ;;
 esac
