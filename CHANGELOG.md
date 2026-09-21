@@ -1,3 +1,23 @@
+## v1.5.1 — SSL renewal & installer improvements
+
+### New Features
+- **install.sh option 4**: Renew SSL Certificate — tries webroot first, falls back to standalone
+- **Auto-renewal hook**: nginx restarts automatically after certbot timer renews the cert
+
+### Fixes  
+- SSL certificate for pamp.caspinxp.com renewed (valid through 2026-12-20)
+- Post-renewal hook installed at /etc/letsencrypt/renewal-hooks/post/pamp-nginx-reload.sh
+
+---
+
+## نسخه ۱.۵.۱ — تمدید SSL و بهبود نصاب
+
+### امکانات جدید
+- **گزینه ۴ در install.sh**: تمدید گواهی SSL
+- **Hook خودکار**: nginx بعد از تمدید خودکار certbot، restart می‌شود
+
+---
+
 ## v1.5.0 — UI Overhaul: collapsible sidebar, nav SVGs, dashboard search & metrics, avatar upload
 
 ### Sidebar
