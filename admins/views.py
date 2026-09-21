@@ -428,31 +428,32 @@ def telegram_config(request):
         cfg.bot_token = new_token
     cfg.chat_id = request.POST.get('chat_id', '').strip()
     try:
-        cfg.backup_interval_hours = max(1, int(request.POST.get('backup_interval_hours', 24)))
+        cfg.backup_interval_minutes = min(1440, max(5, int(request.POST.get('backup_interval_minutes', 60))))
     except (ValueError, TypeError):
-        cfg.backup_interval_hours = 24
+        cfg.backup_interval_minutes = 60
     cfg.is_enabled = request.POST.get('is_enabled') == '1'
     cfg.save()
 
     from django_celery_beat.models import PeriodicTask, IntervalSchedule
+    from .tasks import send_telegram_backup
     if cfg.is_enabled and cfg.bot_token and cfg.chat_id:
         schedule, _ = IntervalSchedule.objects.get_or_create(
-            every=cfg.backup_interval_hours * 60,
+            every=cfg.backup_interval_minutes,
             period=IntervalSchedule.MINUTES,
         )
-        task, _ = PeriodicTask.objects.get_or_create(
+        PeriodicTask.objects.update_or_create(
             name='Telegram DB Backup',
             defaults={
-                'task': 'admins.tasks.send_telegram_backup',
+                'task': send_telegram_backup.name,
                 'interval': schedule,
                 'enabled': True,
             },
         )
-        task.interval = schedule
-        task.enabled = True
-        task.save()
     else:
-        PeriodicTask.objects.filter(name='Telegram DB Backup').update(enabled=False)
+        # .save() (not queryset .update()) so django-celery-beat sees the change signal
+        for task in PeriodicTask.objects.filter(name='Telegram DB Backup'):
+            task.enabled = False
+            task.save()
 
     return HttpResponse('<div class="action-result success">✓ Telegram backup settings saved</div>')
 

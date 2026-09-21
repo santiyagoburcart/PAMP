@@ -340,7 +340,7 @@ class TelegramConfig(models.Model):
     """Single-row Telegram bot settings for automated DB backups."""
     bot_token = models.CharField(max_length=255, blank=True)
     chat_id = models.CharField(max_length=100, blank=True)
-    backup_interval_hours = models.PositiveIntegerField(default=24)
+    backup_interval_minutes = models.PositiveIntegerField(default=60)
     is_enabled = models.BooleanField(default=False)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -355,7 +355,7 @@ class TelegramConfig(models.Model):
         obj, _ = cls.objects.get_or_create(pk=1, defaults={
             'bot_token': '',
             'chat_id': '',
-            'backup_interval_hours': 24,
+            'backup_interval_minutes': 60,
             'is_enabled': False,
         })
         return obj
