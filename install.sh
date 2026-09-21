@@ -524,6 +524,54 @@ NGINXHTTP_UPDATE
     echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 }
 
+do_renew_ssl() {
+  echo ""
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "  PAMP SSL Certificate Renewal"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+  if [ ! -f "/opt/pamp/.env" ]; then
+    echo "  PAMP is not installed."
+    exit 1
+  fi
+
+  cd /opt/pamp
+  detect_compose
+  DOMAIN=$(grep ALLOWED_HOSTS .env | cut -d= -f2 | cut -d, -f1)
+  echo "  Domain: ${DOMAIN}"
+
+  # Try webroot method first (nginx stays up)
+  echo "  Trying webroot renewal (nginx stays running)..."
+  docker run --rm \
+    -v /etc/letsencrypt:/etc/letsencrypt \
+    -v /opt/pamp/certbot_www:/var/www/certbot \
+    certbot/certbot renew \
+    --webroot -w /var/www/certbot \
+    --cert-name "${DOMAIN}" \
+    --non-interactive --force-renewal 2>&1
+
+  if [ $? -eq 0 ]; then
+    echo "  ✓ Certificate renewed via webroot"
+    $DC restart nginx
+    echo "  ✓ nginx restarted"
+  else
+    echo "  Webroot failed. Trying standalone (nginx will stop briefly)..."
+    $DC stop nginx
+    certbot certonly --standalone -d "${DOMAIN}" \
+      --non-interactive --agree-tos \
+      --email "admin@${DOMAIN}" --force-renewal 2>&1
+    $DC start nginx
+    sleep 3
+  fi
+
+  # Verify
+  certbot certificates | grep -A4 "${DOMAIN}"
+  echo ""
+  STATUS=$(curl -sI "https://${DOMAIN}/" 2>/dev/null | head -1)
+  echo "  HTTPS status: ${STATUS:-could not connect}"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+}
+
 do_uninstall() {
     # Check if PAMP is actually installed before proceeding
     if [ ! -f "/opt/pamp/.env" ] && ! docker ps -a --format '{{.Names}}' 2>/dev/null | grep -q "pamp"; then
