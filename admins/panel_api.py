@@ -9,6 +9,12 @@ class PanelAPIError(Exception):
     pass
 
 
+# Max users returned per /api/users call (also get_users()'s default `limit`). If a
+# response hits this cap it may be truncated — deleted-user detection must not run
+# against a possibly-incomplete list (see get_admin_user_stats / sync_all_admins).
+DEFAULT_USERS_LIMIT = 4096
+
+
 class PanelAPIClient:
     def __init__(self):
         from admins.models import PanelConfig
@@ -70,7 +76,7 @@ class PanelAPIClient:
             return data.get('admins', data.get('items', []))
         return []
 
-    def get_users(self, admin_username=None, limit=4096):
+    def get_users(self, admin_username=None, limit=DEFAULT_USERS_LIMIT):
         params = {'limit': limit}
         if admin_username:
             params['admin'] = admin_username
@@ -127,11 +133,23 @@ class PanelAPIClient:
           - total_user_limit (sum of user data_limit)
           - total_user_used  (sum of user used_traffic)
           - per-status counts
+
+        Raises PanelAPIError if /api/users fails or returns something unusable.
+        Callers must NOT treat that as "this admin has zero users" — an empty
+        result here must never be mistaken for every user having been deleted
+        (see track_deleted_users in tasks.py).
         """
-        try:
-            users = self.get_users(admin_username=admin_username)
-        except PanelAPIError:
-            users = []
+        users = self.get_users(admin_username=admin_username)
+        if not isinstance(users, list):
+            raise PanelAPIError(
+                f"/api/users returned an unexpected shape for '{admin_username}': "
+                f"{type(users).__name__}"
+            )
+
+        # The panel caps /api/users at DEFAULT_USERS_LIMIT per call. Hitting that cap
+        # means the list may be truncated, so the caller must not compare it against
+        # the last snapshot — missing tail users would look like deletions.
+        truncated = len(users) >= DEFAULT_USERS_LIMIT
 
         total_limit = 0
         total_used = 0
@@ -153,6 +171,7 @@ class PanelAPIClient:
             'disabled_users': counts['disabled'],
             'expired_users': counts['expired'],
             'users': users,  # raw list passed to snapshot tracker — avoids a second API call
+            'truncated': truncated,
         }
 
     def disable_admin(self, username: str) -> tuple:
@@ -310,8 +329,28 @@ class PanelAPIClient:
             else:
                 admin_remaining = 0
 
-            # Per-user breakdown (requires one API call per admin)
-            user_stats = self.get_admin_user_stats(uname)
+            # Per-user breakdown (requires one API call per admin). A failed or
+            # invalid /api/users response must NOT be treated as "this admin has
+            # zero users" — that would make track_deleted_users() think every user
+            # was deleted and permanently inflate deleted_users_used_bytes. Skip this
+            # admin for this run instead; the caller keeps its DB row untouched and
+            # the next scheduled sync retries it.
+            try:
+                user_stats = self.get_admin_user_stats(uname)
+            except PanelAPIError as e:
+                logger.error(
+                    "sync_all_admins: /api/users failed for '%s' — skipping this "
+                    "admin this run: %s", uname, e,
+                )
+                results.append({'username': uname, 'user_stats_error': str(e)})
+                continue
+
+            if user_stats['truncated']:
+                logger.warning(
+                    "sync_all_admins: user list for '%s' hit the %d-item cap and may "
+                    "be truncated — skipping deleted-user detection for this admin "
+                    "this run.", uname, DEFAULT_USERS_LIMIT,
+                )
 
             results.append({
                 'username': uname,
@@ -332,6 +371,7 @@ class PanelAPIClient:
                 'expired_users': user_stats['expired_users'],
                 'raw_data': admin_data,
                 'users': user_stats['users'],  # passed to snapshot tracker
+                'skip_deleted_detection': user_stats['truncated'],
             })
 
         logger.info("Fetched stats for %d admins.", len(results))

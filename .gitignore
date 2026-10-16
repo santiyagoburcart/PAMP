@@ -36,6 +36,12 @@ db.sqlite3
 mysql_data/
 redis_data/
 
+# DB backups — never commit (contains live data)
+backups/
+*.sql
+*.sql.gz
+*.dump
+
 # IDE
 .vscode/
 .idea/

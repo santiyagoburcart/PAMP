@@ -1,3 +1,28 @@
+## v1.5.3 — Fix sold-volume data corruption on panel sync errors
+
+### Fixes
+- **Data corruption**: a failed/invalid `GET /api/users` response for an admin was silently treated as "zero users", making `track_deleted_users` think every one of that admin's users had been deleted — permanently inflating `deleted_users_used_bytes` (and therefore "Total Sold") on every such hiccup. `get_admin_user_stats` now raises instead of swallowing the error, and the sync task skips that admin entirely for the run (old values/snapshots kept untouched, retried next sync) instead of writing bad data.
+- If the user list hits the 4096-item fetch cap (possibly truncated), deleted-user detection is now skipped for that admin only, with a warning logged, instead of risking false "deletions".
+- If `GET /api/admins` returns an empty list, the sync no longer deletes every `PanelAdmin` row — that step is skipped and logged.
+- Fixed a 500 on `/v2/panel/` for reseller accounts without an `AdminLimit` row (`panel_admin.support_telegram` doesn't exist — now reads it from `limit_config` with the same fallback the v1 portal already used).
+- No calculation formula changed (`sold_limit_bytes`, `hidden_traffic`, `admin_remaining`, `usage_percent`, enforcement thresholds) — error handling only.
+
+### Internal
+- Added `admins/tests.py` (19 tests) covering fetch failure/timeout/5xx/network-drop, truncated lists, empty admin lists, and normal-sync regression, run against an isolated in-memory SQLite DB (`pamp/test_settings.py`) — never the live database.
+
+---
+
+## نسخه ۱.۵.۳ — رفع خرابی داده «حجم فروخته‌شده» هنگام خطای سینک پنل
+
+### رفع اشکال
+- یک پاسخ ناموفق یا نامعتبر از `GET /api/users` برای یک ادمین، قبلاً به اشتباه به‌عنوان «صفر کاربر» در نظر گرفته می‌شد و باعث می‌شد همه کاربران آن ادمین «حذف‌شده» تلقی شوند و به‌طور دائمی به `deleted_users_used_bytes` (و در نتیجه «Total Sold») اضافه شوند. حالا در صورت خطا، آن ادمین در همان اجرا نادیده گرفته می‌شود و مقادیر/اسنپ‌شات‌های قبلی‌اش دست‌نخورده می‌ماند.
+- اگر لیست کاربران به سقف ۴۰۹۶ موردی برسد (احتمال ناقص بودن)، تشخیص کاربر حذف‌شده برای آن ادمین نادیده گرفته می‌شود.
+- اگر `GET /api/admins` خالی برگردد، دیگر همه ادمین‌ها حذف نمی‌شوند.
+- خطای ۵۰۰ صفحه `/v2/panel/` برای نمایندگان بدون تنظیمات محدودیت رفع شد.
+- هیچ فرمول محاسباتی تغییر نکرده — فقط مدیریت خطا اصلاح شده.
+
+---
+
 ## v1.5.2 — Telegram backup interval in minutes
 
 ### Changes

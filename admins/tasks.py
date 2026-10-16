@@ -145,7 +145,30 @@ def sync_panel_admins(self):
     errors = []
     now = timezone.now()
 
+    if not admins_data:
+        # /api/admins came back empty — could be a real empty panel, but could also be
+        # a bad/partial response. Either way, do NOT run the "remove admins no longer on
+        # panel" step below on this data: that would read as "every admin was deleted".
+        msg = "/api/admins returned no admins — skipped admin-deletion step this run"
+        logger.warning("Panel sync: %s", msg)
+        errors.append(msg)
+
     for data in admins_data:
+        uname = data.get('username')
+
+        # get_admin_user_stats() failed for this admin (timeout, rate limit, 5xx,
+        # network drop, or an invalid response) — do not touch this admin's row at
+        # all this run. Keep its old snapshots/values untouched and let the next
+        # scheduled sync retry it, instead of writing stale/empty data over it.
+        if data.get('user_stats_error'):
+            msg = (
+                f"{uname}: /api/users failed — {data['user_stats_error']} "
+                f"(skipped this run, old values kept, will retry next sync)"
+            )
+            errors.append(msg)
+            logger.warning(msg)
+            continue
+
         try:
             obj, _ = PanelAdmin.objects.update_or_create(
                 username=data['username'],
@@ -172,7 +195,15 @@ def sync_panel_admins(self):
             # Detect deleted users and accumulate their used-traffic into sold volume.
             # Must reload obj so deleted_users_used_bytes reflects any prior accumulation.
             obj.refresh_from_db(fields=['deleted_users_used_bytes'])
-            track_deleted_users(obj, data.get('users', []))
+            if data.get('skip_deleted_detection'):
+                # User list hit the fetch cap and may be truncated — comparing it to the
+                # last snapshot would make the missing tail users look deleted.
+                logger.warning(
+                    "Skipping deleted-user detection for '%s' — user list was "
+                    "truncated this run.", uname,
+                )
+            else:
+                track_deleted_users(obj, data.get('users', []))
 
             # Re-read after track_deleted_users may have updated deleted_users_used_bytes.
             obj.refresh_from_db(fields=['deleted_users_used_bytes'])
@@ -190,11 +221,13 @@ def sync_panel_admins(self):
             errors.append(f"{data['username']}: {e}")
             logger.warning("Error saving admin %s: %s", data['username'], e)
 
-    # Remove admins that no longer exist on the panel
-    synced_usernames = {data['username'] for data in admins_data if data.get('username')}
-    deleted_count = PanelAdmin.objects.exclude(username__in=synced_usernames).delete()[0]
-    if deleted_count:
-        logger.info("Removed %d admins no longer on panel", deleted_count)
+    # Remove admins that no longer exist on the panel — never on an empty/failed
+    # /api/admins response (handled above; admins_data is falsy in that case).
+    if admins_data:
+        synced_usernames = {data['username'] for data in admins_data if data.get('username')}
+        deleted_count = PanelAdmin.objects.exclude(username__in=synced_usernames).delete()[0]
+        if deleted_count:
+            logger.info("Removed %d admins no longer on panel", deleted_count)
 
     # Auto-enforce data limits
     try:

@@ -929,7 +929,10 @@ def portal_v2(request):
 
     is_blocked = panel_admin.status == 'disabled' or panel_admin.pamp_blocked
     block_reason = 'disabled' if panel_admin.status == 'disabled' else ('pamp_limited' if panel_admin.pamp_blocked else None)
-    support_telegram = panel_admin.support_telegram or '@support'
+    try:
+        support_telegram = panel_admin.limit_config.support_telegram or '@support'
+    except Exception:
+        support_telegram = '@support'
 
     show_warning = False
     warning_pct = 0
