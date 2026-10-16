@@ -46,6 +46,10 @@ backups/
 *.pem
 *.key
 
+# autopush script internal state (lock/flag files) — defense-in-depth;
+# the lock file itself normally lives outside the repo (/run), not here.
+.autopush*
+
 # IDE
 .vscode/
 .idea/

@@ -24,7 +24,10 @@ set -u
 cd "$PAMP_REPO_DIR" || exit 1
 
 LOG_FILE="$PAMP_REPO_DIR/logs/autopush.log"
-LOCK_FILE="$PAMP_REPO_DIR/.autopush.lock"
+# Outside the repo on purpose: a lock file living inside the working tree
+# risks getting swept up by `git add -A` (exactly this happened once in
+# testing). /run is tmpfs, root-writable, and never part of any git repo.
+LOCK_FILE="${PAMP_LOCK_FILE:-/run/pamp-autopush.lock}"
 DEBOUNCE_SECONDS=60
 MAX_FILE_BYTES=$((5 * 1024 * 1024))   # 5 MB
 
