@@ -42,6 +42,10 @@ backups/
 *.sql.gz
 *.dump
 
+# Keys/certs — never commit
+*.pem
+*.key
+
 # IDE
 .vscode/
 .idea/
